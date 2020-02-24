@@ -387,16 +387,16 @@ GR=readRDS('../downstream/output/GR.all.diff.H1.GM12878.rds')
 GR_merge=GRanges()
 for(sp in unique(GR$Sample)){GR_merge=c(GR_merge,stat_merge(GR[GR$Sample==sp]))}
 GR_merge_exclude_GM=GR_merge[!GR_merge$Sample%in%c('merged - GM12878','1 - GM12878','2 - GM12878')]
-GR_merge_exclude_GM=GR_merge_exclude_GM[width(GR_merge_exclude_GM)>10]
+GR_merge_exclude_GM[width(GR_merge_exclude_GM)>10]
 #GR dNME vs dMML at ASM
 GR_merge_exclude_GM_sig=GR_merge_exclude_GM[GR_merge_exclude_GM$dMML_pval<=pval_cutoff |GR_merge_exclude_GM$dNME_pval<=pval_cutoff]
 GR_merge_exclude_GM_sig=GR_merge_exclude_GM[!is.na(GR_merge_exclude_GM$dMML_pval) &!is.na(GR_merge_exclude_GM$dNME_pval)]
-GR_merge_df=data.frame(dMML=GR_merge_exclude_GM_sig$dMML,dNME=GR_merge_exclude_GM_sig$dNME)
+GR_merge_df=data.frame(dMML=round(GR_merge_exclude_GM_sig$dMML,digits=1),dNME=GR_merge_exclude_GM_sig$dNME)
 #GR_merge_df_agg=aggregate(GR_merge_df$dNME,by=list(GR_merge_df$dMML),FUN=mean)
 #GR_merge_df_agg$sd=aggregate(GR_merge_df$dNME,by=list(GR_merge_df$dMML),FUN=sd)$x
-names(GR_merge_df_agg)=c("dMML","dNME","sd")
-ggplot(GR_merge_df, aes(x=dMML, y=dNME)) + geom_smooth(method = "loess", formula = y ~x, size = 1)+
-  xlim(c(0,1))+ylim(c(0,0.5))+ggtitle("dMML and dNME relationship at least one ASM event region")
+names(GR_merge_df)=c("dMML","dNME","sd")
+ggplot(GR_merge_df, aes(x=dMML, y=dNME)) + geom_smooth(method = "loess", formula = y ~ x, size = 1)+
+  xlim(c(0,1))+ylim(c(0,1))+ggtitle("dMML and dNME relationship all region")
   
 #####Heatmap trial###########
 GR_merge_df_heat=data.frame(dMML=round(GR_merge_exclude_GM_sig$dMML*2,digits=1)/2,dNME=round(GR_merge_exclude_GM_sig$dNME*2,digits=1)/2)
@@ -522,13 +522,18 @@ if (!requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE))
 {BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")}
 library("BSgenome.Hsapiens.UCSC.hg19")
 library(BiocParallel)
-library(motifbreakR)
+
 pval_cutoff=0.1
 variant_HetCpG_meta=readRDS('../downstream/output/ASM_enrich_meta.rds')
 variant_HetCpG_NME=variant_HetCpG_meta[!variant_HetCpG_meta$Subject=='GM12878' & variant_HetCpG_meta$Statistic=='dNME']
 #All SNP
-motif=motif_break(unique(variant_HetCpG_NME))
-#Unique SNP: do it tonight
+motif=motif_break(unique(variant_HetCpG_NME))#Maybe we can downscale the SNPs
+#Downscale SNPs using SNPs near those gene
+#Find SNPs that have at least one dNME event in all samples
+variant_HetCpG_NME_ASM=unique(variant_HetCpG_NME[variant_HetCpG_NME$pvalue<=pval_cutoff])
+#Remove those SNP
+olap=findOverlaps(variant_HetCpG_NME,variant_HetCpG_NME_ASM)
+variant_HetCpG_NME_no_ASM
 #Do it for all motifs
 variant_HetCpG_NME=variant_HetCpG_meta[variant_HetCpG_meta$Statistic=='dNME' & variant_HetCpG_meta$pvalue<=pval_cutoff]
 for(sp in unique(variant_HetCpG_NME$Sample)){saveRDS(variant_HetCpG_NME[variant_HetCpG_NME$Sample==sp],paste('../downstream/motif/',sp,'_dNME_SNP.rds',sep=''))}
@@ -560,7 +565,7 @@ motif_break<-function(gr_in){
                          threshold = 1e-4,
                          method = "ic",
                          bkg = c(A=0.25, C=0.25, G=0.25, T=0.25),verbose=T,
-                         BPPARAM = SnowParam(workers=22))
+                         BPPARAM = MulticoreParam(workers=22,progressbar=TRUE))
 
   return(results)
 }
