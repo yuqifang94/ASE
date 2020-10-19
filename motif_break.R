@@ -17,7 +17,7 @@ motif_break<-function(gr_in){
                          threshold = 1e-4,
                          method = "ic",
                          bkg = c(A=0.25, C=0.25, G=0.25, T=0.25),verbose=T,
-                         BPPARAM = SnowParam(workers=22))
+                         BPPARAM = (workers=22))
   
   return(results)
 }
@@ -26,6 +26,7 @@ motif_num<-function(number_in,pval_cutoff=0.05){
   if (!requireNamespace("MotifDb", quietly = TRUE))
   {BiocManager::install("MotifDb")}
   library(MotifDb)
+  
   if (!requireNamespace("motifbreakR", quietly = TRUE))
   {BiocManager::install("motifbreakR")}
   library(motifbreakR)
