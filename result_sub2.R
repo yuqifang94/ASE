@@ -15,14 +15,16 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=36),
                  axis.text.y=element_text(size=32),
                  legend.text = element_text(size=32),
                  legend.title = element_blank())+theme_classic()
-#Figure S2:
+#Figure S1:
 
 selected_features=c("CpG island","CpG shore","CpG shelf","CpG open sea","gene body","exon","intron","intergenic","promoter","TSS")
 
 genomic_features_OR=lapply(selected_features,function(x){
+  #NME enrichment
   GR_merge$ASM="No"
   GR_merge$ASM[GR_merge$dNME_pval<=pval_cutoff]="Yes"
   NME_enrich=testEnrichmentFeature_stat(GR_merge,genomic_features[[x]],maxgap=0)[[2]]
+  #MML_enrichment
   GR_merge$ASM="No"
   GR_merge$ASM[GR_merge$dMML_pval<=pval_cutoff]="Yes"
   MML_enrich=testEnrichmentFeature_stat(GR_merge,genomic_features[[x]],maxgap=0)[[2]]
@@ -37,7 +39,7 @@ genomic_features_OR=do.call(rbind,genomic_features_OR)
 genomic_features_OR$star=add.significance.stars(genomic_features_OR$pvalue, cutoffs = c(0.05, 0.01, 0.001))
 genomic_features_OR$star=gsub(' ','',genomic_features_OR$star)
 theme_bar=theme(axis.text.x = element_text(angle = 90, hjust = 1),legend.position="bottom")
-pdf('../downstream/output/graphs/FigureS2/feature_enrichment.pdf',width=10,height=5)
+pdf('../downstream/output/graphs/FigureS1/feature_enrichment.pdf',width=10,height=5)
 print(ggplot(genomic_features_OR,aes(x=feature,y=OR,fill=region_type)) + 
   geom_bar(stat="identity", position=position_dodge())+ylim(0, 6.5)+
   ggtitle("")+xlab('Sample name')+ylab('Odds Ratio')+
@@ -51,11 +53,18 @@ dev.off()
 #Figure 2A,B
 library(readxl)
 Imprinted_Genes <- as.data.frame(read_excel("../downstream/input/Imprinted Genes.xlsx"))
+Imprinted_Genes$Expressed_allele= Imprinted_Genes$`Expressed Allele`
 #ecdf: Figure 2A
 GR_merge_genes_promoter=GR_merge[!is.na(GR_merge$genes_promoter)]
 GR_merge_genes_promoter$imprinted="Non-Imprinted"
 GR_merge_genes_promoter$imprinted[unlist(lapply(GR_merge_genes_promoter$genes_promoter,function(x) any(x%in% Imprinted_Genes$Gene)))]="Imprinted"
-GR_merge_genes_df=data.frame(dMML=GR_merge_genes_promoter$dMML,imprinted=GR_merge_genes_promoter$imprinted)
+GR_merge_genes_df=data.table(regon=paste0(seqnames(GR_merge_genes_promoter),":",start(GR_merge_genes_promoter),'-',end(GR_merge_genes_promoter)),
+                                                   dMML=GR_merge_genes_promoter$dMML,imprinted=GR_merge_genes_promoter$imprinted,dMML_pvalue=GR_merge_genes_promoter$dMML_pval,
+                             genes=GR_merge_genes_promoter$genes_promoter)
+GR_merge_genes_df$expressed_allele=lapply(GR_merge_genes_df$genes,function(x) Imprinted_Genes$Expressed_allele[match(x,Imprinted_Genes$Gene)])
+GR_merge_genes_df$genes=unlist(lapply(GR_merge_genes_df$genes,function(x) paste(x,collapse = ";")))
+GR_merge_genes_df$expressed_allele=unlist(lapply(GR_merge_genes_df$expressed_allele,function(x) paste(x,collapse = ";")))
+write.csv(GR_merge_genes_df[dMML_pvalue<=pval_cutoff&imprinted=="Imprinted"],'../downstream/output/imprinted_regions.csv')
 #Getting ecdf
 ecdf_df_out=data.frame()
 for(type in unique(GR_merge_genes_df$imprinted)){
@@ -63,17 +72,13 @@ for(type in unique(GR_merge_genes_df$imprinted)){
   imprinted_uq=seq(0,1,0.001)
   ecdf_df_out=rbind(ecdf_df_out,data.frame(dMML=imprinted_uq,quant=GR_merge_genes_promoter_estimate(imprinted_uq),imprinted=type,stringsAsFactors = F))
 }
-#Getting density
+#Getting density ecdf files
 
 pdf('../downstream/output/graphs/Figure2/imprinted_2A.pdf',width=3.5,height=3.5)
 print(ggplot(ecdf_df_out,aes(x=dMML,y=quant,group=imprinted,color=imprinted))+geom_line(size=1.5)+xlab('dMML')+
   ylab('cumulative probability')+theme_glob+theme(legend.position = 'bottom'))
  # print(ggplot(GR_merge_genes_df,aes(x=dMML,fill=imprinted,color=imprinted))+geom_density(size=1.5,alpha=0.4)+
  #         xlab('dMML')+theme(legend.position = 'bottom')+theme_glob)
-dev.off()
-pdf('../downstream/output/graphs/Figure2/imprinted_2A_density.pdf',width=3.5,height=3.5)
- print(ggplot(GR_merge_genes_df,aes(x=dMML,fill=imprinted,color=imprinted))+geom_density(size=1.5,alpha=0.4)+
-       xlab('dMML')+theme_glob+theme(legend.position = 'bottom'))
 dev.off()
 
 #Bar plot Figure 2B
@@ -84,6 +89,7 @@ dMML_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'ge
             cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',
            Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal']), data.frame(allele="Maternally\nexpressed")))
 dMML_OR$stat_type="dMML-ASM"
+dMML_OR$star=add.significance.stars(dMML_OR$pvalue, cutoffs = c(0.05, 0.01, 0.001))
 dNME_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',Imprinted_Genes$Gene),
                     data.frame(allele="All Imprinted genes")),
               cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
@@ -91,14 +97,16 @@ dNME_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'ge
               cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
                                Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal']), data.frame(allele="Maternally expressed")))
 dNME_OR$stat_type="dNME-ASM"
+dNME_OR$star=add.significance.stars(dNME_OR$pvalue, cutoffs = c(0.05, 0.01, 0.001))
+
 OR_barplot=dMML_OR
 
 pdf('../downstream/output/graphs/Figure2/Imprinted_2B.pdf',width=3.5,height=3.5, useDingbats=FALSE)
 print(ggplot(OR_barplot,aes(x=allele,y=OR))+
-  geom_bar(stat="identity",position=position_dodge(0.9),fill="light blue",width=0.5)+ylim(c(0,100))+
+  geom_bar(stat="identity",position=position_dodge(0.9),fill="light blue",width=0.5)+ylim(c(0,105))+
   geom_errorbar(aes(ymin=lowerCI,ymax=upperCI),width=0.2,position=position_dodge(0.9))+ylab("Enrichment")+
   xlab("")+geom_text(aes(label=round(OR,digits = 2),y=upperCI),position=position_dodge(0.9),vjust=-0.5,color="black", size=3)+
-  #geom_text(aes(y=upperCI,label=star),vjust=-0.5,position = position_dodge(0.9))+
+  geom_text(aes(y=upperCI,label=star),vjust=-1,position = position_dodge(0.9))+
   theme_glob)
 dev.off()
 # Finding the overlap between monoallelic expressed gene ------------------
@@ -132,13 +140,16 @@ ah_num=names(query(ah, c("chromhmmSegmentations", ENCODE_name$ENCODE[ENCODE_name
 chromHMM_dMML_all=chromHMM_combine(chromHMM_dMML_all_ls)
 
 #Plot OR with error bar
-pdf('../downstream/output/graphs/Figure2/Figure2C_crhomHMM.pdf',width=5,height=5)
 chromHMM_dMML_all=chromHMM_dMML_all[order(chromHMM_dMML_all$OR,decreasing=F),]
 chromHMM_dMML_all$states=factor(chromHMM_dMML_all$states,levels=chromHMM_dMML_all$states)
+chromHMM_dMML_all$FDR=p.adjust(chromHMM_dMML_all$p_value,method='BH')
+chromHMM_dMML_all$star=add.significance.stars(chromHMM_dMML_all$FDR, cutoffs = c(0.05, 0.01, 0.001))
+pdf('../downstream/output/graphs/Figure2/Figure2C_crhomHMM.pdf',width=5,height=5)
 print(ggplot(chromHMM_dMML_all,aes(x=states,y=OR,fill=states))+geom_bar(stat="identity",color="black",position=position_dodge(0.9))+
   geom_errorbar(aes(ymin=lower_CI,ymax=upper_CI),width=0.2,position=position_dodge(0.9))+ coord_flip()+
-  theme_glob+xlab("chromHMM states")+theme(legend.position = "")+ylim(c(0,12))+
-  geom_text(aes(label=round(OR,digits = 2),y=upper_CI),hjust=-0.5, color="black", size=3))
+  theme_glob+xlab("chromHMM states")+theme(legend.position = "")+ylim(c(0,13))+
+  geom_text(aes(label=round(OR,digits = 2),y=upper_CI),hjust=-0.5, color="black", size=3)+
+  geom_text(aes(label=star,y=upper_CI+0.5),hjust=-1, color="black", size=3))
 dev.off()
 
 #Figure 2D chromatin accessibility
@@ -147,6 +158,7 @@ dev.off()
 
 ######reading in data
 GR_merge_H1=GR_merge[GR_merge$Subject=='H1']
+#This file from Ken
 ATAC_H1=as.data.frame(read.table("../downstream/input/H1_ATAC_allele_count.txt",header=T,stringsAsFactors = F))
 colnames(ATAC_H1)=c("seqname","start","end","rep1_g1","rep1_g2","rep2_g1","rep2_g2")
 sampleTable <- data.frame(condition = factor(c("genome1","genome2","genome1","genome2")))
@@ -159,7 +171,9 @@ dds_ATAC = DESeqDataSetFromMatrix(countData=as.matrix(ATAC_H1[,4:7]), colData=sa
 dds_ATAC_lfc<-DESeq(dds_ATAC,betaPrior=FALSE)
 res_ATAC_lfc<-results(dds_ATAC_lfc,name=c("condition_genome2_vs_genome1"))
 ###lfc works better
+
 ##############read in ATAC-seq CPM data they are same in regions
+#This file from Ken
 ATAC_H1_CPM=as.data.frame(read.table("../downstream/input/H1_ATAC_allele_CPM.txt",header=T,stringsAsFactors = F))
 colnames(ATAC_H1_CPM)=c("seqname","start","end","rep1_g1_CPM","rep1_g2_CPM","rep2_g1_CPM","rep2_g2_CPM")
 ATAC_H1_CPM=makeGRangesFromDataFrame(as.data.frame(ATAC_H1_CPM),keep.extra.columns = T)
@@ -170,19 +184,13 @@ ATAC_H1_CPM$log2FC_CPM=log2((ATAC_H1_CPM$rep1_g2_CPM+ATAC_H1_CPM$rep2_g2_CPM+1)/
 ATAC_H1_CPM$genome2_CPM=(ATAC_H1_CPM$rep1_g2_CPM+ATAC_H1_CPM$rep2_g2_CPM)/2
 ATAC_H1_CPM$genome1_CPM=(ATAC_H1_CPM$rep1_g1_CPM+ATAC_H1_CPM$rep2_g1_CPM)/2
 ############Putting data into GR merge object
-olap_ATAC=findOverlaps(GR_merge_H1,ATAC_H1_CPM,select="first",maxgap =500)
+olap_ATAC=findOverlaps(GR_merge_H1,ATAC_H1_CPM,select="all",maxgap =500)
 #####Check overlapped regions
-sum(!is.na(olap_ATAC))#24783
-GR_merge_H1_ATAC=GR_merge_H1#[queryHits(olap_ATAC)]
-GR_merge_H1_ATAC$ATAC_FC=NA
-GR_merge_H1_ATAC$ATAC_FC=ATAC_H1_CPM$log2FoldChange[olap_ATAC]
-GR_merge_H1_ATAC$ATAC_FC_pval=ATAC_H1_CPM$pvalue[olap_ATAC]
-GR_merge_H1_ATAC$ATAC_FC_pval_adj=p.adjust(GR_merge_H1_ATAC$ATAC_FC_pval,method="BH")
-GR_merge_H1_ATAC$ATAC_FC_CPM=ATAC_H1_CPM$log2FC_CPM[olap_ATAC]
-GR_merge_H1_ATAC$g1_CPM=ATAC_H1_CPM$genome1_CPM[olap_ATAC]
-GR_merge_H1_ATAC$g2_CPM=ATAC_H1_CPM$genome2_CPM[olap_ATAC]#126027 
-GR_merge_H1_ATAC$log2FC_CPM=ATAC_H1_CPM$log2FC_CPM[olap_ATAC]
-GR_merge_H1_ATAC=GR_merge_H1_ATAC[!is.na(GR_merge_H1_ATAC$ATAC_FC)]#17692
+sum(!is.na(olap_ATAC))#12696
+qt_dt=cbind(data.table(qt=queryHits(olap_ATAC)),as.data.table(mcols(ATAC_H1_CPM[subjectHits(olap_ATAC)])))
+qt_dt=qt_dt[,lapply(.SD,mean),by=qt]#.SD: subset of Data, subset each column as list
+GR_merge_H1_ATAC=GR_merge_H1[qt_dt$qt]
+mcols(GR_merge_H1_ATAC)=cbind(mcols(GR_merge_H1_ATAC),qt_dt[,-1])
 GR_merge_H1_ATAC$dMML_relative=GR_merge_H1_ATAC$MML2-GR_merge_H1_ATAC$MML1
 GR_merge_H1_ATAC$dNME_relative=GR_merge_H1_ATAC$NME2-GR_merge_H1_ATAC$NME1
 ####test correlation
@@ -196,7 +204,8 @@ pdf('../downstream/output/graphs/Figure2/Figure2D_ATAC-seq_dMML.pdf',width=3.5,h
 print(ggplot(ATAC_plot[ATAC_plot$dMML_pval<=pval_cutoff,],aes(x=dMML,y=ATAC_FC_CPM))+geom_smooth()+geom_point(alpha=0.5)+
   ylab('Allelic accessibility change')+theme_glob)+xlab('relative dMML')
 dev.off()
-pdf('../downstream/output/graphs/FigureS3/Figure2D_ATAC-seq_dNME.pdf',width=3.5,height=3.5)
-print(ggplot(ATAC_plot[ATAC_plot$dNME_pval<=pval_cutoff,],aes(x=dNME,y=ATAC_FC_CPM))+geom_smooth()+geom_point(alpha=0.5)+
-  ylab('Allelic accessibility change')+theme_glob)+xlab('relative dNME')
-dev.off()
+#Not in use Figure S3
+# pdf('../downstream/output/graphs/FigureS3/Figure2D_ATAC-seq_dNME.pdf',width=3.5,height=3.5)
+# print(ggplot(ATAC_plot[ATAC_plot$dNME_pval<=pval_cutoff,],aes(x=dNME,y=ATAC_FC_CPM))+geom_smooth()+geom_point(alpha=0.5)+
+#   ylab('Allelic accessibility change')+theme_glob)+xlab('relative dNME')
+# dev.off()

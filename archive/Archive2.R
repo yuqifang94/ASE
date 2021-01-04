@@ -469,3 +469,91 @@ motif_enrich<-function(motif_gene_strong,variant_in,pval_cutoff=0.1,dist=500,con
 
 #gff_example=import.gff('../downstream/data/gff_file/H1_het.cpelasm.gff')
 
+
+# Finding examples -----------
+
+#Not in Ecker's paper but functional
+#select regions and visualize using  Gviz
+library(Gviz)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(org.Mm.eg.db)
+chromHMM_enhancer=readRDS("../downstream/output/chromHMM_enhancer.rds")
+bin_enhancer=readRDS("../downstream/output/bin_enhancer.rds")
+#Prepare necessary tracks
+grtrack=GeneRegionTrack(TxDb.Mmusculus.UCSC.mm10.knownGene)
+symbols <- unlist(mapIds(org.Mm.eg.db, GenomicFeatures::genes(TxDb.Mmusculus.UCSC.mm10.knownGene)$gene_id, "SYMBOL", "ENTREZID", 
+                         multiVals = "first"))
+symbol(grtrack) <- symbols[gene(grtrack)]
+grtrack=grtrack[!is.na(symbol(grtrack))]
+gtrack <- GenomeAxisTrack()
+plot_regions_mouse<-function(tissue,select_region,size_forward,size_backward,motif_annotation=AnnotationTrack()){
+  #getting mml and nme
+  mml_example=mml[select_region$region,sub('-.*','',colnames(mml))==tissue]
+  nme_example=nme[select_region$region,names(mml_example)]
+  dmml_example=dmml[[tissue]][select_region$region,]
+  dnme_example=dnme[[tissue]][select_region$region,]
+  UC_example=UC[[tissue]][select_region$region,]
+  nme_mml_dt=data.table(stage=sub('-all','',sub(paste0(tissue,'-'),'',names(mml_example))),
+                        MML=mml_example,NME=nme_example)
+  nme_mml_dt=melt.data.table(nme_mml_dt[stage!="P0"],id.vars = "stage",variable.name = "Statistics")
+  dnme_dmml_UC_dt=data.table(stage=names(UC_example),UC=UC_example,dMML=dmml_example,dNME=dnme_example)
+  dnme_dmml_UC_dt=melt.data.table(dnme_dmml_UC_dt,id.vars = "stage",variable.name = "Statistics")
+  #covert to GR
+  select_region=convert_GR(select_region)
+  target_region=AnnotationTrack(select_region,name="example",fill="purple")
+  chr=as.character(seqnames(select_region))
+  itrack <- IdeogramTrack(genome ="mm10", chromosome = chr)
+  chromHMM_anno=AnnotationTrack(subsetByOverlaps(chromHMM_enhancer[chromHMM_enhancer$tissue==tissue],
+                                                 select_region,maxgap = 1000),name="Enhancer chromHMM",fill="red")
+  bin_enhancer_track=AnnotationTrack(subsetByOverlaps(bin_enhancer,select_region,maxgap = 1000),name="Enhancer ref",fill="pink")
+  Gviz::plotTracks(list(itrack, gtrack,grtrack,bin_enhancer_track,chromHMM_anno,motif_annotation,target_region),from = start(select_region)-size_forward, 
+                   to = end(select_region)+size_backward, transcriptAnnotation = "symbol")
+  
+  
+  nme_mml_plot=ggplot(nme_mml_dt,aes(x=stage,y=value,group=Statistics,color=Statistics))+geom_line(size=1)+theme_glob+theme(legend.position = "bottom")+
+    ylim(c(0,1))+scale_color_manual(values=c('red','blue'))+theme(axis.title.x=element_blank(),axis.title.y = element_blank())
+  dNME_dMML_UC_plot=ggplot(dnme_dmml_UC_dt,aes(x=stage,y=value,group=Statistics,color=Statistics))+geom_line(size=1)+theme_glob+
+    theme(legend.position = "bottom",axis.text.x = element_text(angle = 90),axis.title.x=element_blank(),axis.title.y = element_blank())+
+    scale_color_manual(values=c('magenta','red','blue'))
+  ggarrange(nme_mml_plot,dNME_dMML_UC_plot,nrow=1,ncol=2)
+  
+}
+
+# Heart -------------------------------------------------------------------
+tissue="heart"
+#Select regions from Heart
+heart_GO=fread('../downstream/output/mm10_result/bin_enhancer/all_gene_list/heart_all.csv')
+heart_GO=heart_GO[(GO_result!="")&chromHMM_enhancer]
+heart_GO=heart_GO[order(dNME_maxJSD,decreasing = T)]
+DNase=readRDS('../downstream/input/mm10_DNase.rds')
+#N>=3
+heart_GON3=subsetByOverlaps(convert_GR(heart_GO$region),DNase[DNase$N>=5])
+heart_GON3=paste0(seqnames(heart_GON3),':',start(heart_GON3),'-',end(heart_GON3))
+heart_GO[region %in% heart_GON3,c("region","cluster","dNME_maxJSD")][1:10]
+#min NME<=0.3?
+#Tbx1: Epithelial Properties of the Second Heart Field
+pdf('../downstream/output/graphs/example_Mouse/Popdc3.pdf',width=7,height=3.5)
+plot_regions_mouse("heart",heart_GO[gene=="Popdc3","region"],25000,10000)
+dev.off()
+#Example motif BMP4, klf2: 
+pdf('../downstream/output/graphs/example_Mouse/BMP4.pdf',width=7,height=3.5)
+plot_regions_mouse("heart",heart_GO[gene=="Bmp4","region"],10000,80000)
+dev.off()
+#Wnt signaling through Dishevelled, Rac and JNK regulates dendritic development
+pdf('../downstream/output/graphs/example_Mouse/Uncx.pdf',width=7,height=3.5)
+plot_regions_mouse("forebrain",heart_GO[gene=="Wnt7b"&cluster==4,"region"],20000,10000)
+dev.off()
+#Example motif Gata4: 
+pdf('../downstream/output/graphs/example_Mouse/Mef2a.pdf',width=7,height=3.5)
+plot_regions_mouse("heart",heart_GO[gene=="Mef2a"&cluster==10,"region"],15000000,10000)
+dev.off()
+
+#Generate bed files from all csv files
+gene_enhancer_out=GRanges()
+for (sp in names(UC)){
+  gene_enhancer_out=c(gene_enhancer_out,convert_GR(rownames(UC[[sp]])))
+  
+}
+gene_enhancer_out=unique(gene_enhancer_out)
+export.bed(resize(gene_enhancer_out,500,fix='center'),'../downstream/output/DNase_cluster.bed')
+

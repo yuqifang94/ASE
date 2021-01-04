@@ -56,7 +56,7 @@ plotMB<-function (results, rsid, reverseMotif = TRUE, effect = c("strong",
             if (doRev) {
                 pwm <- pwms[[pwm.i]]
                 pwm <- pwm[, rev(1:ncol(pwm))]
-                pwms[[pwm.i]] <- pwm
+                pwms@listData[[pwm.i]] <- pwm
                 names(pwms)[pwm.i] <- paste0(names(pwms)[pwm.i], 
                   "-:r")
             }

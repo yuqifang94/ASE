@@ -1,4 +1,102 @@
-#Dependencies
+# Dependencies in use -----------------------------------------------------
+if (!requireNamespace("rtracklayer", quietly = TRUE))
+{BiocManager::install("rtracklayer")}
+library(rtracklayer)
+if (!requireNamespace("GenomicRanges", quietly = TRUE))
+{BiocManager::install("GenomicRanges")}
+library(GenomicRanges)
+if (!requireNamespace("data.table", quietly = TRUE))
+{BiocManager::install("data.table")}
+library(data.table)
+if (!requireNamespace("Gmisc", quietly = TRUE))
+{BiocManager::install("Gmisc")}
+library(Gmisc)
+if (!requireNamespace("matrixStats", quietly = TRUE))
+{BiocManager::install("matrixStats")}
+library(matrixStats)
+if (!requireNamespace("parallel", quietly = TRUE))
+{BiocManager::install("parallel")}
+library(parallel)
+if (!requireNamespace("readr", quietly = TRUE))
+{install.packages("readr")}
+library(readr)
+if (!requireNamespace("readxl", quietly = TRUE))
+{install.packages("readxl")}
+library(readxl)
+if (!requireNamespace("reshape2", quietly = TRUE))
+{BiocManager::install("reshape2")}
+library(reshape2)
+
+#plot 
+if (!requireNamespace("pheatmap", quietly = TRUE))
+{BiocManager::install("pheatmap")}
+library(pheatmap)
+if (!requireNamespace("ggfortify", quietly = TRUE))
+{BiocManager::install("ggfortify")}
+library(ggfortify)
+if (!requireNamespace("RColorBrewer", quietly = TRUE))
+{BiocManager::install("RColorBrewer")}
+library(RColorBrewer)
+if (!requireNamespace("ggplot2", quietly = TRUE))
+{BiocManager::install("ggplot2")}
+library(ggplot2)
+if (!requireNamespace("ggpubr", quietly = TRUE))
+{BiocManager::install("ggpubr")}
+library(ggpubr)
+if (!requireNamespace("shiny", quietly = TRUE))
+{BiocManager::install("shiny",version="devel")}
+library(shiny)
+if (!requireNamespace("lattice", quietly = TRUE))
+{install.packages("lattice")}
+library(lattice)
+if (!requireNamespace("gridExtra", quietly = TRUE))
+{BiocManager::install("gridExtra")}
+library(gridExtra)
+if (!requireNamespace("grid", quietly = TRUE))
+{BiocManager::install("grid")}
+library(grid)
+if (!requireNamespace("pander", quietly = TRUE))
+{install.packages("pander")}
+library(pander)
+if (!requireNamespace("preprocessCore", quietly = TRUE))
+{install.packages("preprocessCore")}
+library(preprocessCore)
+#hg19 genome 
+if (!requireNamespace("TxDb.Hsapiens.UCSC.hg19.knownGene", quietly = TRUE))
+{BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")}
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+if (!requireNamespace("Homo.sapiens", quietly = TRUE))
+{BiocManager::install("Homo.sapiens")}
+library(Homo.sapiens)
+if (!requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE))
+{BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")}
+library(BSgenome.Hsapiens.UCSC.hg19)
+if (!requireNamespace("org.Hs.eg.db", quietly = TRUE))
+{BiocManager::install("org.Hs.eg.db")}
+library(org.Hs.eg.db)
+
+#hg38 genome
+if (!requireNamespace("SNPlocs.Hsapiens.dbSNP151.GRCh38", quietly = TRUE)){
+  BiocManager::install("SNPlocs.Hsapiens.dbSNP151.GRCh38")}
+library(SNPlocs.Hsapiens.dbSNP151.GRCh38)
+
+#mm10 genome related
+if (!requireNamespace("TxDb.Mmusculus.UCSC.mm10.knownGene", quietly = TRUE)){
+  BiocManager::install("TxDb.Mmusculus.UCSC.mm10.knownGene")}
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+if (!requireNamespace("Mus.musculus", quietly = TRUE)){
+  BiocManager::install("Mus.musculus")}
+library(Mus.musculus)
+if (!requireNamespace("BSgenome.Mmusculus.UCSC.mm10", quietly = TRUE)){
+  BiocManager::install("BSgenome.Mmusculus.UCSC.mm10")}
+library(BSgenome.Mmusculus.UCSC.mm10)
+
+#genome tools
+if (!requireNamespace("liftOver", quietly = TRUE)){
+  BiocManager::install("liftOver")}
+library(liftOver)
+
+#Accessibility analysis
 if (!requireNamespace("limma", quietly = TRUE))
 {BiocManager::install("limma")}
 library(limma)
@@ -11,97 +109,56 @@ library(tximport)
 if (!requireNamespace("DESeq2", quietly = TRUE))
 {BiocManager::install("DESeq2")}
 library(DESeq2)
-if (!requireNamespace("readr", quietly = TRUE))
-{install.packages("readr")}
-library(readr)
-if (!requireNamespace("readxl", quietly = TRUE))
-{install.packages("readxl")}
-library(readxl)
+
+#Annotations
 if (!requireNamespace("annotatr", quietly = TRUE))
 {BiocManager::install("annotatr",INSTALL_opts = c('--no-lock'))}
 library(annotatr)
 if (!requireNamespace("AnnotationHub", quietly = TRUE))
 {BiocManager::install("AnnotationHub")}
 library(AnnotationHub)
-if (!requireNamespace("shiny", quietly = TRUE))
-{BiocManager::install("shiny",version="devel")}
-library(shiny)
-if (!requireNamespace("rtracklayer", quietly = TRUE))
-{BiocManager::install("rtracklayer")}
-library(rtracklayer)
-library(GenomicRanges)
-if (!requireNamespace("TxDb.Hsapiens.UCSC.hg19.knownGene", quietly = TRUE))
-{BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")}
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-if (!requireNamespace("Homo.sapiens", quietly = TRUE))
-{BiocManager::install("Homo.sapiens")}
-library(Homo.sapiens)
 if (!requireNamespace("GenomicFeatures", quietly = TRUE))
 {BiocManager::install("GenomicFeatures")}
 library(GenomicFeatures)
-if (!requireNamespace("BSgenome.Hsapiens.UCSC.hg19", quietly = TRUE))
-{BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")}
-library(BSgenome.Hsapiens.UCSC.hg19)
-if (!requireNamespace("org.Hs.eg.db", quietly = TRUE))
-{BiocManager::install("org.Hs.eg.db")}
-library(org.Hs.eg.db)
 if (!requireNamespace("VariantAnnotation", quietly = TRUE))
 {BiocManager::install("VariantAnnotation")}
 library(VariantAnnotation)
-if (!requireNamespace("reshape2", quietly = TRUE))
-{BiocManager::install("reshape2")}
-library(reshape2)
-if (!requireNamespace("gridExtra", quietly = TRUE))
-{BiocManager::install("gridExtra")}
-library(gridExtra)
-if (!requireNamespace("grid", quietly = TRUE))
-{BiocManager::install("grid")}
-library(grid)
-if (!requireNamespace("ggplot2", quietly = TRUE))
-{install.packages("ggplot2")}
-library(ggplot2)
-if (!requireNamespace("lattice", quietly = TRUE))
-{install.packages("lattice")}
-library(lattice)
-if (!requireNamespace("Repitools", quietly = TRUE))
-{BiocManager::install("Repitools")}
-library(Repitools)
 if (!requireNamespace("topGO", quietly = TRUE))
 {BiocManager::install("topGO")}
 library(topGO)
-if(!require(psych)){install.packages("psych")}
-library('psych')
-if(!require(vcd)){install.packages("vcd")}
-if(!require(DescTools)){install.packages("DescTools")}
-if(!require(rcompanion)){install.packages("rcompanion")}
-if(!require(ggpubr)){install.packages("ggpubr")}
-library("ggpubr")
-if(!require(readxl)){install.packages("readxl")}
-library(readxl) 
-if(!require(ggpointdensity)){install.packages("ggpointdensity")}
-library(ggpointdensity)
-if (!requireNamespace("rethinking", quietly = TRUE))
-{install.packages(c("coda","mvtnorm","devtools","loo","dagitty"))
-  library(devtools)
-  devtools::install_github("rmcelreath/rethinking")}
-library(rethinking)
-if (!requireNamespace("gwasrapidd", quietly = TRUE)){
-  remotes::install_github("ramiromagno/gwasrapidd")}
-library(gwasrapidd)
-library(qusage)
-if (!requireNamespace("gwascat", quietly = TRUE)){
-BiocManager::install("gwascat")}
-library(gwascat)
-if (!requireNamespace("liftOver", quietly = TRUE)){
-  BiocManager::install("liftOver")}
-library(liftOver)
-if (!requireNamespace("SNPlocs.Hsapiens.dbSNP151.GRCh38", quietly = TRUE)){
-  BiocManager::install("SNPlocs.Hsapiens.dbSNP151.GRCh38")}
-library(SNPlocs.Hsapiens.dbSNP151.GRCh38)
-library(RColorBrewer)
-library(stringr)
-library(data.table)
-library(pander)
+
+
+
+# Not in use --------------------------------------------------------------
+# 
+# if (!requireNamespace("Repitools", quietly = TRUE))
+# {BiocManager::install("Repitools")}
+# library(Repitools)
+# if(!require(psych)){install.packages("psych")}
+# library('psych')
+# if(!require(vcd)){install.packages("vcd")}
+# if(!require(DescTools)){install.packages("DescTools")}
+# if(!require(rcompanion)){install.packages("rcompanion")}
+# if(!require(ggpubr)){install.packages("ggpubr")}
+# library("ggpubr")
+# if(!require(readxl)){install.packages("readxl")}
+# library(readxl) 
+# if(!require(ggpointdensity)){install.packages("ggpointdensity")}
+# library(ggpointdensity)
+# if (!requireNamespace("rethinking", quietly = TRUE))
+# {install.packages(c("coda","mvtnorm","devtools","loo","dagitty"))
+#   library(devtools)
+#   devtools::install_github("rmcelreath/rethinking")}
+# library(rethinking)
+# if (!requireNamespace("gwasrapidd", quietly = TRUE)){
+#   remotes::install_github("ramiromagno/gwasrapidd")}
+# library(gwasrapidd)
+# library(qusage)
+# if (!requireNamespace("gwascat", quietly = TRUE)){
+# BiocManager::install("gwascat")}
+# library(gwascat)
+
+
 #global pval cutoff file names
 pval_cutoff=0.1 #Onuchic use 0.1
 gff_in_file='../downstream/input/gff_in.rds'
@@ -112,8 +169,8 @@ hetCpG_gff_file='../downstream/input/hetCpG_gff_final1.rds'
 GR_merge_file="../downstream/output/GR_merge_final12_ls.rds"
 variant_HetCpG_meta_file='../downstream/output/variant_HetCpG_meta_final1_ls.rds'
 genomic_features_file="../downstream/input/genomic_features2020.rds"
-NME_agnostic_file="../downstream/input/NME_allele_agnostic_merge_2k.rds"
-MML_agnostic_file="../downstream/input/MML_allele_agnostic_merge_2k.rds"
+NME_agnostic_file="../downstream/input/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
+MML_agnostic_file="../downstream/input/MML_allele_agnostic_merge_20k_homogeneous2.rds"
 motif_gene_file='../downstream/output/motif_all_JASPAR_default.rds' #For all SNP
 #Checking chromosome name
 chr_check<-function(gr_in){
@@ -169,8 +226,6 @@ readSubGff <- function(inDir,sub,chrsOfInterest=paste("chr",1:22,sep="")){
 extractHetCpG<-function(vcfDir,sub,chrsOfInterest=paste("chr",1:22,sep="")){
   cat('Processing subject:', sub,'\n')
   tt1=proc.time()[[3]]
-  #genomeGr <- unlist(tileGenome(seqinfo(Hsapiens),ntile=1))
-  #genomeGr <- setGenomeLengths(genomeGr)
   vcf <- readVcf(file=paste(vcfDir,sub,".phased.vcf.gz",sep=""),"hg19")
   
   gt <- as.vector(geno(vcf)$GT)
@@ -202,9 +257,11 @@ het_CpG_df<-function(var_gr){
   #get trinucleotide
   var_gr$REF_tri=paste0(minus_loc,var_gr$REF,plus_loc)
   var_gr$ALT_tri=paste0(minus_loc,var_gr$ALT,plus_loc)
-  #check if heterogygouze: note rowSum =2 have trinucleotide form CGG with ref =G alt =C
-  var_gr$npmCG=rowSums(as.data.table(mcols(var_gr))[,.(str_count(REF_tri,pattern="CG"),str_count(ALT_tri,pattern="CG"))])
-  var_gr$HetCpG=var_gr$npmCG>0
+  #currently not in use
+  # #check if heterogygouze: note rowSum =2 have trinucleotide form CGG with ref =G alt =C
+  # var_gr$npmCG=rowSums(as.data.table(mcols(var_gr))
+  #                      [,.(str_count(REF_tri,pattern="CG"),str_count(ALT_tri,pattern="CG"))])
+  # var_gr$HetCpG=var_gr$npmCG>0
   #Add CG content for genome1 and genome2 based on GT
   var_gr$genome1_plus=NA
   var_gr$genome1_minus=NA
@@ -233,11 +290,10 @@ het_CpG_df<-function(var_gr){
 }
 
 # Function to set genome and chromosome lengths to a GR object
-setGenomeLengths <- function(GR,chrsOfInterest=paste("chr",1:22,sep="")){
+setGenomeLengths <- function(GR,chrsOfInterest=paste("chr",1:22,sep=""),genome_in="hg19"){
   # Get genome info
   GR=chr_check(GR)
-  hg19<-getBSgenome("hg19")
-  genome.seqinfo <- seqinfo(hg19)
+  genome.seqinfo <- seqinfo(getBSgenome(genome_in))
   genome.seqinfo <- genome.seqinfo[chrsOfInterest]
   GR <- GR[seqnames(GR) %in% chrsOfInterest]
   genome(GR) <- genome(genome.seqinfo)
@@ -249,342 +305,26 @@ setGenomeLengths <- function(GR,chrsOfInterest=paste("chr",1:22,sep="")){
 #read in all sample tissue diff
 import.subject<-function(inDir,calc='diff'){
   #for calc: diff -> dMML etc, allele -> NME etc
-  # H1: only use merged data
-  H1_subject <- rep("H1",1)
-  H1_subject_labels <- rep("CL3",1)
-  H1_tissues <- c(
-    
-    "merged"
-  )             
-  H1_tissue_labels <- c(
-    "Embryonic Stem Cell", "Embryonic Stem Cell", "Embryonic Stem Cell"
-  )
-  H1_gtex_labels <- c(
-    "", "Embryonic Stem Cell", "Embryonic Stem Cell"
-  )
-  H1_diff_labels <- c(
-    "Undifferentiated","Undifferentiated","Undifferentiated"
-  )
-  # GM12878
-  # GM12878_subject <- rep("GM12878",1)
-  # GM12878_subject_labels <- rep("CL4",1)
-  # GM12878_tissues <- c(
-  #   #"1","2",
-  #   "merged"
-  # )             
-  # GM12878_tissue_labels <- c(
-  #   "EBV B-cell","EBV B-cell","EBV B-cell"
-  # )
-  # GM12878_gtex_labels <- c(
-  #   "","",""
-  # )
-  # GM12878_diff_labels <- c(
-  #   "","",""
-  # )
-  #HuFGM02
-  HuFGM02_subject <- rep("HuFGM02",2)
-  HuFGM02_subject_labels <- rep("Brain1",2)
-  HuFGM02_tissues <- c(
-    "brain_germinal_matrix_tissue_paired",
-    "brain_cerebellum_tissue_paired"
-  )             
-  HuFGM02_tissue_labels <- c(
-    "brain_germinal_matrix",
-    "brain_cerebellum_tissue"
-  )
-  HuFGM02_gtex_labels <- c(
-    "",""
-  )
-  HuFGM02_diff_labels <- c(
-    "differentiated",'differentiated'
-  )
-  #112
-  b112_subject <- rep("112",1)
-  b112_subject_labels <- rep("Brain2",1)
-  b112_tissues <- c(
-    "Brain_substantia_nigra_paired"
-  )             
-  b112_tissue_labels <- c(
-    "Brain_substantia_nigra"
-  )
-  b112_gtex_labels <- c(
-    ""
-  )
-  b112_diff_labels <- c(
-    "differentiated"
-  )
-  
-  #149
-  b149_subject <- rep("149",1)
-  b149_subject_labels <- rep("Brain3",1)
-  b149_tissues <- c(
-    "Brain_Hippocampus_middle_paired"
-  )             
-  b149_tissue_labels <- c(
-    "Brain_Hippocampus_middle"
-  )
-  b149_gtex_labels <- c(
-    ""
-  )
-  b149_diff_labels <- c(
-    "differentiated"
-  )
-  #150
-  b150_subject <- rep("150",1)
-  b150_subject_labels <- rep("Brain4",1)
-  b150_tissues <- c(
-    "Brain_Hippocampus_middle_paired"
-  )             
-  b150_tissue_labels <- c(
-    "Brain_Hippocampus_middle"
-  )
-  b150_gtex_labels <- c(
-    ""
-  )
-  b150_diff_labels <- c(
-    "differentiated"
-  )
-  # H9
-  H9_subject <- rep("H9",1)
-  H9_subject_labels <- rep("CL1",1)
-  H9_tissues <- c(
-    "42_embryonic_stem_cell_single"
-  )             
-  H9_tissue_labels <- c(
-    "Embryonic Stem Cell"
-  )
-  H9_gtex_labels <- c(
-    ""
-  )
-  H9_diff_labels <- c(
-    "Undifferentiated"
-  )
-  
-  # HUES64
-  HUES64_subject <- rep("HUES64",4)
-  HUES64_subject_labels <- rep("CL2",4)
-  HUES64_tissues <- c(
-    "stem_27_undifferentiated_paired",
-    "ectoderm_paired",
-    "endoerm_27_paired",
-    "mesoderm_23_paired"
-  )
-  HUES64_tissue_labels <- c(
-    "Embyonic Stem Cell",
-    "Ectoderm",
-    "Endoderm",
-    "Mesoderm"
-  )
-  HUES64_gtex_labels <- c("","","","")
-  HUES64_diff_labels <- c(
-    "Undifferentiated",
-    "Semidifferentiated",
-    "Semidifferentiated",
-    "Semidifferentiated"
-  )
-  
-  # skin03
-  skin03_subject <- rep("skin03",2)
-  skin03_subject_labels <- rep("D11",2)
-  skin03_tissues <- c(
-    "foreskin_keratinocyte_paired",
-    "foreskin_melanocyte_paired"
-  )
-  skin03_tissue_labels <- c(
-    "Foreskin Keratinocyte",
-    "Foreskin Melanocyte"
-  )
-  skin03_gtex_labels <- c("","")
-  skin03_diff_labels <- rep("Differentiated",length(skin03_subject))
-  
-  # STL001
-  stl001_subject <- rep("STL001",11)
-  stl001_subject_labels <- rep("D5",11)
-  stl001_tissues <- c(
-    "Adipose_single",
-    "Small_Intestine_single",
-    "Bladder_single",
-    "Gastric_single",
-    "Left_Ventricle_single",
-    "Lung_single",
-    "Psoas_Muscle_single",
-    "Right_Ventricle_single",
-    "Sigmoid_Colon_single",
-    "Spleen_single",
-    "Thymus_single"
-  )
-  stl001_tissue_labels <- c(
-    "Adipose",
-    "Small Intestine",
-    "Bladder",
-    "Gastric",
-    "Left Ventricle",
-    "Lung",
-    "Psoas Muscle",
-    "Right Ventricle",
-    "Sigmoid Colon",
-    "Spleen",
-    "Thymus"
-  )
-  stl001_gtex_labels <- c(
-    "Adipose_Subcutaneous",
-    "",
-    "",
-    "",
-    "Heart_Left_Ventricle",
-    "Lung",
-    "",
-    "",
-    "Colon_Transverse",
-    "",
-    ""
-  )
-  stl001_diff_labels <- rep("Differentiated",length(stl001_subject))
-  
-  # STL002
-  stl002_subject <- rep("STL002",11)
-  stl002_subject_labels <- rep("D6",11)
-  stl002_tissues <- c(
-    "Adipose_single",
-    "Adrenal_Gland_single",
-    "Aorta_single",
-    "Esophagus_single",
-    "Gastric_single",
-    "Lung_single",
-    "Ovary_single",
-    "Pancreas_single",
-    "Psoas_Muscle_single",
-    "Small_Intestine_single",
-    "Spleen_single"
-  )
-  stl002_tissue_labels <- c(
-    "Adipose",
-    "Adrenal Gland",
-    "Aorta",
-    "Esophagus",
-    "Gastric",
-    "Lung",
-    "Ovary",
-    "Pancreas",
-    "Psoas Muscle",
-    "Small Intestine",
-    "Spleen"
-  )
-  stl002_gtex_labels <- c(
-    "Adipose_Subcutaneous",
-    "Adrenal_Gland",
-    "Artery_Aorta",
-    "Esophagus_Mucosa",
-    "",
-    "Lung",
-    "Uterus",
-    "Pancreas",
-    "",
-    "",
-    ""
-  )
-  stl002_diff_labels <- rep("Differentiated",length(stl002_subject))
-  
-  # STL003
-  stl003_subject <- rep("STL003",13)
-  stl003_subject_labels <- rep("D7",13)
-  stl003_tissues <- c(
-    "Adipose_Tissue_single",
-    "Adrenal_Gland_single",
-    "Aorta_single",
-    "Esophagus_single",
-    "Gastric_single",
-    "Left_Ventricle_single",
-    "Pancreas_single",
-    "Psoas_Muscle_single",
-    "Right_Atrium_single",
-    "Right_Ventricle_single",
-    "Sigmoid_Colon_single",
-    "Small_Intestine_single",
-    "Spleen_single"
-  )
-  stl003_tissue_labels <- c(
-    "Adipose",
-    "Adrenal Gland",
-    "Aorta",
-    "Esophagus",
-    "Gastric",
-    "Left Ventricle",
-    "Pancreas",
-    "Psoas Muscle",
-    "Right Atrium",
-    "Right Ventricle",
-    "Sigmoid Colon",
-    "Small Intestine",
-    "Spleen"
-  )
-  stl003_gtex_labels <- c(
-    "Adipose_Subcutaneous",
-    "Adrenal_Gland",
-    "Artery_Aorta",
-    "Esophagus",
-    "",
-    "Heart_Left_Ventricle",
-    "Pancreas",
-    "",
-    "",
-    "",
-    "Colon_Transverse",
-    "",
-    ""
-  )
-  stl003_diff_labels <- rep("Differentiated",length(stl003_subject))
-  
-  # STL011
-  stl011_subject <- rep("STL011",1)
-  stl011_subject_labels <- rep("D8",1)
-  stl011_tissues <- c(
-    "Liver_single"
-  )
-  stl011_tissue_labels <- c(
-    "Liver"
-  )
-  stl011_gtex_labels <- c(
-    "Liver"
-  )
-  stl011_diff_labels <- rep("Differentiated",length(stl011_subject))
-  
-  # Create single vectors
-  subjects <- c(H1_subject,H9_subject,HUES64_subject,skin03_subject,stl001_subject,
-                stl002_subject,stl003_subject,stl011_subject,HuFGM02_subject,b112_subject,b150_subject,b149_subject)
-  tissues <- c(H1_tissues,H9_tissues,HUES64_tissues,skin03_tissues,stl001_tissues,
-               stl002_tissues,stl003_tissues,stl011_tissues,HuFGM02_tissues,b112_tissues,b150_tissues,b149_tissues)
-  subject_labels <- c(H1_subject_labels,H9_subject_labels,HUES64_subject_labels,skin03_subject_labels,
-                      stl001_subject_labels,stl002_subject_labels,stl003_subject_labels,
-                      stl011_subject_labels,HuFGM02_subject_labels,b112_subject_labels,b150_subject_labels,b149_subject_labels)
-  tissue_labels <- c(H1_tissue_labels,H9_tissue_labels,HUES64_tissue_labels,skin03_tissue_labels,
-                     stl001_tissue_labels,stl002_tissue_labels,stl003_tissue_labels,
-                     stl011_tissue_labels,HuFGM02_tissue_labels,b112_tissue_labels,b150_tissue_labels,b149_tissue_labels)
-  gtex_labels <- c(H1_gtex_labels,H9_gtex_labels,HUES64_gtex_labels,skin03_gtex_labels,
-                   stl001_gtex_labels,stl002_gtex_labels,stl003_gtex_labels,
-                   stl011_gtex_labels,HuFGM02_gtex_labels,b112_gtex_labels,b150_gtex_labels,b149_gtex_labels)
-  diff_labels <- c(H1_diff_labels,H9_diff_labels,HUES64_diff_labels,skin03_diff_labels,stl001_diff_labels,
-                   stl002_diff_labels,stl003_diff_labels,stl011_diff_labels,HuFGM02_diff_labels,b112_diff_labels,b149_diff_labels,b150_diff_labels)
+  bed_in=dir(inDir,pattern="bedGraph")
+  sample_in=unique(sub('_phased.*','',bed_in))
   GRs=GRanges()
-  for (i in 1:length(subjects)) {
+  for (sp in sample_in) {
+    subjects=sub('_.*','',sp)
+    tissues=sub(paste0(subjects,"_"),'',sp)
     # Print sample being loaded
-    print(paste("Loading sample:",subjects[i],tissues[i]))
+    cat("Loading:",subjects,'-',tissues,'\n')
     if (calc=='diff'){
-      GR.in=read.diffGR(subjects[i],tissues[i],inDir,cutoff=0.05)
+      GR.in=read.diffGR(subjects,tissues,inDir)
     }else if(calc=='allele'){
-      GR.in=read.alleleGR(subjects[i],tissues[i],inDir)
+      GR.in=read.alleleGR(subjects,tissues,inDir)
     }else {cat('Wrong calc \n')}
-    GR.in$SubjectLabel <- subject_labels[i]
-    GR.in$Tissue <- tissue_labels[i]
-    GR.in$GTEx <- gtex_labels[i]
-    GR.in$State <- diff_labels[i]
-    GRs=append(GRs,GR.in)
+    GRs=c(GRs,GR.in)
   }
   return(GRs)
   
 }
 #Function to read in single GR object:
-read.diffGR<-function(subjects,tissues,inDir,cutoff=0.05,chrsOfInterest=paste("chr",1:22,sep="")){
+read.diffGR<-function(subjects,tissues,inDir,chrsOfInterest=paste("chr",1:22,sep="")){
   #Initialization
   GRs=GRanges()
   #Make sure the inputs are unique
@@ -592,20 +332,17 @@ read.diffGR<-function(subjects,tissues,inDir,cutoff=0.05,chrsOfInterest=paste("c
   filename=paste(inDir,subjects,"_",tissues,"_phased_tmml_pvals.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=TRUE,'dMML')
   
-  GRs <- append(GRs,GR.in)
+  GRs <- c(GRs,GR.in)
   # dnme
   filename=paste(inDir,subjects,"_",tissues,"_phased_tnme_pvals.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=TRUE,'dNME')
-  GRs <- append(GRs,GR.in)
+  GRs <- c(GRs,GR.in)
   # uc
   filename=paste(inDir,subjects,"_",tissues,"_phased_tpdm_pvals.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=TRUE,'UC')
-  GRs <- append(GRs,GR.in)
-  #Check ASM
+  GRs <- c(GRs,GR.in)
+  #Check if pvalue available
   GRs <- GRs[!is.na(GRs$pvalue)]
-  GRs$ASM <- NA
-  GRs[GRs$pvalue<=cutoff]$ASM <- "Yes"
-  GRs[GRs$pvalue>cutoff]$ASM <- "No"
   # Add sample field
   GRs$Sample <- paste(tissues,"-",GRs$Subject)
   # Add genome info 
@@ -621,22 +358,22 @@ read.alleleGR<-function(subjects,tissues,inDir,chrsOfInterest=paste("chr",1:22,s
   filename=paste(inDir,subjects,"_",tissues,"_phased_mml1.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=FALSE,'MML')
   GR.in$Genome="1"
-  GRs <- append(GRs, GR.in)
+  GRs <- c(GRs, GR.in)
   #MML2
   filename=paste(inDir,subjects,"_",tissues,"_phased_mml2.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=FALSE,'MML')
   GR.in$Genome="2"
-  GRs <- append(GRs, GR.in)
+  GRs <- c(GRs, GR.in)
   #NME1
   filename=paste(inDir,subjects,"_",tissues,"_phased_nme1.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=FALSE,'NME')
   GR.in$Genome="1"
-  GRs <- append(GRs, GR.in)
+  GRs <- c(GRs, GR.in)
   #NME2
   filename=paste(inDir,subjects,"_",tissues,"_phased_nme2.bedGraph",sep="")
   GR.in=import.ASMbed(subjects,tissues,filename,pvalue=FALSE,'NME')
   GR.in$Genome="2"
-  GRs <- append(GRs, GR.in)
+  GRs <- c(GRs, GR.in)
   # Add sample field
   GRs$Sample <- paste(tissues,"-",subjects)
   # Add genome info 
@@ -656,7 +393,6 @@ import.ASMbed<-function(subjects,tissues,filename,pvalue=TRUE,Statistic,chrsOfIn
   GR_out$Data=NULL
   GR_out$Subject <- subjects
   GR_out$tissue<-tissues
-  GR_out$sample_name<-paste(tissues,subjects, sep=' - ')
   GR_out$Statistic <- Statistic
   GR_out$Value<- GR$score
   #for differential analysis, make sure the GR_out are unique
@@ -665,9 +401,6 @@ import.ASMbed<-function(subjects,tissues,filename,pvalue=TRUE,Statistic,chrsOfIn
     GR_out <- GR_out[!duplicated(GR[,c()])]
     }
   else{GR_out$N <- GR$NA.} #not diff for new samples
-
-  #GR_out <- resize(GR_out, width(GR_out) + 1, fix="end")
-  #GR_out <- resize(GR_out, width(GR_out) + 1, fix="start")
   return(GR_out)
 }
 #Get features
@@ -752,56 +485,13 @@ getGeneralFeats_CpG <- function(CpGdir,enhancerDir='',chrsOfInterest=paste("chr"
   return(outGR)
   
 }
-#Count number of CpG in gff, find examples to check
-gff_hetCpG_count<-function(sub,gff_in,vcf_in,CpG){
-  cat('Processing',sub,'\n')
-  #Read in gff file
-  gff_sub=gff_in[gff_in$Subject==sub]
-  #Read in vcf het CpG information
-  vcf_sub=vcf_in[[sub]]
-  #Filter het CpG regions
-  vcf_sub_het=vcf_sub[vcf_sub$HetCpG]
-  #For each gff region count overlaps
-  #gff_het_count=countOverlaps(gff_sub,vcf_sub_het)
-  #cat(sub,':',sum(gff_het_count>1)/length(gff_het_count)*100, '% all gff region have more than 1 het CpG\n', sep='')
-  #cat(sub,':',sum(gff_het_count>1)/sum(gff_het_count>0)*100, '% all het CpG region have more than 1 het CpG\n', sep='')
-  #cat(sub,':',sum(gff_het_count>0)/length(gff_het_count)*100, '% gff region have het CpG\n', sep='')
-  olap=findOverlaps(vcf_sub_het,gff_sub,type='within',select='all')
-  #Count number of CG, here g1CG=genome1 and g2CG=genome2, however, we need to split based on the GT, also ref
-  vcf_sub_het$g1CG=(vcf_sub_het$genome1_plus=='CG')+(vcf_sub_het$genome1_minus=='CG')
-  vcf_sub_het$g2CG=(vcf_sub_het$genome2_plus=='CG')+(vcf_sub_het$genome2_minus=='CG')
-  vcf_sub_het$refCG=(vcf_sub_het$REF_plus=='CG')+(vcf_sub_het$REF_minus=='CG')
-  vcf_sub_het$altCG=(vcf_sub_het$ALT_plus=='CG')+(vcf_sub_het$ALT_minus=='CG')
-  #Add Het CpG information
-  gff_sub$HetCpG=FALSE
-  gff_sub[subjectHits(olap)]$HetCpG=TRUE
-  #g1CG, SNP have CG in ref 
-  #g2CG SNP have CG in alt
-  gff_sub$g1CG=0
-  gff_sub$g2CG=0
-  gff_sub$refCG=0
-  gff_sub$altCG=0
-  #Count number of Het CpG here *Check 
-  df_sub=data.table(subjHits=subjectHits(olap),
-                    g1CG=vcf_sub_het$g1CG[queryHits(olap)],g2CG=vcf_sub_het$g2CG[queryHits(olap)],
-                    refCG=vcf_sub_het$refCG[queryHits(olap)],altCG=vcf_sub_het$altCG[queryHits(olap)])
-  
-  agg_sub=df_sub[,.(g1CG=sum(g1CG),g2CG=sum(g2CG),refCG=sum(refCG),altCG=sum(altCG)),by=subjHits]
-  gff_sub$g1CG[agg_sub$subjHits]=agg_sub$g1CG#agg_sub$subjHits is the unique subject hits
-  gff_sub$g2CG[agg_sub$subjHits]=agg_sub$g2CG
-  gff_sub$refCG[agg_sub$subjHits]=agg_sub$refCG#agg_sub$subjHits is the unique subject hits
-  gff_sub$altCG[agg_sub$subjHits]=agg_sub$altCG
-  gff_sub$N_hg19=countOverlaps(gff_sub,CpG)
-  gff_sub$N_nonhet=gff_sub$N_hg19-countOverlaps(gff_sub,vcf_sub_het[vcf_sub_het$refCG>0])
-  
-  return(gff_sub)
-}
+
 #Put hetCpG count into each sample in gr_allele
 
 ##redo instead of adding allele information to allele CpG, add it to GR_merge
 #This is mainly modifed to fit the output of CPEL ASM
 
-stat_merge<-function(gr_in,allele_in){
+stat_merge<-function(gr_in,allele_in,vcf_in,CpG){
   #Check merge behavior, 
   dMML=gr_in[gr_in$Statistic=="dMML"]
   dNME=gr_in[gr_in$Statistic=="dNME"]
@@ -836,12 +526,39 @@ stat_merge<-function(gr_in,allele_in){
   gr$MML2[queryHits(olap_MML2)]=allele_in[allele_in$Genome==2 & allele_in$Statistic=='MML']$Value[subjectHits(olap_MML2)]
   gr$Subject=unique(gr_in$Subject)
   gr$tissue=unique(gr_in$tissue)
-
+  #Add g1cg etc information to the gr
+  gr=add_hetCPG(gr,vcf_in,CpG)
   return(gr)
 }
+
+add_hetCPG<-function(gr,vcf_in,CpG){
+  olap=findOverlaps(vcf_in,gr,type='within',select='all')
+  #Count number of CG, here g1CG=genome1 and g2CG=genome2, however, we need to split based on the GT, also ref
+  vcf_in$g1CG=as.numeric(grepl("CG",vcf_in$genome1_tri))
+  vcf_in$g2CG=as.numeric(grepl("CG",vcf_in$genome2_tri))
+  vcf_in$refCG=as.numeric(grepl("CG",vcf_in$REF_tri))
+  vcf_in$altCG=as.numeric(grepl("CG",vcf_in$ALT_tri))
+  #Count number of Het CpG here *Check 
+  df_sub=data.table(subjHits=subjectHits(olap),
+                    g1CG=vcf_in$g1CG[queryHits(olap)],g2CG=vcf_in$g2CG[queryHits(olap)],
+                    refCG=vcf_in$refCG[queryHits(olap)],altCG=vcf_in$altCG[queryHits(olap)])
+  
+  agg_sub=df_sub[,.(g1CG=sum(g1CG),g2CG=sum(g2CG),refCG=sum(refCG),altCG=sum(altCG)),by=subjHits]
+  gr$g1CG[agg_sub$subjHits]=agg_sub$g1CG#agg_sub$subjHits is the unique subject hits
+  gr$g2CG[agg_sub$subjHits]=agg_sub$g2CG
+  gr$refCG[agg_sub$subjHits]=agg_sub$refCG#agg_sub$subjHits is the unique subject hits
+  gr$altCG[agg_sub$subjHits]=agg_sub$altCG
+  gr$N_hg19=countOverlaps(gr,CpG)
+  #count number of CG lost from reference
+  gr$N_nonhet=gr$N_hg19-countOverlaps(gr,vcf_in[(vcf_in$refCG-vcf_in$altCG)>0])
+  
+  return(gr)
+}
+
+
 #add genes to GR
 add_gene_GR<-function(GR_merge_in,feature_in,feature_names){
-  elementMetadata(GR_merge_in)[[feature_names]]=NA
+  mcols(GR_merge_in)[[feature_names]]=NA
   olap_promoter=findOverlaps(GR_merge_in,feature_in)
   df_idx=data.table(qt=queryHits(olap_promoter),
                     genes=as.character(feature_in$gene_name[subjectHits(olap_promoter)]),
@@ -849,68 +566,22 @@ add_gene_GR<-function(GR_merge_in,feature_in,feature_names){
   df_idx=df_idx[,list(genes=list(genes)),by=list(df_idx$qt)]
   colnames(df_idx)=c('qt','genes')
   df_idx$genes=lapply(df_idx$genes,as.character)
-  elementMetadata(GR_merge_in)[[feature_names]][df_idx$qt]=df_idx$genes
+  mcols(GR_merge_in)[[feature_names]][df_idx$qt]=df_idx$genes
   return(GR_merge_in)
   
 }
 
-#Add hypervaribility to each region: check with Jason/Ken/Jordi
-add_hyper_var<-function(GR_in,hyper_var_in,sample_name,upper_cutoff=0.75,lower_cutoff=0.25){
-  GR_sp=GR_in[GR_in$Sample %in%sample_name]
-  hyper_var=read_hypervar(hyper_var_in)
-
-  #check output
-  GR_in$hyper_var_promoter[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$genes_promoter[GR_in$Sample %in%sample_name],
-                                                              function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
-  
-  GR_in$hyper_var_TSS[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$TSS[GR_in$Sample %in%sample_name],
-                                                                  function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
-  GR_in$hyper_var_body[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$genes_body[GR_in$Sample %in%sample_name],
-                                                                   function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
-  GR_in$hyper_var_lower[GR_in$Sample %in%sample_name]=quantile(hyper_var$hypervar_logvar,prob=lower_cutoff)
-  GR_in$hyper_var_upper[GR_in$Sample %in%sample_name]=quantile(hyper_var$hypervar_logvar,prob=upper_cutoff)
-  GR_in$hyper_var_median[GR_in$Sample %in%sample_name]=median(hyper_var$hypervar_logvar)
-  GR_in$hyper_var_fn[GR_in$Sample %in%sample_name]=rep(list(hyper_var_in),length(GR_in$hyper_var_fn[GR_in$Sample %in%sample_name]))
-  return(GR_in)
-}
-read_hypervar<-function(hyper_var_in){
-  hyper_var=data.table()
-  for (fn in hyper_var_in){
-    fn_in=readRDS(fn)
-    fn_in$gene_name=rownames(fn_in)
-    fn_in=as.data.table(fn_in)
-    rownames(fn_in)=NULL
-    hyper_var=rbind(hyper_var,fn_in)
-  }
-  
-  #Find the dataset that have most regions overlap with NME regions, check correlation?
-  hyper_var=hyper_var[,list(mean=mean(mean,na.rm=T),var=mean(var,na.rm=T),
-                      hypervar_var=mean(hypervar_var,na.rm=T),hypervar_logvar=mean(hypervar_logvar,na.rm=T)),
-                      by=list(hyper_var$gene_name)]
-  colnames(hyper_var)[1]='gene_name'
-  return(hyper_var)
-}
-#Count number of Heterozygous CpG at each gff region, notice the boundary condition, keep in mind gff file is shorterned by 1 due to bedGraph adjustment
-hetCGallele_merged<-function(sub,gr_merge,gff,CpG,vcf_in,gene_size=500){
+#Count Number of Het CpG at extened regions, each extend 500 bp
+hetCGallele_merged<-function(sub,gr_merge,CpG,vcf_in,gene_size=500){
   cat('Analyzing',sub,'\n')
   t1=proc.time()[[3]]
   #Import vcf file
   sub_vcf=vcf_in[[sub]]
-  het_vcf=sub_vcf[sub_vcf$HetCpG]
   sub_allele=gr_merge[gr_merge$Subject==sub]
-  sub_het=gff[[sub]]
   #gr_allele got resized with start and end +1, use +2 to include equal start & end, no longer needed for new output?
   #sub_het=resize(sub_het, width(sub_het) + 4, fix="center")
-  gr_merge_olap=findOverlaps(sub_allele,sub_het,type='equal')
-  sub_allele=sub_allele[queryHits(gr_merge_olap)]
-  sub_allele$g1CG=sub_het$g1CG[subjectHits(gr_merge_olap)]
-  sub_allele$g2CG=sub_het$g2CG[subjectHits(gr_merge_olap)]
-  sub_allele$N_hg19=NULL
-  sub_allele$N_hg19=sub_het$N_hg19[subjectHits(gr_merge_olap)]
-  sub_allele$N_nonhet=NULL
-  sub_allele$N_nonhet=sub_het$N_nonhet[subjectHits(gr_merge_olap)]
   sub_allele$gff_size=width(sub_allele)
-  gr_out=GR_resize_merged(sub_allele,CpG,het_vcf,gene_size=gene_size,sub)#Check for calculating density
+  gr_out=GR_resize_merged(sub_allele,CpG,sub_vcf,gene_size=gene_size,sub)#Check for calculating density
   cat('Finish analyzing',sub,proc.time()[[3]]-t1,'\n')
   return(gr_out)
 }
@@ -920,18 +591,33 @@ GR_resize_merged<-function(GR.in,CpG_sites,hetCpG,sub,gene_size=500){
   ##From definitino of CpG island, use 200 bp regions
   GR.extend=resize(GR.in,width=width(GR.in)+gene_size,fix='center')
   GR.in$CG_hg19_extend=countOverlaps(GR.extend,CpG_sites)
-  #Change here for ref
-  GR.in$CG_nonhet_extend=GR.in$CG_hg19_extend-countOverlaps(GR.extend,hetCpG[hetCpG$genome1_plus=='CG'|hetCpG$genome1_minus=='CG'])
+  #any SNP contain CG in ref genome
+  GR.in$CG_nonhet_extend=GR.in$CG_hg19_extend-countOverlaps(GR.extend,hetCpG[grepl("CG",hetCpG$REF_tri)])
   gr_seq=getSeq(Hsapiens,GR.extend,as.character=T)
   GR.in$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
   #Count CpG in genome 1
   GR.in$CG_allele_extend_g1=GR.in$CG_nonhet_extend+
-    countOverlaps(GR.extend,hetCpG[hetCpG$genome1_plus=='CG'|hetCpG$genome1_minus=='CG'])
+    countOverlaps(GR.extend,hetCpG[grepl("CG",hetCpG$genome1_tri)])
   GR.in$CG_allele_extend_g2=GR.in$CG_nonhet_extend+
-    countOverlaps(GR.extend,hetCpG[hetCpG$genome2_plus=='CG'|hetCpG$genome2_minus=='CG'])
+    countOverlaps(GR.extend,hetCpG[grepl("CG",hetCpG$genome2_tri)])
   GR.in$gff_size_extend=width(GR.extend)
   return(GR.in)
 }
+
+#Count expted CG numbers and return data.frame
+countCGOR<-function(x){ #x=input seq
+  #calculate Odds ratio for expected CG vs actual CG
+  #Expected CG number C * number G/total length
+  # Gardiner-Garden M, Frommer M (1987). "CpG islands in vertebrate genomes". Journal of Molecular Biology.
+  #Wiki, actual: ((number of C + Number of G)/2)^2/length of genomics Normalized CpG content, whole genome ~25%
+  NC=countPattern('C',x)
+  NG=countPattern('G',x)
+  #NCG=countPattern('CG',x)
+  CG_exp=NC*NG/nchar(x) #PC*PG*length
+  CG_exp_norm=((NC+NG)/2)^2/nchar(x) #assuming PC=PG = (NC+NG)/2/length
+  return(CG_exp_norm)
+}
+
 
 #Give each SNP an ASM information for each subject
 variant_meta<- function(subj,variant_in,GR_in){ #variant_in for each subject, GR_in for each subject
@@ -941,7 +627,7 @@ variant_meta<- function(subj,variant_in,GR_in){ #variant_in for each subject, GR
   sp=unique(GR_in_subj$Sample)
   gr_out_sp = GRanges()
   for (sps in sp){
-    cat('Processing',sp,'\n')
+    cat('Processing',sps,'\n')
     gr_out_sp=c(gr_out_sp,variant_meta_sp(variant_in_subj,GR_in_subj[GR_in_subj$Sample==sps]))
     
   }
@@ -950,32 +636,13 @@ variant_meta<- function(subj,variant_in,GR_in){ #variant_in for each subject, GR
   
 }
 
-#for given stat: need to debug
+#For each sample, assign NME to SNP within each region
 variant_meta_sp <-function(variant_subj,GR_sp){
   olap=findOverlaps(variant_subj,GR_sp,maxgap =0,type='within')
   gr_out=variant_subj[queryHits(olap)]
-  #Find the overlap region
-  #gr_out=variant_subj[queryHits(olap)]
+  #Find GR_merge olap
   olap=subjectHits(olap)
-  gr_out$Sample=GR_sp$Sample[olap]
-  #gr_out$pvalue=GR_sp$pvalue[olap]
-  gr_out$dNME_pval=GR_sp$dNME_pval[olap]
-  gr_out$dMML_pval=GR_sp$dMML_pval[olap]
-  gr_out$UC_pval=GR_sp$UC_pval[olap]
-  gr_out$dMML=GR_sp$dMML[olap]
-  gr_out$dNME=GR_sp$dNME[olap]
-  gr_out$UC=GR_sp$UC[olap]
-  gr_out$NME1=GR_sp$NME1[olap]
-  gr_out$NME2=GR_sp$NME2[olap]
-  gr_out$MML1=GR_sp$MML1[olap]
-  gr_out$MML2=GR_sp$MML2[olap]
-  gr_out$g1CG=GR_sp$g1CG[olap]
-  gr_out$g2CG=GR_sp$g2CG[olap]
-  gr_out$tissue=GR_sp$tissue[olap]
-  gr_out$N=GR_sp$N[olap]
-  gr_out$genes_promoter=GR_sp$genes_promoter[olap]
-  gr_out$genes_body=GR_sp$genes_body[olap]
-  gr_out$TSS=GR_sp$TSS[olap]
+  mcols(gr_out)=cbind(mcols(gr_out),mcols(GR_sp)[olap,])
   gr_out$refNME=NA
   gr_out$altNME=NA
   gr_out$refMML=NA
@@ -994,76 +661,74 @@ variant_meta_sp <-function(variant_subj,GR_sp){
   
   gr_out$Statistic=GR_sp$Statistic[olap]
   
-  gr_out$HetCpG=FALSE
-  #This may be different from previous result?
-  gr_out$HetCpG=((gr_out$REF_plus =='CG' | gr_out$REF_minus=='CG') & !(gr_out$ALT_plus =='CG' | gr_out$ALT_minus=='CG')) |
-    (!(gr_out$REF_plus =='CG' | gr_out$REF_minus=='CG') & (gr_out$ALT_plus =='CG' | gr_out$ALT_minus=='CG'))
+  # gr_out$HetCpG=FALSE
+  # #This may be different from previous result?
+  # gr_out$HetCpG=((gr_out$REF_plus =='CG' | gr_out$REF_minus=='CG') & !(gr_out$ALT_plus =='CG' | gr_out$ALT_minus=='CG')) |
+  #   (!(gr_out$REF_plus =='CG' | gr_out$REF_minus=='CG') & (gr_out$ALT_plus =='CG' | gr_out$ALT_minus=='CG'))
   return(gr_out)
 }
-#get masked trinucleotide, currently not in use
-mask_tri<-function(x){
-  x_sp=strsplit(x,'')[[1]]
-  x_sp[2]='X'
-  return(paste(x_sp,collapse = ''))
-}
+
 #Read in allele-agnositc model
-read.agnostic<-function(file_in,GR_merge_in,allele_include=T){
+read.agnostic<-function(file_in,GR_merge_in=NULL,allele_include=T,olap_type="any",all_regions=NA,sample_in=NA,hyper_var_file=NA){
   stat=toupper(sub('.*_','',sub('.bedGraph','',file_in)))
-  informME_in=import.bedGraph(file_in)
-  if(length(informME_in)>0){
-  colnames(elementMetadata(informME_in))=c('score','N','K')
-  if(all(seqlevels(informME_in)==gsub('chr','',seqlevels(informME_in)))){seqlevels(informME_in)=paste('chr',seqlevels(informME_in),sep='')}
-  #fit  bedGraph reads, import.bedGraph will remove 1 from start
-  start(informME_in)=start(informME_in)-1
-  olap=findOverlaps(GR_merge_in,informME_in)
- cat('Percent overlap with dNME region:',length(unique(subjectHits(olap)))/length(informME_in)*100,'%\n')
- informME_in$score_original=informME_in$score
- informME_in$dMML=NA
- informME_in$dMML_pval=NA
- informME_in$dMML[subjectHits(olap)]=GR_merge_in$dMML[queryHits(olap)]
- informME_in$dMML_pval[subjectHits(olap)]=GR_merge_in$dMML_pval[queryHits(olap)]
+  informME_in=read.bedGraph.informME(file_in)
+  if(length(GR_merge_in)>0){
+    GR_merge_in=GR_merge_in[GR_merge_in$Sample==sample_in]
+  #Find overlapped region
+    olap=findOverlaps(informME_in,GR_merge_in,type=olap_type)
+    if(length(olap)>0) {informME_in=informME_in[-queryHits(olap)]}
+  }
   #add GR_merge data
   if(allele_include){
+  
+    cat('Percent overlap with dNME region:',length(unique(queryHits(olap)))/length(informME_in)*100,'%\n')
+    informME_in$score_original=informME_in$score
+ 
     #replace value instead of remove regions
-    informME_in$score[subjectHits(olap)]=
-      rowMeans(as.matrix(elementMetadata(GR_merge_in)[paste(stat,c('1','2'),sep='')]))[queryHits(olap)]
-  }else( informME_in=informME_in[-subjectHits(olap)])
+    olap=findOverlaps(all_regions,GR_merge_in)
+    asm_replacement=data.table(idx=queryHits(olap), 
+                               score= rowMeans(as.matrix(elementMetadata(GR_merge_in)[paste(stat,c('1','2'),sep='')]))[subjectHits(olap)],
+                               dMML=GR_merge_in$dMML[subjectHits(olap)],
+                               dMML_pval=GR_merge_in$dMML_pval[subjectHits(olap)],
+                               N=GR_merge_in$N[subjectHits(olap)])
+    asm_replacement=asm_replacement[,list(score=mean(score),dMML=mean(dMML),dMML_pval=mean(dMML_pval)),by=list(idx)]
+    all_regions=all_regions[asm_replacement$idx]
+    all_regions$score=asm_replacement$score
+    all_regions$K=NA
+    all_regions$dMML=asm_replacement$dMML
+    all_regions$dMML_pval=asm_replacement$dMML_pval
+    informME_in=c(informME_in,all_regions)
+  }
  informME_in=informME_in[!is.infinite(informME_in$score)]
-  quant=c("0-25%","25%-50%","50%-75%","75%-100%")
-  informME_in$quant_score=findInterval(informME_in$score,quantile(informME_in$score,prob=c(0,0.25,0.5,0.75),na.rm=T))
-  informME_in$quant_score=quant[informME_in$quant_score]
-  informME_in$Sample=unique(GR_merge_in$Sample)
+  informME_in$Sample=sample_in
+  informME_in$hyper_var_fn=hyper_var_file
   return(informME_in)
-  }
+
 }
-read.agnostic.mouse<-function(in_dir,tissue,stage,stat_type,replicate){
-  file_in=paste(in_dir,'mm10_',tissue,'_',stage,'_merged',replicate,'_allele_agnostic_',stat_type,'.bedGraph',sep='')
-  cat('processing:',file_in,'\n')
-  informME_in=import.bedGraph(file_in)
-  if(length(informME_in)>0){
-    colnames(elementMetadata(informME_in))=c('score','N','K')
-    if(all(seqlevels(informME_in)==gsub('chr','',seqlevels(informME_in)))){seqlevels(informME_in)=paste('chr',seqlevels(informME_in),sep='')}
-    #fit  bedGraph reads, import.bedGraph will remove 1 from start
-    start(informME_in)=start(informME_in)-1
-    informME_in$tissue=tissue
-    informME_in$stage=stage
-    informME_in$bioreplicate=replicate
-    informME_in$Sample=paste(tissue,stage,replicate,sep='-')
-    
-    return(informME_in)
+#read in hypervaribility from file
+read_hypervar<-function(hyper_var_in){
+  hyper_var=data.table()
+  for (fn in hyper_var_in){
+    fn_in=readRDS(fn)
+    fn_in$gene_name=rownames(fn_in)
+    fn_in=as.data.table(fn_in)
+    rownames(fn_in)=NULL
+    hyper_var=rbind(hyper_var,fn_in)
   }
+  
+  #Find the dataset that have most regions overlap with NME regions, check correlation?
+  hyper_var=hyper_var[,list(mean=mean(mean,na.rm=T),var=mean(var,na.rm=T),
+                            hypervar_var=mean(hypervar_var,na.rm=T),hypervar_logvar=mean(hypervar_logvar,na.rm=T)),
+                      by=list(hyper_var$gene_name)]
+  colnames(hyper_var)[1]='gene_name'
+  return(hyper_var)
 }
-#collapase variants
-variants_collapase<-function(varsDiff){
-  variants <- paste(as.character(varsDiff$REF),as.character(unlist(varsDiff$ALT)),sep="-")
-  # Combine same variants (ALT/REF -> REF/ALT)
-  variants[variants %in% c("A-C","C-A")] <- "A-C"
-  variants[variants %in% c("A-G","G-A")] <- "A-G"
-  variants[variants %in% c("A-T","T-A")] <- "A-T"
-  variants[variants %in% c("C-G","G-C")] <- "C-G"
-  variants[variants %in% c("C-T","T-C")] <- "C-T"
-  variants[variants %in% c("G-T","T-G")] <- "G-T"
-  return(variants)
+#Calculating NME vs hypervaribility
+dist_plot_calc<-function(informME_in,genes_hypervar,genomic_features,enhancer=FALSE){
+  if(enhancer){informME_in_dist=informME_in}else{informME_in_dist=dist_calc(informME_in,genomic_features$TSS)}
+  mcols(informME_in_dist)=cbind(mcols(informME_in_dist),genes_hypervar[,-1][match(informME_in_dist$gene,genes_hypervar$gene_name)])
+  
+  return(informME_in_dist)
 }
 #calculate distance to the genomic features
 dist_calc<-function(gr_in,gr_feature){
@@ -1079,62 +744,80 @@ dist_calc<-function(gr_in,gr_feature){
   sgn <- as.integer(ifelse(strand(gr_feature)=="+",1,-1))
   gr_in$dist=sgn*(start(resize(gr_in,1,fix="center"))-start(resize(gr_feature,1,fix="start")))
   gr_in$gene=gr_feature$gene_name
-
+  
   return(gr_in)
 }
-#Merge allele agnositc data 
-allele_agnostic_merge<-function(GR_in,nme_in,mml_in,pval_cutoff=0.1){
-  NME_in=import.bedGraph(nme_in)
-  if(all(seqlevels(NME_in)==gsub('chr','',seqlevels(NME_in)))){seqlevels(NME_in)=paste('chr',seqlevels(NME_in),sep='')}
-  MML_in=import.bedGraph(mml_in)
-  if(all(seqlevels(MML_in)==gsub('chr','',seqlevels(MML_in)))){seqlevels(MML_in)=paste('chr',seqlevels(MML_in),sep='')}
-  olap=findOverlaps(NME_in,GR_in)
-  agnostic_diff_df=data.frame(NME=NME_in$score[queryHits(olap)],dNME=GR_in$dNME[subjectHits(olap)],
-                              dNME_pval=GR_in$dNME_pval[subjectHits(olap)],dMML=GR_in$dMML[subjectHits(olap)],
-                              dMML_pval=GR_in$dMML_pval[subjectHits(olap)],MML=MML_in$score[queryHits(olap)])
-  agnostic_diff_df$dNME_ASM=agnostic_diff_df$dNME_pval<=pval_cutoff
-  agnostic_diff_df$dMML_ASM=agnostic_diff_df$dMML_pval<=pval_cutoff
-  agnostic_diff_df$dNME_ASM_non_dMML=agnostic_diff_df$dMML_pval>pval_cutoff & agnostic_diff_df$dNME_pval<=pval_cutoff
-  agnostic_diff_df$sample=unique(GR_in$Sample)
-  return(agnostic_diff_df)
+read.bedGraph.informME<-function(file_in){
   
+  informME_in=import.bedGraph(file_in)
+  if(length(informME_in)>0){
+    colnames(elementMetadata(informME_in))=c('score','N','K')
+    if(all(seqlevels(informME_in)==gsub('chr','',seqlevels(informME_in)))){seqlevels(informME_in)=paste('chr',seqlevels(informME_in),sep='')}
+    #fit  bedGraph reads, import.bedGraph will remove 1 from start
+    start(informME_in)=start(informME_in)-1
+    return(informME_in)
+  }
+}
+#read in mouse enhancer
+read_chromHMM_bed<-function(bed_dir,rep){
+  bed_out=GRanges()
+  for(fn in dir(bed_dir,pattern='.bed.gz')){
+    #get sample name etc
+    fn_split=strsplit(fn,'_')[[1]]
+    stage=gsub('e','E',fn_split[1])
+    tissue=gsub('facial-prominence','EFP',fn_split[2])
+    tissue=gsub('neural-tube','NT',tissue)
+    bed_in=read.table(paste(bed_dir,fn,sep=''))
+    colnames(bed_in)=c('chr','start','end','chrom_num','chrom_state')
+    bed_in=makeGRangesFromDataFrame(bed_in,keep.extra.columns = T)
+    bed_in$stage=stage
+    bed_in$tissue=tissue
+    bed_in$rep=rep
+    bed_in$Sample=paste(stage,tissue,sep='-')
+    bed_out=c(bed_out,bed_in)
+  }
+  return(bed_out)
+}
+#Enrichment analysis for genomic features in dMML and dNME
+testEnrichmentFeature_stat<-function(dataGR,featureGR,maxgap=0,output_ft=1){
+  # Find ranges overlapping with feature
+  olaps <- findOverlaps(dataGR,featureGR,type="any",select="all",maxgap = maxgap)
+  
+  indFeature <- queryHits(olaps)
+  featurestatistic <- dataGR[indFeature]
+  complementarystatistic <- dataGR[-indFeature]
+  
+  # Enrichment of in feature
+  #featurestatistic <- featureData[featureData$Statistic==statistic]
+  #complementarystatistic <- complementaryData[complementaryData$Statistic==statistic]
+  contTablestatistic <- data.frame(ASM=c(NA,NA),nonASM=c(NA,NA))
+  rownames(contTablestatistic) <- c("Feature","Complementary")
+  contTablestatistic[1,]$ASM <- sum(featurestatistic$ASM=="Yes")
+  contTablestatistic[1,]$nonASM <- sum(featurestatistic$ASM=="No")
+  contTablestatistic[2,]$ASM <- sum(complementarystatistic$ASM=="Yes")
+  contTablestatistic[2,]$nonASM <- sum(complementarystatistic$ASM=="No")
+  #print(contTablestatistic)
+  #Return overlap >=output_ft
+  if(contTablestatistic[1,1]>=output_ft){
+  return(list(contTablestatistic,fisher.test(contTablestatistic)))
+  }
 }
 #MAE enrich
 MAE_enrich<-function(GR_merge,pval_cutoff,genes='genes_promoter',stat='dMML_pval',MAE=MAE){
   #GR_merge=GR_merge[!is.na(GR_merge$genes_promoter)]
-  stat_gene=elementMetadata(GR_merge)[[genes]][elementMetadata(GR_merge)[[stat]]<=pval_cutoff]
-  non_stat_gene=elementMetadata(GR_merge)[[genes]][elementMetadata(GR_merge)[[stat]]>pval_cutoff]
+  GR_merge=elementMetadata(GR_merge)
+  stat_gene=GR_merge[[genes]][GR_merge[[stat]]<=pval_cutoff]
+  non_stat_gene=GR_merge[[genes]][GR_merge[[stat]]>pval_cutoff]
   stat_MAE=sum(unlist(lapply(stat_gene,function(x) any(x %in% MAE))))
   nonstat_MAE=sum(unlist(lapply(non_stat_gene,function(x) any(x %in% MAE)))) 
   nonstat_nonMAE=sum(!unlist(lapply(non_stat_gene,function(x) any(x %in% MAE))))
   stat_nonMAE=sum(!unlist(lapply(stat_gene,function(x) any(x %in% MAE))))
+  print(matrix(c(stat_MAE,stat_nonMAE,nonstat_MAE,nonstat_nonMAE),nrow=2))
   ft=fisher.test(matrix(c(stat_MAE,stat_nonMAE,nonstat_MAE,nonstat_nonMAE),nrow=2))
   return(data.frame(OR=ft$estimate,pvalue=ft$p.value,lowerCI= ft$conf.int[1],upperCI=ft$conf.int[2]))
 }
-#Processing RNA-seq data
-RNA_seq_process<-function(dir_in,fds,condition_rep=3){
-  files=paste(dir_in,fds,"/t_data.ctab",sep="")
-  tmp=read_tsv(files[1])
-  tx2gene <- tmp[, c("t_name", "gene_name")]
-  txi <- tximport(files, type = "stringtie", tx2gene = tx2gene)
-  txi[1:3]=lapply(txi[1:3],function(x) {colnames(x)=fds 
-  return(x)})
-  sampleTable <- data.frame(condition = factor(rep(c("genome1", "genome2"), each =condition_rep)))
-  rownames(sampleTable) <- colnames(txi$counts)
-  ####Perfrom differential RNA analysis
-  dds_RNA<- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
-  if(ncol(as.data.frame(assay(dds_RNA)))==2){
-    res_RNA<-as.data.frame(cpm(assay(dds_RNA)))
-    res_RNA$gene_name=rownames(res_RNA)
-    res_RNA=res_RNA[(res_RNA[,1]!=0&res_RNA[,2]!=0),]
-    res_RNA=res_RNA[(res_RNA[,1]>10&res_RNA[,2]>10),]
-    res_RNA$log2FoldChange=log2((res_RNA[,2])/(res_RNA[,1]))
-  }else{
-    dds_RNA<-DESeq(dds_RNA)
-    res_RNA<-results(dds_RNA,name= "condition_genome2_vs_genome1")
-  }
-  return(res_RNA)
-}
+
+
 #ChromHMM* check
 ENCODE_to_sample<-function(sample_in){
   #Assign code to each sample
@@ -1175,6 +858,587 @@ ENCODE_to_sample<-function(sample_in){
   
   return(ENCODE_number_to_sample)
 }
+##Use  CMH test for chromHMM analysis
+chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_pval"){
+  
+  GR_merge_sp=GR_merge[GR_merge$Sample%in%sample_name]
+  GR_merge_sp$ASM="No"
+  GR_merge_sp$ASM[elementMetadata(GR_merge_sp)[,stat]<=pval_cutoff]="Yes"
+  out_df=data.frame()
+  count_table=list()
+  count_table_N=data.frame()
+  for(states in unique(chromHMM$name)){
+    OR=testEnrichmentFeature_stat(GR_merge_sp,chromHMM[chromHMM$name==states])
+    #Get contengency table
+    count_table[[states]]=OR[[1]]
+    OR=OR[[2]]
+    #result directly from fisher.test for each state
+    out_df=rbind(out_df,
+                 data.frame(state=states,OR=OR$estimate,p_value=OR$p.value,
+                            lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+    # }
+  }
+  return(list(out_df,count_table))
+}
+#Combine contengency table
+chromHMM_combine<-function(chromHMM_in){
+  cont_table_all=list()
+  #ChromHMM, list object, each is a sample, within sample ,each is a state
+  for (states in names(chromHMM_in[[1]][[2]])){
+    #extract 2x2 table for each states for each sample, return a list of sample with its contengency table
+    chromHMM_in_cont=lapply(chromHMM_in, function(x,states) x[[2]][[states]],states=states)
+    #For each state, construct a CMH table, 4 columns
+    cont_table_all[[states]]=do.call(rbind,lapply(seq_along(chromHMM_in_cont),melt_cont,cont_in=chromHMM_in_cont))
+    print(states)
+    
+  }
+  cont_table_all_CMH=lapply(cont_table_all,CMH_test)
+  cont_table_all_CMH_df=data.frame(states=names(cont_table_all_CMH), 
+                                   OR=unlist(lapply(cont_table_all_CMH, function(x) x$estimate[[1]])), 
+                                   p_value=unlist(lapply(cont_table_all_CMH, function(x) x$p.value)),
+                                   lower_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[1])),
+                                   upper_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[2])))
+  
+  return(cont_table_all_CMH_df)
+}
+
+melt_cont<-function(i,cont_in){
+  sp=names(cont_in)[i]
+  # cont_out=cont_in[[i]]
+  # cont_out$subject=factor(paste(sp,cont_out$N,sep='_'))
+  # return(cont_out)
+  count_out=as.numeric(unlist(cont_in[[i]]))
+  if(length(count_out)>0){
+  #print(count_out)
+  #cutoff of smallest number in the table
+  if (all(count_out>0)){
+    return(data.frame(subject=factor(rep(sp,4)),
+                      ASM=factor(c('ASM','ASM','Non-ASM','Non-ASM')),
+                      feature=factor(c('Feature','Non_feature','Feature','Non_feature')),
+                      count=count_out
+    ))
+  }
+  }
+}
+
+CMH_test<-function(df_in,CMH_eqn=count~ASM+feature+subject){
+  if (nrow(df_in)>0){
+    CMH_table=xtabs(CMH_eqn,data=df_in)
+    
+    if (length(dim(CMH_table)[3]!=0)){
+      
+      if(dim(CMH_table)[3]>1){
+        fs=mantelhaen.test(CMH_table)
+      }
+      else if(dim(CMH_table)[3]==1){
+        #print(as.matrix(CMH_table[,,1]))
+        #print(count_all)
+        fs=fisher.test(as.matrix(CMH_table[,,1]))
+        
+      }
+      return(fs)
+    }
+    
+  }
+}
+#SNP OR
+OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA){
+  
+  larger_NME_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in$refNME<tb_in$altNME))
+  larger_NME_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in$refNME<tb_in$altNME))
+  lower_NME_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in$refNME>tb_in$altNME))
+  lower_NME_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in$refNME>tb_in$altNME))
+  cont_table=matrix(c(larger_NME_SNP,larger_NME_nonSNP,lower_NME_SNP,lower_NME_nonSNP),nrow=2)
+  OR=fisher.test(cont_table)
+  #print(cont_table)
+  return(data.table(OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2],SNP=SNP))
+}
+
+dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cutoff,dir='../downstream/output/graphs/Figure3/'){
+  
+  #informME_in_dist=informME_in_dist[-which(informME_in_dist$dMML_pval<=cutoff)]
+  
+  informME_in_dist$exp_stat=informME_in_dist[[stat_in]]
+  informME_in_dist=informME_in_dist[!is.na(exp_stat)]
+  plot_informME_dat=informME_in_dist[,list(score=score,stat_in=stat_in,dist=dist,exp_stat=exp_stat,gene=gene,
+                                           quant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=c(0,0.25,0.5,0.75),na.rm=T)),
+                                           hypervarquant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100),
+                                     #scorequant001=findInterval(exp_stat,quantile(score,prob=c(0.01,1,0.01),na.rm=T))/100
+                                     by=list(Sample)]
+  rm(informME_in_dist)
+  quant=c("0-25%","25%-50%","50%-75%","75%-100%")
+  plot_informME_dat$quant=quant[plot_informME_dat$quant]
+  plot_informME_dat$quant=as.factor(plot_informME_dat$quant)
+  dist_plot=list()
+  #print(unique(plot_informME_dat[,c(3,4)]))
+  pdf(paste0(dir,'Figure3A_',ylab,'_',stat_in,'_dist.pdf'),width=3.5,height=3.5)
+  for(sp in unique(plot_informME_dat$Sample)){
+  print(ggplot(plot_informME_dat[abs(dist)<=3000&Sample==sp],aes(x=dist,y=score,color=quant))+theme_glob+
+    geom_smooth(size=1,na.rm=TRUE,se=TRUE)+ggtitle(sp)+
+    theme(legend.position="bottom")+ labs(color = "quantile")+
+    xlab("Distance to TSS")+ylab(ylab)+guides(color=guide_legend(nrow=2,byrow=TRUE)))
+  }
+ dev.off()
+  #find where min NME is 
+  #plot_informME_dat_median=plot_informME_dat[abs(dist)<=3000,list(median_score=median(score)),by=list(dist,quant)]
+  #min_dist=plot_informME_dat_median[which.min(median_score)]$dist
+  #plot_informME_dat_ft=plot_informME_dat[dist<=min_dist+250&dist>=min_dist-250]
+  plot_informME_dat_ft=plot_informME_dat[dist>=0&dist<=500]
+  #print(cor.test(plot_informME_dat_cor$score,plot_informME_dat_cor$exp_stat))
+  #Use correlation between hypervaribility quantile and NME
+  # plot_informME_dat_cor=plot_informME_dat_ft[,list(median_score=median(score)),
+  #                                         by=list(exp_stat,gene,hypervarquant,Sample)]
+  cor_mean=plot_informME_dat_ft[,list(cor=cor(score,hypervarquant),pvalue=cor.test(score,hypervarquant)$p.value),by=list(Sample)]
+  write.csv(cor_mean,paste0(dir,'Figure3A_',ylab,'_',stat_in,'_500bp_tb.csv'),row.names = F)
+  print(mean(cor_mean$cor))
+  # print(cor.test(plot_informME_dat_cor$median_score,plot_informME_dat_cor$hypervarquant))
+  heatmap_informME_dat=plot_informME_dat_ft[,list(median_score=median(score)),by=list(hypervarquant,Sample)]
+  heatmap_informME_dat=heatmap_informME_dat[,list(hypervarquant=hypervarquant,NME=median_score,cor=cor(median_score,hypervarquant)),by=list(Sample)]
+  heatmap_informME_dat=heatmap_informME_dat[order(heatmap_informME_dat$cor,decreasing = F),]
+  heatmap_informME_dat$Sample=factor(heatmap_informME_dat$Sample,levels = unique(heatmap_informME_dat$Sample))
+  heatmap_plot=ggplot(heatmap_informME_dat,aes(hypervarquant,Sample,fill=NME))+geom_tile()+scale_fill_distiller(palette = "RdPu", direction = 1)+
+    xlab('quantile')+ylab('Sample')+theme_glob+theme(legend.position = 'bottom')
+  ggsave(paste0(dir,'Figure3A_',ylab,'_',stat_in,'_heatmap.pdf'),heatmap_plot,device='pdf',width=7,height=7,units="in")
+  # cor_plot=ggplot(plot_informME_dat,aes(x=exp_stat,y=dat))+
+  #   geom_smooth(size=1,na.rm=TRUE,se=TRUE)+theme_glob+
+  #   theme(legend.position="bottom")+ggtitle('Correlation to hypervaribility within 500 bp upstream from TSS')+geom_point(alpha=0.1)
+  # 
+  # print(cor_plot)
+  return(plot_informME_dat)
+}
+direction_calc_enriched_subj<-function(motif_loc,variant_all,gene_in,pval_cutoff=0.1,stat="NME"){
+  
+  #print(motif_sig_df)
+  # motif_sig_df=motif_sig_df[which(motif_sig_df$qval<=0.2&motif_sig_df$OR>1),]
+  motif_direction_out=mclapply(gene_in,direction_enriched_sample,
+                               variant_gene=variant_all,motif_gene_subj=motif_loc,pval_cutoff=pval_cutoff,stat=stat,mc.cores =1)
+  
+  
+  
+  return(do.call(rbind,motif_direction_out))
+}
+
+direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,nperm=0,stat="NME"){
+  motif_gene_subj=motif_gene_subj[motif_gene_subj$geneSymbol==tf]
+  variant_gene=variant_gene[mcols(variant_gene)[[paste0('d',stat,'_pval')]]<=pval_cutoff]
+  olap=findOverlaps(variant_gene,motif_gene_subj)
+  variant_gene=variant_gene[queryHits(olap)]
+  variant_gene$alleleDiff=motif_gene_subj$alleleDiff[subjectHits(olap)]
+  variant_gene=variant_gene[!is.na(variant_gene$alleleDiff)]
+  
+  #alleleDiff is calculated use ref - alt, prefer low ent ones
+  variant_gene$stat_diff=mcols(variant_gene)[[paste0('alt',stat)]]-mcols(variant_gene)[[paste0('ref',stat)]]
+  same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$stat_diff),na.rm = TRUE)
+  opposite_dir=sum(sign(variant_gene$alleleDiff)!= sign(variant_gene$stat_diff),na.rm = TRUE)
+  # same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$MML_diff),na.rm = TRUE)
+  # opposite_dir=sum(sign(variant_gene$alleleDiff)!= sign(variant_gene$MML_diff),na.rm = TRUE)
+  total_data=same_dir+opposite_dir
+  
+  variant_gene_df=data.frame(alleleDiff=sign(variant_gene$alleleDiff),stat_diff=sign(variant_gene$stat_diff))
+  len_x=nrow(variant_gene_df)
+  if(nperm>0){
+    same_dir_perm=replicate(nperm,
+                            sum(sample(variant_gene_df$alleleDiff,len_x,replace = F)==sample(variant_gene_df$stat_diff,len_x,replace = F)))
+    same_dir_perm_prob=same_dir_perm/total_data
+  }else{same_dir_perm_prob=-1}
+  if(same_dir >0 &opposite_dir>0){
+    
+    binom=binom.test(same_dir,(same_dir+opposite_dir),0.5)
+    #print(binom)
+    # binom=summary(lm(abs(variant_gene$alleleDiff)~abs(variant_gene$dMML)))
+    #binom$p.value=pf(binom$fstatistic[1],df1 = binom$fstatistic[2],df2 = binom$fstatistic[3],lower.tail = F)
+    # return(data.frame(TF=unique(motif_gene_subj$geneSymbol),total_data=same_dir+opposite_dir,same_dir=same_dir,opposite_dir=opposite_dir,
+    #                   binom.pval=binom$p.value,prob=binom$estimate[[1]],NSNP=length(variant_gene),stringsAsFactors = F))
+    prob_binom=binom$estimate[[1]]
+    if(nperm>0){binom.pval=sum(abs(same_dir_perm_prob-0.5)>=abs(prob_binom-0.5))/nperm}else{binom.pval=NA}
+    # if(prob_binom>0.5){
+    #   binom.pval=sum(same_dir_perm_prob>=(same_dir/total_data)|same_dir_perm_prob<=(1-(same_dir/total_data)))/nperm
+    #   
+    # }else if(prob_binom<0.5){binom.pval=sum(same_dir_perm_prob<=(same_dir/total_data)|same_dir_perm_prob>=(1-(same_dir/total_data)))/nperm}
+    #cat(tf,':',binom.pval,'\n')
+    return(data.table(TF=unique(motif_gene_subj$geneSymbol),total_data=total_data,same_dir=same_dir,opposite_dir=opposite_dir,
+                      binom.pval_perm=binom.pval,binom.pval=binom$p.value,prob=prob_binom,NSNP=length(variant_gene),stringsAsFactors = F))
+  }
+}
+OMIM_annotation<-function(motif_in,OMIM){
+  motif_in=motif_in[order(motif_in$Proportion,decreasing=T),]
+  motif_in$OMIM=NA
+  for(tf in unique(motif_in$TF)){
+    tf_in=gsub('\\(var.2\\)','',tf)
+    tf_in=gsub('\\(var.3\\)','',tf_in)
+    
+    tf_in=unlist(strsplit(tf_in,'::'))
+    #print(tf_in)
+    OMIM_disease=OMIM$Phenotypes[which(unlist(lapply(OMIM$`Gene Symbols`,function(x) any(x%in% tf_in))))]
+    if(length(OMIM_disease)>0){
+      motif_in$OMIM[motif_in$TF==tf]=paste(OMIM_disease,collapse=';')}
+    
+  }
+  
+  return(motif_in)
+}
+NME_dNME_ken<-function(motif_in,GR_in,stat_in){
+  tt1=proc.time()[[3]]
+  olap=findOverlaps(motif_in,GR_in,select='all')
+  if(length(GR_in$NME1)>0){GR_in$NME=(GR_in$NME1+GR_in$NME2)/2}
+  subj_olap=subjectHits(olap)
+  stat_in_df=data.table(qt=queryHits(olap),stat_in=elementMetadata(GR_in)[[stat_in]][subj_olap],
+                        sample=GR_in$Sample[subj_olap],stringsAsFactors = T)
+  sample_all=unique(GR_in$Sample)
+  gc()
+  stat_in_df_stat=dcast.data.table(stat_in_df,qt~sample,value.var = "stat_in",fun.aggregate = mean)
+  
+  for(sp in sample_all){
+    elementMetadata(motif_in)[[sp]]=NA
+    if(!is.null(stat_in_df_stat[[sp]])){
+      elementMetadata(motif_in)[[sp]][stat_in_df_stat$qt]=stat_in_df_stat[[sp]]
+    }
+    
+  }
+  #add column of NA if motif don't have all samples
+  print(proc.time()[[3]]-tt1)
+  gc()
+  return(motif_in)
+}
+
+read.agnostic.mouse<-function(in_dir,tissue,stage,stat_type,replicate){
+  file_in=paste(in_dir,'mm10_',tissue,'_',stage,'_',replicate,'_allele_agnostic_',stat_type,'.bedGraph',sep='')
+  cat('processing:',file_in,'\n')
+  informME_in=import.bedGraph(file_in)
+  if(length(informME_in)>0){
+    colnames(elementMetadata(informME_in))=c('score','N','K')
+    if(all(seqlevels(informME_in)==gsub('chr','',seqlevels(informME_in)))){seqlevels(informME_in)=paste('chr',seqlevels(informME_in),sep='')}
+    #fit  bedGraph reads, import.bedGraph will remove 1 from start
+    start(informME_in)=start(informME_in)-1
+    informME_in$tissue=tissue
+    stage=gsub('_5','.5',stage)
+    stage=gsub('day','E',stage)
+    stage=gsub('E0','P0',stage)
+    informME_in$stage=stage
+    informME_in$bioreplicate=replicate
+    informME_in$Sample=paste(tissue,stage,replicate,sep='-')
+    
+    return(informME_in)
+  }
+}
+#UC
+read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
+  
+  cat('processing:',file_in,'\n')
+  informME_in=import.bedGraph(file_in)
+  if(length(informME_in)>0){
+    colnames(elementMetadata(informME_in))=c('score','N','K')
+    if(all(seqlevels(informME_in)==gsub('chr','',seqlevels(informME_in)))){seqlevels(informME_in)=paste('chr',seqlevels(informME_in),sep='')}
+    #fit  bedGraph reads, import.bedGraph will remove 1 from start
+    start(informME_in)=start(informME_in)-1
+    #process file name
+    file_in=strsplit(file_in,'\\/')[[1]]
+    file_in=file_in[length(file_in)]
+    file_in=gsub('_uc.bedGraph','',file_in)
+    file_in=gsub('_jsd.bedGraph','',file_in)
+    comp= strsplit(file_in,'-vs-')[[1]]
+    comp= strsplit(file_in,'-vs-')[[1]]
+    strain=unlist(lapply(strsplit(comp,'_'),function(x) x[1]))
+    #if  contain BL6DBA, use ref is BL6DBA
+    strain=ifelse('BL6DBA'%in%strain,'BL6DBA','mm10')
+    comp=unlist(lapply(strsplit(comp,'_'),function(x) paste(x[-1],collapse = '_')))
+    comp=comp[comp!='']
+    comp_stage=unlist(lapply(comp,function(x) {x_split=strsplit(x,'_')[[1]]
+    x_split=x_split[-length(x_split)][-1]
+    x_split=paste(x_split,collapse = '_')
+    return(x_split)}))
+    tissue1=strsplit(comp[1],'_')[[1]][1]
+    tissue2=strsplit(comp[2],'_')[[1]][1]
+    #if BL6DBA, the 1st comp_stage is empty
+    
+    comp_stage=gsub('_5','.5',comp_stage)
+    comp_stage=gsub('day','E',comp_stage)
+    comp_stage=gsub('E0','P0',comp_stage)
+    replicate=strsplit(comp[1],'_')[[1]][length(strsplit(comp[1],'_')[[1]])]
+    replicate=gsub('merged','',replicate)
+    informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',comp_stage[2],'-',replicate)
+    informME_in=informME_in[informME_in$N>=fileter_N]
+    cat('Minimum N:',min(informME_in$N),'\n')
+    #informME_in$Ref=strain
+    if(matrix){
+      informME_in$Sample=paste0(tissue1,'_',comp_stage[1],'-',tissue2,'_',comp_stage[2],'-',replicate)
+      informME_in_dt=as.data.table(mcols(informME_in))[,c("score","Sample")]
+      colnames(informME_in_dt)=c("UC","Sample")
+      informME_in_dt$UC=as.numeric(informME_in_dt$UC)
+      informME_in_dt$region=paste0(seqnames(informME_in),":",start(informME_in),"-",end(informME_in))
+      informME_in_dt=informME_in_dt[match(gff_in,region),"UC"]
+      colnames(informME_in_dt)=paste0(tissue1,'_',comp_stage[1],'-',tissue2,'_',comp_stage[2],'-',replicate)
+      return(informME_in_dt)
+    }
+    else{return(informME_in)}
+  }
+}
+
+agnostic_matrix_conversion<-function(gr_in,stat='NME'){
+  gr_out=granges(unique(gr_in))
+  olap=findOverlaps(gr_in,gr_out,type='equal')
+  stat_in_df=elementMetadata(gr_in[queryHits(olap)])[c(stat,'Sample')]
+  stat_in_df$idx=NA
+  stat_in_df$idx[queryHits(olap)]=subjectHits(olap)
+  stat_in_df=as.data.table(stat_in_df)
+  
+  stat_in_df_stat=dcast.data.table(data=stat_in_df,formula=idx~Sample,value.var = stat,fun.aggregate=mean)#remove agg.fun for new run
+  gr_out=gr_out[stat_in_df_stat$idx]
+  mcols(gr_out)=stat_in_df_stat[,-1]
+  return(gr_out)
+  
+}
+
+cor_dMML_dNME_enrich<-function(all_region_ts,prob_cutoff,FeDMR){
+  all_region_ts$change=FALSE
+  cutoff_cor=quantile(all_region_ts$cor,prob=prob_cutoff)
+  all_region_ts$change[all_region_ts$cor>=cutoff_cor]=TRUE
+  #Find regions that have FeDMR in at least 1 tissue
+  
+  olap=findOverlaps(all_region_ts,FeDMR)
+  all_region_ts$FeDMR=FALSE
+  all_region_ts$FeDMR[queryHits(olap)]=TRUE
+  cont_table=matrix(c(sum(all_region_ts$change&all_region_ts$FeDMR),
+                      sum(all_region_ts$change&(!all_region_ts$FeDMR)),
+                      sum((!all_region_ts$change)&(all_region_ts$FeDMR)),
+                      sum((!all_region_ts$change)&(!all_region_ts$FeDMR))),nrow=2)
+  OR=fisher.test(cont_table)
+  print(cont_table)
+  return(data.table(OR=OR$estimate,pvalue=OR$p.value,cutoff_cor=cutoff_cor,
+                    lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2]))
+}
+
+corfunc <- function(m1,m2,type='concordant') {
+  if (type=='concordant') {
+    rowSums(scalematrix(m1) * scalematrix(m2))/(ncol(m1)-1)
+  } else {
+    scalematrix(t(m1)) %*% t(scalematrix(t(m2)))/(nrow(m1)-1)            
+  }
+}
+scalematrix <- function(data) {
+  cm <- rowMeans(data)
+  csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
+  (data - cm) / csd
+}
+
+#GO annotation
+GO_run<-function(gl,back,cluster,ptcount=0){
+  geneList <- factor(as.integer(back %in% gl))
+  names(geneList) <- back
+  suppressMessages({GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,geneSel=function(a) {a},
+                                  annot = annFUN.org, mapping = "org.Mm.eg.db", ID = "Symbol")
+  resultFisher <- runTest(GOdata, algorithm = "classic", statistic = "fisher")})
+  sigres <- GenTable(GOdata, classicFisher = resultFisher, topNodes = length(resultFisher@score),orderBy="classicFisher",numChar=1000)
+  sigres$classicFisher[sigres$classicFisher=="< 1e-30"] <- 0
+  sigres <- sigres[sigres$Annotated >= 10,]
+  sigres$FDR <- p.adjust(sigres$classicFisher,method="fdr")
+  fc <- ((sigres[,"Significant"]+ptcount)/(sum(GOdata@allScores[GOdata@feasible]==1)+ptcount))/((sigres[,"Annotated"]+ptcount)/(sum(GOdata@feasible)+ptcount))
+  sigres <- data.frame(sigres,FC=fc)
+  sigres <- sigres[order(sigres$FDR,-sigres$FC),]
+  sigres=as.data.table(sigres)
+  siggene_forID=lapply(sigres$GO.ID,function(x,GOdata){
+    gene=sigGenes(GOdata)[sigGenes(GOdata)%in%unlist(genesInTerm(GOdata, x))]
+    gl_dt=data.table(rank=1:length(gl),gene=gl)
+    mt=match(gl_dt$gene,gene)
+    mt=mt[!is.na(mt)]
+    highest_rank=NA
+    return(list(paste(gene[mt],collapse =";"),highest_rank))
+    
+    
+  },GOdata=GOdata)
+  siggene=unlist(lapply(siggene_forID,function(x) x[[1]]))
+  max_rank=unlist(lapply(siggene_forID,function(x) x[[2]]))
+  if(nrow(sigres)>0){ 
+    sigres$genes=siggene
+    sigres$higest_ranks=max_rank
+    
+  }
+  sigres$cluster=cluster
+  return(sigres)
+}
+GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
+  GO_out_all=list()
+  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
+  for (ts in tissue){
+    cat("Processing:",ts,'\n')
+    fn=paste0(ts,'.csv')
+    #read in csv file for given tissue
+    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
+    csv_in_ts=csv_in_ts[order(dNME_maxJSD_rank,decreasing = F)]
+    # Getting enhancer
+    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
+      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
+        if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}
+    #GO annotation
+    if(nrow(csv_in_ts)>1){
+      #GO annotation for each cluster
+      csv_out=lapply(1:10,function(clu){
+        sp=paste0(ts,'-',clu)
+        csv_in_ts_clu=csv_in_ts[cluster==clu]
+        csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxJSD_rank,decreasing=F)]
+        #Add NME and mml cor
+        csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
+        csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
+        
+        if(nrow(csv_in_ts_clu)>1){
+          
+          #GO annotation for chromHMM 
+          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
+          write.csv(GO_out_cluster[FC>=1.5],
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/',sp,'_cluster_GO.csv'),row.names = F,quote = T)
+          csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
+          #GO annotation for other types of regions
+          GO_out_cluster_NME=GO_run(csv_in_ts_clu[nme_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_NME_only=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_MML=GO_run(csv_in_ts_clu[mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_MML_only=GO_run(csv_in_ts_clu[mml_cor>=0.7&nme_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_non_MML=GO_run(csv_in_ts_clu[mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_NME_MML=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_non_NME_non_MML=GO_run(csv_in_ts_clu[nme_cor<0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          
+          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
+          return(list(GO_out_cluster_all=GO_out_cluster,GO_out_cluster_NME=GO_out_cluster_NME,GO_out_cluster_non_MML=GO_out_cluster_non_MML,csv_in_ts_clu=csv_in_ts_clu,
+                      GO_out_cluster_NME_only=GO_out_cluster_NME_only,GO_out_cluster_MML=GO_out_cluster_MML,GO_out_cluster_MML_only=GO_out_cluster_MML_only,
+                      GO_out_cluster_non_NME_non_MML=GO_out_cluster_non_NME_non_MML,GO_out_cluster_NME_MML=GO_out_cluster_NME_MML))
+        }
+        
+      })
+      GO_out_all[[ts]]=csv_out
+      write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxJSD,decreasing=T)],
+                file=paste0('../downstream/output/mm10_result/',enc_type,'/enhancer_gene_list/',dir_in,'/',ts,'_all.csv'))
+    }
+    
+  }
+  return(GO_out_all)
+}
+
+
+dcast_matrix<-function(dt_in,value_in,colnames_order=colnames_order){
+  dt_in=dcast.data.table(dt_in,Term~cluster,value.var  = value_in)
+  dt_in_mt=as.matrix(dt_in[,-1])
+  rownames(dt_in_mt)=dt_in$Term
+  dt_in_mt=dt_in_mt[order(max.col(dt_in_mt,)),]
+  dt_in_mt=dt_in_mt[,colnames_order]
+  return(dt_in_mt)
+}
+makeColorRampPalette <- function(colors, cutoff.fraction, num.colors.in.palette)
+{
+  stopifnot(length(colors) == 4)
+  ramp1 <- colorRampPalette(colors[1:2])(num.colors.in.palette * cutoff.fraction)
+  ramp2 <- colorRampPalette(colors[3:4])(num.colors.in.palette * (1 - cutoff.fraction))
+  return(c(ramp1, ramp2))
+}
+library(pheatmap)
+plot_GO_heatmap<-function(selected_tissue,GO_anno,GO_out){
+  GO_tissue=list()
+  for(tissue in selected_tissue){
+    GO_in=GO_out[[tissue]]
+    GO_in=fastDoCall('rbind',lapply(GO_in,function(x) {
+      x=x[[GO_anno]]
+      x$sig_num=sum(x$FDR<=0.1)
+      return(x)
+    }))
+    
+    
+    GO_in=GO_in[,.(GO.ID,Term,classicFisher,FDR,FC,cluster,sig_num)]
+    GO_in_top=do.call(c,lapply(1:10,function(x) {
+      
+      return(GO_in[cluster==x][FC>=1.5&FDR<=0.1][order(FDR,-FC,decreasing=F)][1:5]$GO.ID)
+    }))
+    GO_in=GO_in[GO.ID%in%GO_in_top]
+    GO_in$log10FDR=-log10(GO_in$FDR)
+    GO_in_main= dcast_matrix(GO_in,"FC")
+    GO_in_main=GO_in_main[order(max.col(GO_in_main),decreasing = F),]
+    GO_in_FDR= dcast_matrix(GO_in,"FDR")
+    #GO_in_FDR_log10= dcast_matrix(GO_in,"log10FDR")
+    GO_in_FDR[GO_in_FDR<=0.1]="*"
+    GO_in_FDR[GO_in_FDR>0.1]=""
+    GO_in_FDR=GO_in_FDR[rownames(GO_in_main),]
+    col_label=unique(GO_in[,.(cluster,sig_num)])
+    col=colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))
+    c2 <- brewer.pal(10,'Set3')
+    names(c2) <- 1:10
+    breaksList = seq(-1, 1, by = 0.01)
+    colann= data.frame(cluster=as.character(1:10))
+    #pdf(paste0('../downstream/output/graphs/Figure6/GO_', tissue,'_',GO_anno,'_FC.pdf'),width=25,height=14)
+    pheatmap(scalematrix(GO_in_main),cluster_rows =F,cluster_cols = F,
+             show_colnames = T,show_rownames = T,display_numbers=GO_in_FDR,border_color = NA,
+             color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),
+             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_chromHMM.pdf'),
+             cellwidth=60,cellheight=25,annotation_colors = list(cluster=c2),annotation_col = colann, annotation_legend = F,
+             fontsize=30,legend = F,labels_col=col_label$sig_num)
+    #dev.off()
+    GO_tissue[[tissue]]=GO_in_main
+    #,breaks=breaksList,color=col(length(breaksList))
+  }
+  
+}
+matrix_conv<-function(dt_in,value.var){
+  out_dc=dcast.data.table(dt_in,region~stage,value.var=value.var)
+  rn=out_dc$region
+  out_dc=as.matrix(out_dc[,-1])
+  rownames(out_dc)=rn
+  return(out_dc)
+}
+# Currently Not in use ----------------------------------------------------
+
+
+#collapase variants
+variants_collapase<-function(varsDiff){
+  variants <- paste(as.character(varsDiff$REF),as.character(unlist(varsDiff$ALT)),sep="-")
+  # Combine same variants (ALT/REF -> REF/ALT)
+  variants[variants %in% c("A-C","C-A")] <- "A-C"
+  variants[variants %in% c("A-G","G-A")] <- "A-G"
+  variants[variants %in% c("A-T","T-A")] <- "A-T"
+  variants[variants %in% c("C-G","G-C")] <- "C-G"
+  variants[variants %in% c("C-T","T-C")] <- "C-T"
+  variants[variants %in% c("G-T","T-G")] <- "G-T"
+  return(variants)
+}
+
+#Merge allele agnositc data 
+allele_agnostic_merge<-function(GR_in,nme_in,mml_in,pval_cutoff=0.1){
+  NME_in=import.bedGraph(nme_in)
+  if(all(seqlevels(NME_in)==gsub('chr','',seqlevels(NME_in)))){seqlevels(NME_in)=paste('chr',seqlevels(NME_in),sep='')}
+  MML_in=import.bedGraph(mml_in)
+  if(all(seqlevels(MML_in)==gsub('chr','',seqlevels(MML_in)))){seqlevels(MML_in)=paste('chr',seqlevels(MML_in),sep='')}
+  olap=findOverlaps(NME_in,GR_in)
+  agnostic_diff_df=data.frame(NME=NME_in$score[queryHits(olap)],dNME=GR_in$dNME[subjectHits(olap)],
+                              dNME_pval=GR_in$dNME_pval[subjectHits(olap)],dMML=GR_in$dMML[subjectHits(olap)],
+                              dMML_pval=GR_in$dMML_pval[subjectHits(olap)],MML=MML_in$score[queryHits(olap)])
+  agnostic_diff_df$dNME_ASM=agnostic_diff_df$dNME_pval<=pval_cutoff
+  agnostic_diff_df$dMML_ASM=agnostic_diff_df$dMML_pval<=pval_cutoff
+  agnostic_diff_df$dNME_ASM_non_dMML=agnostic_diff_df$dMML_pval>pval_cutoff & agnostic_diff_df$dNME_pval<=pval_cutoff
+  agnostic_diff_df$sample=unique(GR_in$Sample)
+  return(agnostic_diff_df)
+  
+}
+
+#Processing RNA-seq data
+RNA_seq_process<-function(dir_in,fds,condition_rep=3){
+  files=paste(dir_in,fds,"/t_data.ctab",sep="")
+  tmp=read_tsv(files[1])
+  tx2gene <- tmp[, c("t_name", "gene_name")]
+  txi <- tximport(files, type = "stringtie", tx2gene = tx2gene)
+  txi[1:3]=lapply(txi[1:3],function(x) {colnames(x)=fds 
+  return(x)})
+  sampleTable <- data.frame(condition = factor(rep(c("genome1", "genome2"), each =condition_rep)))
+  rownames(sampleTable) <- colnames(txi$counts)
+  ####Perfrom differential RNA analysis
+  dds_RNA<- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
+  if(ncol(as.data.frame(assay(dds_RNA)))==2){
+    res_RNA<-as.data.frame(cpm(assay(dds_RNA)))
+    res_RNA$gene_name=rownames(res_RNA)
+    res_RNA=res_RNA[(res_RNA[,1]!=0&res_RNA[,2]!=0),]
+    res_RNA=res_RNA[(res_RNA[,1]>10&res_RNA[,2]>10),]
+    res_RNA$log2FoldChange=log2((res_RNA[,2])/(res_RNA[,1]))
+  }else{
+    dds_RNA<-DESeq(dds_RNA)
+    res_RNA<-results(dds_RNA,name= "condition_genome2_vs_genome1")
+  }
+  return(res_RNA)
+}
+
 #Tissue to germlayer
 tissue_to_germlayer<-function(GR_input){
   GR_input$germlayer=NA
@@ -1199,200 +1463,14 @@ tissue_to_germlayer<-function(GR_input){
   GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
   return(GR_input)
 }
-##Use  CMH test instead
-chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_pval"){
-  
-  GR_merge_sp=GR_merge[GR_merge$Sample%in%sample_name]
-  GR_merge_sp$ASM="No"
-  GR_merge_sp$ASM[elementMetadata(GR_merge_sp)[,stat]<=pval_cutoff]="Yes"
-  out_df=data.frame()
-  count_table=list()
-  count_table_N=data.frame()
-  for(states in unique(chromHMM$name)){
-    OR=testEnrichmentFeature_stat(GR_merge_sp,chromHMM[chromHMM$name==states])
-    count_table[[states]]=OR[[1]]
-    OR=OR[[2]]
-    out_df=rbind(out_df,data.frame(state=states,OR=OR$estimate,p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
-    # }
-  }
-  return(list(out_df,count_table))
-}
-testEnrichmentFeature_stat<-function(dataGR,featureGR,maxgap=0){
-  # Find ranges overlapping with feature
-  olaps <- findOverlaps(dataGR,featureGR,type="any",select="all",maxgap = maxgap)
-  
-  indFeature <- queryHits(olaps)
-  featurestatistic <- dataGR[indFeature]
-  complementarystatistic <- dataGR[-indFeature]
-  
-  # Enrichment of in feature
-  #featurestatistic <- featureData[featureData$Statistic==statistic]
-  #complementarystatistic <- complementaryData[complementaryData$Statistic==statistic]
-  contTablestatistic <- data.frame(ASM=c(NA,NA),nonASM=c(NA,NA))
-  rownames(contTablestatistic) <- c("Feature","Complementary")
-  contTablestatistic[1,]$ASM <- sum(featurestatistic$ASM=="Yes")
-  contTablestatistic[1,]$nonASM <- sum(featurestatistic$ASM=="No")
-  contTablestatistic[2,]$ASM <- sum(complementarystatistic$ASM=="Yes")
-  contTablestatistic[2,]$nonASM <- sum(complementarystatistic$ASM=="No")
-  #print(contTablestatistic)
-  return(list(contTablestatistic,fisher.test(contTablestatistic)))
-  
-}
-chromHMM_combine<-function(chromHMM_in){
-  cont_table_all=list()
-  for (states in names(chromHMM_in[[1]][[2]])){
-    #extract 2x2 table for each states for each sample, return a list of sample with its contengencytable
-    chromHMM_in_cont=lapply(chromHMM_in, function(x,states) x[[2]][[states]],states=states)
-    #For each state, construct a CMH table
-    cont_table_all[[states]]=do.call(rbind,lapply(seq_along(chromHMM_in_cont),melt_cont,cont_in=chromHMM_in_cont))
-    print(states)
-    
-  }
-  cont_table_all_CMH=lapply(cont_table_all,CMH_test)
-  cont_table_all_CMH_df=data.frame(states=names(cont_table_all_CMH), 
-                                   OR=unlist(lapply(cont_table_all_CMH, function(x) x$estimate[[1]])), 
-                                   p_value=unlist(lapply(cont_table_all_CMH, function(x) x$p.value)),
-                                   lower_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[1])),
-                                   upper_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[2])))
-  
-  return(cont_table_all_CMH_df)
-}
-melt_cont<-function(i,cont_in){
-   sp=names(cont_in)[i]
-  # cont_out=cont_in[[i]]
-  # cont_out$subject=factor(paste(sp,cont_out$N,sep='_'))
-  # return(cont_out)
-  count_out=as.numeric(unlist(cont_in[[i]]))
-  #print(count_out)
-  #cutoff of smallest number in the table
-  if (all(count_out>0)){
-    return(data.frame(subject=factor(rep(sp,4)),
-                      ASM=factor(c('ASM','ASM','Non-ASM','Non-ASM')),
-                      feature=factor(c('Feature','Non_feature','Feature','Non_feature')),
-                      count=count_out
-    ))
-  }
-  
-}
-CMH_test<-function(df_in,CMH_eqn=count~ASM+feature+subject){
-  if (nrow(df_in)>0){
-    CMH_table=xtabs(CMH_eqn,data=df_in)
-    
-    if (length(dim(CMH_table)[3]!=0)){
-      
-      if(dim(CMH_table)[3]>1){
-        fs=mantelhaen.test(CMH_table)
-      }
-      else if(dim(CMH_table)[3]==1){
-        #print(as.matrix(CMH_table[,,1]))
-        #print(count_all)
-        fs=fisher.test(as.matrix(CMH_table[,,1]))
-        
-      }
-      return(fs)
-    }
-    
-  }
-}
-#Calculating NME vs hypervaribility
-dist_plot_calc<-function(file_in,genes_hypervar,genomic_features,GR_merge,exp_stat=quote(hypervar_logvar)){
-  informME_in=read.agnostic(file_in,GR_merge)
-  informME_in_dist=dist_calc(informME_in,genomic_features$TSS)
-  #check if low expressed gene are excluded already
-  #genes_hypervar=genes_hypervar[genes_hypervar$mean>=quantile(genes_hypervar$mean,prob=0.1),]
-  informME_in_dist$exp_stat=genes_hypervar[,eval(exp_stat)][match(informME_in_dist$gene,genes_hypervar$gene_name)]
-  
-  informME_in_dist=informME_in_dist[!is.na(informME_in_dist$exp_stat),]
-  
-  informME_in_dist$quant=findInterval(informME_in_dist$exp_stat,quantile(informME_in_dist$exp_stat,prob=c(0,0.25,0.5,0.75),na.rm=T))
-  quant=c("0-25%","25%-50%","50%-75%","75%-100%")
-  informME_in_dist$quant=quant[informME_in_dist$quant]
-  informME_in_dist$quant=as.factor(informME_in_dist$quant)
-  #1000 quantiles
-  informME_in_dist$hypervarquant001=findInterval(informME_in_dist$exp_stat,quantile(informME_in_dist$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100
-  informME_in_dist$scorequant001=findInterval(informME_in_dist$score,quantile(informME_in_dist$score,prob=seq(0.01,1,0.01),na.rm=T))/100
-  return(informME_in_dist)
-}
-dist_plot_run<-function(informME_in_dist,theme_glob,ylab,cutoff=pval_cutoff){
-  
-  informME_in_dist=informME_in_dist[-which(informME_in_dist$dMML_pval<=cutoff)]
- 
-  plot_informME_dat=data.table(dat=as.numeric(informME_in_dist$score),dist=informME_in_dist$dist,
-                               exp_stat=informME_in_dist$exp_stat,quant=informME_in_dist$quant)
-  #print(unique(plot_informME_dat[,c(3,4)]))
- 
-  dist_plot=ggplot(plot_informME_dat[abs(plot_informME_dat$dist)<=3000],aes(x=dist,y=dat,color=quant))+theme_glob+
-    geom_smooth(size=1,na.rm=TRUE,se=TRUE)+
-    theme(legend.position="bottom")+ labs(color = "quantile")+
-    xlab("Distance to TSS")+ylab(ylab)+guides(color=guide_legend(nrow=2,byrow=TRUE))
-    
-  print(dist_plot)
-  #Selecting the regions
 
-  print(cor.test(plot_informME_dat[abs(dist)<=500,dat],plot_informME_dat[abs(dist)<=500,exp_stat]))
-  # cor_plot=ggplot(plot_informME_dat,aes(x=exp_stat,y=dat))+
-  #   geom_smooth(size=1,na.rm=TRUE,se=TRUE)+theme_glob+
-  #   theme(legend.position="bottom")+ggtitle('Correlation to hypervaribility within 500 bp upstream from TSS')+geom_point(alpha=0.1)
-  # 
-  # print(cor_plot)
-  return(plot_informME_dat)
-}
 
-direction_calc_enriched_subj<-function(motif_loc,variant_all,gene_in,pval_cutoff=0.1){
-  
-  #print(motif_sig_df)
-  # motif_sig_df=motif_sig_df[which(motif_sig_df$qval<=0.2&motif_sig_df$OR>1),]
-  motif_direction_out=mclapply(gene_in,direction_enriched_sample,
-                             variant_gene=variant_all,motif_gene_subj=motif_loc,pval_cutoff=pval_cutoff,mc.cores =1)
-   
 
-  
-  return(do.call(rbind,motif_direction_out))
-}
 
-direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,nperm=0){
-  motif_gene_subj=motif_gene_subj[motif_gene_subj$geneSymbol==tf]
-  variant_gene=variant_gene[variant_gene$dNME_pval<=pval_cutoff]
-  olap=findOverlaps(variant_gene,motif_gene_subj)
-  variant_gene=variant_gene[queryHits(olap)]
-  variant_gene$alleleDiff=motif_gene_subj$alleleDiff[subjectHits(olap)]
-  variant_gene=variant_gene[!is.na(variant_gene$alleleDiff)]
 
-  #alleleDiff is calculated use ref - alt, prefer low ent ones
-  variant_gene$NME_diff=variant_gene$altNME-variant_gene$refNME
-  variant_gene$MML_diff=variant_gene$altMML-variant_gene$refMML
-  same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$NME_diff),na.rm = TRUE)
-  opposite_dir=sum(sign(variant_gene$alleleDiff)!= sign(variant_gene$NME_diff),na.rm = TRUE)
-  # same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$MML_diff),na.rm = TRUE)
-  # opposite_dir=sum(sign(variant_gene$alleleDiff)!= sign(variant_gene$MML_diff),na.rm = TRUE)
-  total_data=same_dir+opposite_dir
- 
-  variant_gene_df=data.frame(alleleDiff=sign(variant_gene$alleleDiff),NME_diff=sign(variant_gene$NME_diff))
-  len_x=nrow(variant_gene_df)
-  if(nperm>0){
-  same_dir_perm=replicate(nperm,
-                            sum(sample(variant_gene_df$alleleDiff,len_x,replace = F)==sample(variant_gene_df$NME_diff,len_x,replace = F)))
-  same_dir_perm_prob=same_dir_perm/total_data
-}else{same_dir_perm_prob=-1}
-  if(same_dir >0 &opposite_dir>0){
-    
-    binom=binom.test(same_dir,(same_dir+opposite_dir),0.5)
-    #print(binom)
-    # binom=summary(lm(abs(variant_gene$alleleDiff)~abs(variant_gene$dMML)))
-    #binom$p.value=pf(binom$fstatistic[1],df1 = binom$fstatistic[2],df2 = binom$fstatistic[3],lower.tail = F)
-    # return(data.frame(TF=unique(motif_gene_subj$geneSymbol),total_data=same_dir+opposite_dir,same_dir=same_dir,opposite_dir=opposite_dir,
-    #                   binom.pval=binom$p.value,prob=binom$estimate[[1]],NSNP=length(variant_gene),stringsAsFactors = F))
-    prob_binom=binom$estimate[[1]]
-    if(nperm>0){binom.pval=sum(abs(same_dir_perm_prob-0.5)>=abs(prob_binom-0.5))/nperm}else{binom.pval=NA}
-    # if(prob_binom>0.5){
-    #   binom.pval=sum(same_dir_perm_prob>=(same_dir/total_data)|same_dir_perm_prob<=(1-(same_dir/total_data)))/nperm
-    #   
-    # }else if(prob_binom<0.5){binom.pval=sum(same_dir_perm_prob<=(same_dir/total_data)|same_dir_perm_prob>=(1-(same_dir/total_data)))/nperm}
-    #cat(tf,':',binom.pval,'\n')
-    return(data.frame(TF=unique(motif_gene_subj$geneSymbol),total_data=total_data,same_dir=same_dir,opposite_dir=opposite_dir,
-                      binom.pval_perm=binom.pval,binom.pval=binom$p.value,prob=prob_binom,NSNP=length(variant_gene),stringsAsFactors = F))
-  }
-}
+
+
+
 OR_VMR<-function(NME_dat,vmr,percent,NME_quant='quant_score'){
   NME_dat$VMR=FALSE
   olap=findOverlaps(NME_dat,vmr)
@@ -1695,12 +1773,12 @@ getGeneralFeats_mm9 <- function(CpGdir,enhancerDir='',chrsOfInterest=paste("chr"
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites
-  cgs <- lapply(chrsOfInterest, function(x) start(matchPattern("CG", Hsapiens[[x]])))
-  cpgr <- do.call(c,lapply(1:length(chrsOfInterest), function(x) GRanges(names(Hsapiens)[x],IRanges(cgs[[x]],width=2))))
+  cgs <- lapply(chrsOfInterest, function(x) GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),width=2)))
+  
   # Set genome and seqlengths
-  cpgr <- setGenomeLengths(cpgr)
+  cgs <- setGenomeLengths(do.call('c',cgs))
   # Return CpG site GR
-  return(cpgr)
+  return(cgs)
 }
 
 #Get CpG density for each chromosome
@@ -1841,19 +1919,6 @@ export_bed<-function(gr_in,dat,out_name){
 
 
 
-#CountPattern and return data.frame
-countCGOR<-function(x){ #x=input seq
-  #calculate Odds ratio for expected CG vs actual CG
-  #Expected CG number C * number G/total length
-  # Gardiner-Garden M, Frommer M (1987). "CpG islands in vertebrate genomes". Journal of Molecular Biology.
-  #Wiki, actual: ((number of C + Number of G)/2)^2/length of genomics Normalized CpG content, whole genome ~25%
-  NC=countPattern('C',x)
-  NG=countPattern('G',x)
-  #NCG=countPattern('CG',x)
-  CG_exp=NC*NG/nchar(x) #PC*PG*length
-  CG_exp_norm=((NC+NG)/2)^2/nchar(x) #assuming PC=PG = (NC+NG)/2/length
-  return(CG_exp_norm)
-}
 
 #Generate motif from variant file
 
@@ -2402,49 +2467,7 @@ DEVG_analysis<-function(GR_in,tissue,stat_var='hyper_var_TSS'){
                 low_NME_dNME=low_NME_dNME,low_dNME_non_dNME=low_dNME_non_dNME))
   }
 }
-NME_dNME_ken<-function(motif_in,GR_in,stat_in){
-  tt1=proc.time()[[3]]
-  olap=findOverlaps(motif_in,GR_in,select='all')
-  if(!is.na(GR_in$NME1)){GR_in$NME=(GR_in$NME1+GR_in$NME2)/2}
-  subj_olap=subjectHits(olap)
-  stat_in_df=data.table(qt=queryHits(olap),stat_in=elementMetadata(GR_in)[[stat_in]][subj_olap],
-                        sample=GR_in$Sample[subj_olap],stringsAsFactors = T)
-  rm(GR_in)
-  gc()
-  stat_in_df_stat=dcast.data.table(stat_in_df,qt~sample,value.var = "stat_in",fun.aggregate = mean)
 
-  #stat_in_df_sp=dcast(stat_in_df,qt~sample,value.var = "stat_in")
-  # stat_in_df_sp=melt(stat_in_df_sp,id.vars='qt')#Find overlaps more than 1 regions
-  # stat_in_df_sp=stat_in_df_sp[stat_in_df_sp$value>1,]
-  # olap2=which(paste(stat_in_df$qt,stat_in_df$sample,sep='-')%in%paste(stat_in_df_sp$qt,stat_in_df_sp$variable,sep='-'))
-  # stat_in_df_multiple=stat_in_df[olap2,]
-  # stat_in_df_multiple$sample=as.character(stat_in_df_multiple$sample)
-  # stat_in_df_multiple=aggregate(stat_in_df_multiple[,'stat_in'],by=list(stat_in_df_multiple$qt,stat_in_df_multiple$sample),
-  #                                FUN=mean)
-  # colnames(stat_in_df_multiple)=c('qt','sample','stat_in')
-  # stat_in_df_multiple=stat_in_df_multiple[,colnames(stat_in_df)]
-  # 
-  # stat_in_df=rbind(stat_in_df[-olap2,],stat_in_df_multiple)
-  # stat_in_df_stat=dcast(stat_in_df,qt~sample,value.var = "stat_in")
-  # colnames(stat_in_df_stat)[-1]=paste(colnames(stat_in_df_stat)[-1],stat_in,sep='-')
-  # stat_in_df_dNME=dcast(stat_in_df,qt~sample,value.var = "dNME")
-  # colnames(stat_in_df_dNME)[-1]=paste(colnames(stat_in_df_dNME)[-1],'dNME',sep='-')
-  # stat_in_df_dNME_pval=dcast(stat_in_df,qt~sample,value.var = "dNME")
-  # colnames( stat_in_df_dNME_pval)[-1]=paste(colnames( stat_in_df_dNME_pval)[-1],'dNME_pvalue',sep='-')
-  # print(identical(order(stat_in_df_dNME$qt),order(stat_in_df_NME$qt)))
-  # stat_in_df=cbind(stat_in_df_NME,stat_in_df_dNME[,-1],stat_in_df_dNME_pval[,-1])
-  #motif_in=motif_in[stat_in_df$qt]
-  # elementMetadata(motif_in)=NA
-  # elementMetadata(motif_in)[stat_in_df_stat$qt,]=stat_in_df[,-1]
-  for(sp in unique(colnames(stat_in_df_stat))[-1]){
-    elementMetadata(motif_in)[[sp]]=NA
-    elementMetadata(motif_in)[[sp]][stat_in_df_stat$qt]=stat_in_df_stat[[sp]]
-
-  }
-  print(proc.time()[[3]]-tt1)
-  gc()
-  return(motif_in)
-}
 
 motif_reformat<-function(motif_in){
   motif_in$TF=gsub('\\(var.2\\)','',motif_in$TF)
@@ -2463,7 +2486,17 @@ motif_pref<-function(variant_in,motif_gene,motif_dir_in){
   variant_in=variant_in[sign(variant_in$NME2-variant_in$NME1) == sign(variant_in$alleleDiff)]
   return(variant_in)
 }
+convert_GR<-function(x){
+  strand=unlist(lapply(strsplit(x,','),function(x)x[2]))
+  strand=ifelse(is.na(strand),"*",strand)
+  x=ifelse(is.na(strand),x,sub(paste0(',\\','-'),'',sub(paste0(',\\','+'),'',x)))
 
+  gr=GRanges(seqnames=sub(':.*','',x),
+             IRanges(start=as.numeric(sub('-.*','',sub('.*:','',x))),
+                     end=as.numeric(sub('.*-','',x))),strand=strand)
+  return(gr)
+  
+}
 trait_variant=function(x,traits) {
   variant=NA
   
@@ -2570,4 +2603,14 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     }
     else{return(informME_in)}
   }
+}
+
+#Get CpG sites from hg19
+getCpgSitesmm10 <- function(chrsOfInterest=paste("chr",1:19,sep="")){
+  # Obtain all CpG sites
+  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),with=2)))
+  # Set genome and seqlengths
+  cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="mm10")
+  # Return CpG site GR
+  return(cgs)
 }

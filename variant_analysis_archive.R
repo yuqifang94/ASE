@@ -2874,3 +2874,305 @@ GR_merge=add_hyper_var(GR_merge,c('../downstream/input/scRNA/AdultPancreas_1.rds
 GR_merge=add_hyper_var(GR_merge,c('../downstream/input/scRNA/AdultLiver_1.rds','../downstream/input/scRNA/AdultLiver_2.rds',
                                   '../downstream/input/scRNA/AdultLiver_4.rds'),
                        unique(GR_merge$Sample[GR_merge$tissue=='Liver_single']))
+
+
+# scRNA -------------------------------------------------------------------
+
+
+#read in scRNA result from Jason
+dir_scRNA='../downstream/input/Mouse_scRNA/'
+tissue_conv=data.table(scRNA_name=c("Cardiacmusclelineages","Limbmesenchyme","NeuralTube"),
+                       NME_name=c("heart","limb","NT"))
+NME_in=NME_in[NME_in$tissue%in%tissue_conv$NME_name]
+NME_in=NME_in[NME_in$N>=2]
+#promoter
+gtf <- fread('../downstream/input/grcm38.gtf',data.table = F)
+gtf <- gtf[gtf[,3]=='gene',]
+gn <- sub('".*','',sub('.*gene_name "','',gtf[,9]))
+genes <- GRanges(seqnames=gtf[,1],IRanges(start=gtf[,4],end=gtf[,5]),strand = gtf[,7])
+genes$gene_name <- gn
+NME_in=dist_calc(NME_in,genes)
+#chromHMM enhancer
+chromHMM=readRDS('../downstream/output/chromHMM_enhancer.rds')
+NME_in$chromHMM=FALSE
+for(sp in unique(NME_in$Sample)){
+  olap=findOverlaps(NME_in[NME_in$Sample==sp],chromHMM[(chromHMM$tissue==unique(NME_in[NME_in$Sample==sp]$tissue))&
+                                                         (chromHMM$stage==unique(NME_in[NME_in$Sample==sp]$stage))])
+  NME_in$chromHMM[NME_in$Sample==sp][queryHits(olap)]=TRUE
+}
+
+#Bin enhancer
+enhancer_bin=readRDS("../downstream/output/bin_enhancer.rds")
+NME_in$bin_enhancer=NA
+olap=findOverlaps(NME_in,enhancer_bin)
+NME_in$bin_enhancer[queryHits(olap)]=enhancer_bin$`Target Gene`[subjectHits(olap)]
+#Adding the hypervaribility info
+NME_in_dt=as.data.table(mcols(NME_in))
+NME_in_dt$region=paste0(seqnames(NME_in),':',start(NME_in),'-',end(NME_in))
+#Check it's correlation near TSS
+NME_in_dt$hyper_var=-100
+NME_in_dt$quantile_scRNA=-100
+NME_in_dt$quantile_scRNA_100=-100
+NME_in_dt$hyper_var_bin=-100
+NME_in_dt$quantile_scRNA_bin=-100
+NME_in_dt$quantile_scRNA_100_bin=-100
+NME_in_dt$var=-100
+NME_in_dt$var_bin=-100
+NME_in_dt$mean=-100
+NME_in_dt$mean_bin=-100
+NME_in_dt$quantile_scRNA_mean=-100
+NME_in_dt$quantile_scRNA_100_mean=-100
+for(fn in dir(dir_scRNA,pattern=".rds")){
+  cat('processing',fn,'\n')
+  tt1=proc.time()[[3]]
+  ts=tissue_conv[scRNA_name==sub('_.*','',fn)]$NME_name
+  st=sub(paste0(sub('_.*','',fn),'_'),'',sub('.rds','',fn))
+  st=paste0("E",sub('_','.',st))
+  scRNA_in=readRDS(paste0(dir_scRNA,fn))
+  scRNA_in=scRNA_in[rownames(scRNA_in)%in% unique(c(NME_in_dt[(tissue==ts)&(stage==st)]$gene,
+                                                    NME_in_dt[(tissue==ts)&(stage==st)]$genebin_enhancer)),]
+  if(nrow(scRNA_in)>0){
+    scRNA_in$quantile=findInterval(scRNA_in$hypervar_logvar,quantile(scRNA_in$hypervar_logvar,prob=c(0,0.25,0.5,0.75)),rightmost.closed=F)
+    scRNA_in$quantile_100=findInterval(scRNA_in$hypervar_logvar,quantile(scRNA_in$hypervar_logvar,prob=seq(0,0.99,0.01)),rightmost.closed=F)
+    scRNA_in$quantile_mean=findInterval(scRNA_in$mean,quantile(scRNA_in$mean,prob=c(0,0.25,0.5,0.75)),rightmost.closed=F)
+    scRNA_in$quantile_100_mean=findInterval(scRNA_in$mean,quantile(scRNA_in$mean,prob=seq(0,0.99,0.01)),rightmost.closed=F)
+    #Add hypervar to TSS and chromHMM enhancer
+    NME_in_dt[(tissue==ts)&(stage==st)]$hyper_var=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"hypervar_logvar"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"quantile"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA_100=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"quantile_100"]
+    #Add hypervar to bin enhancer
+    
+    NME_in_dt[(tissue==ts)&(stage==st)]$hyper_var_bin=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$bin_enhancer,"hypervar_logvar"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA_bin=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$bin_enhancer,"quantile"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA_100_bin=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$bin_enhancer,"quantile_100"]
+    
+    #Add var to all region
+    NME_in_dt[(tissue==ts)&(stage==st)]$var_bin=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$bin_enhancer,"var"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$var=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"var"]
+    #add mean to all region
+    
+    NME_in_dt[(tissue==ts)&(stage==st)]$mean_bin=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$bin_enhancer,"mean"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$mean=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"mean"]
+    
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA_mean=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"quantile_mean"]
+    NME_in_dt[(tissue==ts)&(stage==st)]$quantile_scRNA_100_mean=scRNA_in[NME_in_dt[(tissue==ts)&(stage==st)]$gene,"quantile_100_mean"]
+  }
+  cat('Finish processing ',fn,'in: ',proc.time()[[3]]-tt1,'\n')
+}
+NME_in_dt=readRDS('../downstream/output/NME_in_dt.rds')
+NME_in_dt=NME_in_dt[(!is.na(hyper_var)&(hyper_var!=-100))|(!is.na(hyper_var_bin )&(hyper_var_bin !=-100))]
+UC_in=readRDS('../downstream/input/UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds')
+
+# Looking at scRNA using Jason's cluster ----------------------------------
+cluster=readRDS('../downstream/input/jsd.rds')
+timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+for(ts in unique(NME_in_dt$tissue)){
+  NME_in_dt_sp=NME_in_dt[tissue==ts]
+  UC_in_sp=UC_in[[ts]]
+  UC_in_mt=as.matrix(mcols(UC_in_sp))
+  rownames(UC_in_mt)=paste0(seqnames(UC_in_sp),':',start(UC_in_sp),'-',end(UC_in_sp))
+  rm(UC_in_sp)
+  colnames(UC_in_mt)=sub(paste0(ts,'-'),'',sub('-all','',colnames(UC_in_mt)))
+  UC_in_mt=UC_in_mt[,colnames(UC_in_mt)%in%timeorder]
+  colnames(UC_in_mt)=paste0("UC-",colnames(UC_in_mt))
+  clu=cluster[[ts]]
+  clu=sort(clu)
+  
+  NME_dc=dcast.data.table(NME_in_dt_sp,region~stage,value.var="NME")
+  rn=NME_dc$region
+  NME_dc=scalematrix(as.matrix(NME_dc[,-1]))
+  rownames(NME_dc)=rn
+  hypervar_dc=dcast.data.table(NME_in_dt_sp,region~stage,value.var="hyper_var")
+  rn=hypervar_dc$region
+  hypervar_dc=scalematrix(as.matrix(hypervar_dc[,-1]))
+  rownames(hypervar_dc)=rn
+  colnames(hypervar_dc)=paste0("hypervar-",colnames(hypervar_dc))
+  colnames(NME_dc)=paste0("NME-",colnames(NME_dc))
+  NME_dc=NME_dc[rowSums(is.na(NME_dc))==0,]
+  hypervar_dc=hypervar_dc[rowSums(is.na(hypervar_dc))==0,]
+  clu=clu[names(clu) %in% intersect(rownames(NME_dc),rownames(hypervar_dc))]
+  NME_dc=NME_dc[names(clu),]
+  hypervar_dc=hypervar_dc[names(clu),]
+  NME_hypervar_cor=corfunc(NME_dc,hypervar_dc)
+  cluster_hypervar=cbind(hypervar_dc,NME_dc,scalematrix(UC_in_mt[names(clu),]))
+  
+  
+  rowann <- data.frame(cluster=as.character(clu),cor=NME_hypervar_cor,stringsAsFactors = F)
+  rownames(rowann)=rownames(cluster_hypervar)
+  colann <- data.frame(statics=sub('-.*','',colnames(cluster_hypervar)),stringsAsFactors = F)
+  rownames(colann)=colnames(cluster_hypervar)
+  c1=c("red","blue","green")
+  
+  names(c1)=c("hypervar","NME","UC")
+  c2 <- brewer.pal(max(clu),'Set3')
+  names(c2) <- 1:max(clu)
+  png(paste0('../downstream/output/graphs/Figure6/scRNA_hypervar_Jason_cluster_',ts,'.png'))
+  print(pheatmap(cluster_hypervar,cluster_rows = F,cluster_cols = F,
+                 annotation_row = rowann,annotation_col = colann,
+                 show_colnames = T,show_rownames = F,
+                 gaps_row = cumsum(table(clu)),gaps_col=cumsum(rle(colann[,1])$lengths),
+                 annotation_colors = list(statics=c1,cluster=c2)))
+  dev.off()
+}
+
+
+
+NME_cor_out=data.table()
+for(dist_cutoff in seq(-3000,3000,100)){
+  NME_in_dt_ht=NME_in_dt[dist>(dist_cutoff-50)&dist<=(dist_cutoff+50),list(NME=median(NME),hyper_var=median(hyper_var,na.rm = T)),by=list(tissue,stage,gene)]
+  NME_in_dt_ht=NME_in_dt_ht[!is.na(hyper_var)]
+  NME_cor_out=rbind(NME_cor_out,data.table(region=dist_cutoff,start=dist_cutoff-50,end=dist_cutoff+50, correlation=cor(NME_in_dt_ht$NME,NME_in_dt_ht$hyper_var)))
+}
+ggplot(NME_cor_out,aes(x=region,y=correlation))+geom_point()+geom_smooth()+xlab("distrance to TSS")
+#TSS
+NME_in_dt_ht=NME_in_dt[dist>50&dist<=150,list(NME=median(NME),hyper_var=median(hyper_var,na.rm = T)),by=list(tissue,stage,gene)]
+#ChromHMM
+NME_in_dt_ht=NME_in_dt[chromHMM==TRUE,list(NME=median(NME),hyper_var=median(hyper_var,na.rm = T)),by=list(tissue,stage,gene)]
+#Plot heatmap use mean NME at Bin enhancer 
+NME_in_dt_ht=NME_in_dt[!is.na(bin_enhancer),list(NME=median(NME),hyper_var=mean(hyper_var_bin )),by=list(tissue,stage,bin_enhancer)]
+NME_in_dt_ht$gene=NME_in_dt_ht$bin_enhancer
+
+NME_in_dt_ht=lapply(unique(NME_in_dt_ht$tissue),function(x){
+  
+  return(NME_in_dt_ht[tissue==x])
+})
+
+library(pheatmap)
+set.seed(12345)
+NME_in_dt_ht=lapply(NME_in_dt_ht,function(x){
+  tissue=unique(x$tissue)
+  NME_dc=dcast.data.table(x,gene~stage,value.var="NME")
+  NME_out=as.matrix(NME_dc[,-1])
+  rownames(NME_out)=NME_dc$gene
+  NME_out=NME_out[rowSums(is.na(NME_out))==0,]
+  
+  hypervar_dc=dcast.data.table(NME_in_dt_ht[[1]],gene~stage,value.var="hyper_var")
+  hypervar_out=as.matrix( hypervar_dc[,-1])
+  hypervar_out=hypervar_out[,colnames(hypervar_out)%in% colnames(NME_out)]
+  rownames( hypervar_out)= hypervar_dc$gene
+  hypervar_out=hypervar_out[rowSums(is.na(hypervar_out))==0,]
+  
+  colnames(NME_out)=paste0('NME_',colnames(NME_out))
+  colnames(hypervar_out)=paste0("hypervar_",colnames(hypervar_out))
+  shared_genes=intersect(rownames(NME_out),rownames(hypervar_out))
+  hypervar_out_sc=scalematrix(hypervar_out[shared_genes,])
+  clu <- kmeans(hypervar_out_sc,10,iter.max = 10000)$cluster
+  clu=sort(clu)
+  hypervar_out_sc=hypervar_out_sc[names(clu),]
+  NME_out_sc=scalematrix(NME_out_sc[names(clu),])
+  NME_hypervar_cor=corfunc(hypervar_out_sc,NME_out_sc)
+  cluster_hypervar=cbind(hypervar_out_sc,NME_out_sc)
+  rowann <- data.frame(cluster=as.character(clu),cor=NME_hypervar_cor,stringsAsFactors = F)
+  colann <- data.frame(statics=sub('_.*','',colnames(cluster_hypervar)),stringsAsFactors = F)
+  rownames(colann)=colnames(cluster_hypervar)
+  c1=c("red","blue")
+  names(c1)=c("hypervar","NME")
+  png(paste0('../downstream/output/graphs/Figure6/scRNA_hypervar_cluster_TSS_',tissue,'.png'))
+  print(pheatmap(cluster_hypervar,cluster_rows = F,cluster_cols = F,
+                 annotation_row = rowann,annotation_col = colann,
+                 show_colnames = T,show_rownames = F,
+                 gaps_row = cumsum(table(clu)),gaps_col=cumsum(rle(colann[,1])$lengths),
+                 annotation_colors = list(statics=c1)))
+  dev.off()
+  
+  
+  clu_all=kmeans(cluster_hypervar[rowSums(is.na(cluster_hypervar))==0,],10,iter.max = 10000)$cluster
+  clu_all=sort(clu_all)
+  cluster_all=cluster_hypervar[names(clu_all),]
+  rowann <- data.frame(cluster=as.character(clu_all),cor=NME_hypervar_cor[names(clu_all)],stringsAsFactors = F)
+  png(paste0('../downstream/output/graphs/Figure6/scRNA_all_cluster_TSS_',tissue,'.png'))
+  print(pheatmap(cluster_all,cluster_rows = F,cluster_cols = F,
+                 annotation_row = rowann,annotation_col = colann,
+                 show_colnames = T,show_rownames = F,
+                 gaps_row = cumsum(table(clu_all)),gaps_col=cumsum(rle(colann[,1])$lengths),
+                 annotation_colors = list(statics=c1)))
+  dev.off()
+  
+  return(NME_hypervar_cor)
+  
+})
+
+
+# #Add HetCpG information to GR_merge, no longer need this middle step
+hetCpG_gff=lapply(subjects,gff_hetCpG_count,gff_in=gff_in,
+                  vcf_in=variant_HetCpG,CpG=CpG_hg19)
+#Checking if agree with gff file
+names(hetCpG_gff)=subjects
+saveRDS(hetCpG_gff,hetCpG_gff_file)
+
+#Count number of CpG in gff, find examples to check
+gff_hetCpG_count<-function(sub,gff_in,vcf_in,CpG){
+  cat('Processing',sub,'\n')
+  #Read in gff file
+  gff_sub=gff_in[gff_in$Subject==sub]
+  #Read in vcf het CpG information
+  vcf_sub=vcf_in[[sub]]
+  #Filter het CpG regions
+  vcf_sub_het=vcf_sub[vcf_sub$HetCpG]
+  #For each gff region count overlaps
+  #gff_het_count=countOverlaps(gff_sub,vcf_sub_het)
+  #cat(sub,':',sum(gff_het_count>1)/length(gff_het_count)*100, '% all gff region have more than 1 het CpG\n', sep='')
+  #cat(sub,':',sum(gff_het_count>1)/sum(gff_het_count>0)*100, '% all het CpG region have more than 1 het CpG\n', sep='')
+  #cat(sub,':',sum(gff_het_count>0)/length(gff_het_count)*100, '% gff region have het CpG\n', sep='')
+  olap=findOverlaps(vcf_sub_het,gff_sub,type='within',select='all')
+  #Count number of CG, here g1CG=genome1 and g2CG=genome2, however, we need to split based on the GT, also ref
+  vcf_sub_het$g1CG=(vcf_sub_het$genome1_plus=='CG')+(vcf_sub_het$genome1_minus=='CG')
+  vcf_sub_het$g2CG=(vcf_sub_het$genome2_plus=='CG')+(vcf_sub_het$genome2_minus=='CG')
+  vcf_sub_het$refCG=(vcf_sub_het$REF_plus=='CG')+(vcf_sub_het$REF_minus=='CG')
+  vcf_sub_het$altCG=(vcf_sub_het$ALT_plus=='CG')+(vcf_sub_het$ALT_minus=='CG')
+  #Add Het CpG information
+  gff_sub$HetCpG=FALSE
+  gff_sub[subjectHits(olap)]$HetCpG=TRUE
+  #g1CG, SNP have CG in ref 
+  #g2CG SNP have CG in alt
+  gff_sub$g1CG=0
+  gff_sub$g2CG=0
+  gff_sub$refCG=0
+  gff_sub$altCG=0
+  #Count number of Het CpG here *Check 
+  df_sub=data.table(subjHits=subjectHits(olap),
+                    g1CG=vcf_sub_het$g1CG[queryHits(olap)],g2CG=vcf_sub_het$g2CG[queryHits(olap)],
+                    refCG=vcf_sub_het$refCG[queryHits(olap)],altCG=vcf_sub_het$altCG[queryHits(olap)])
+  
+  agg_sub=df_sub[,.(g1CG=sum(g1CG),g2CG=sum(g2CG),refCG=sum(refCG),altCG=sum(altCG)),by=subjHits]
+  gff_sub$g1CG[agg_sub$subjHits]=agg_sub$g1CG#agg_sub$subjHits is the unique subject hits
+  gff_sub$g2CG[agg_sub$subjHits]=agg_sub$g2CG
+  gff_sub$refCG[agg_sub$subjHits]=agg_sub$refCG#agg_sub$subjHits is the unique subject hits
+  gff_sub$altCG[agg_sub$subjHits]=agg_sub$altCG
+  gff_sub$N_hg19=countOverlaps(gff_sub,CpG)
+  gff_sub$N_nonhet=gff_sub$N_hg19-countOverlaps(gff_sub,vcf_sub_het[vcf_sub_het$refCG>0])
+  
+  return(gff_sub)
+}
+#Add hypervaribility to each region: check with Jason/Ken/Jordi
+add_hyper_var<-function(GR_in,hyper_var_in,sample_name,upper_cutoff=0.75,lower_cutoff=0.25){
+  GR_sp=GR_in[GR_in$Sample %in%sample_name]
+  hyper_var=read_hypervar(hyper_var_in)
+  
+  #check output
+  GR_in$hyper_var_promoter[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$genes_promoter[GR_in$Sample %in%sample_name],
+                                                                       function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
+  
+  GR_in$hyper_var_TSS[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$TSS[GR_in$Sample %in%sample_name],
+                                                                  function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
+  GR_in$hyper_var_body[GR_in$Sample %in%sample_name]=unlist(lapply(GR_in$genes_body[GR_in$Sample %in%sample_name],
+                                                                   function(x) mean(hyper_var$hypervar_logvar[hyper_var$gene_name %in% x])))
+  GR_in$hyper_var_lower[GR_in$Sample %in%sample_name]=quantile(hyper_var$hypervar_logvar,prob=lower_cutoff)
+  GR_in$hyper_var_upper[GR_in$Sample %in%sample_name]=quantile(hyper_var$hypervar_logvar,prob=upper_cutoff)
+  GR_in$hyper_var_median[GR_in$Sample %in%sample_name]=median(hyper_var$hypervar_logvar)
+  GR_in$hyper_var_fn[GR_in$Sample %in%sample_name]=rep(list(hyper_var_in),length(GR_in$hyper_var_fn[GR_in$Sample %in%sample_name]))
+  return(GR_in)
+}
+
+
+#get masked trinucleotide, currently not in use
+mask_tri<-function(x){
+  x_sp=strsplit(x,'')[[1]]
+  x_sp[2]='X'
+  return(paste(x_sp,collapse = ''))
+}
+
+
+# quant=c("0-25%","25%-50%","50%-75%","75%-100%")
+# informME_in$quant_score=findInterval(informME_in$score,quantile(informME_in$score,prob=c(0,0.25,0.5,0.75),na.rm=T))
+# informME_in$quant_score=quant[informME_in$quant_score]

@@ -2,92 +2,78 @@ rm(list=ls())
 source("mainFunctions_sub.R")
 #Define ggplot theme
 
-theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
+theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
                  axis.text.x=element_text(size=16),
-                 axis.text.y=element_text(size=16))
-plot_CpG_number<-function(allele_gr_ASM,stat="NME",theme_in=theme_glob){
-  allele_het_df=rbind(data.frame(value=c(elementMetadata(allele_gr_ASM)[,paste0(stat,'1')][allele_gr_ASM$CpGdiff>0],
-                                         elementMetadata(allele_gr_ASM)[,paste0(stat,'2')][allele_gr_ASM$CpGdiff<0]),type='More CpG'),
-                      data.frame(value=c(elementMetadata(allele_gr_ASM)[,paste0(stat,'2')][allele_gr_ASM$CpGdiff>0],
-                                         elementMetadata(allele_gr_ASM)[,paste0(stat,'1')][allele_gr_ASM$CpGdiff<0]),type='less CpG'))
-  print(ggplot(allele_het_df,aes(x=value,color=type,fill=type))+
-          geom_density(alpha=0.25,size=1)+xlab(stat)+
-          theme_in+theme(legend.position="bottom",legend.title = element_blank())+ylim(c(0,4))+
-          scale_color_manual(values=c("blue","red"))+scale_fill_manual(values=c("blue","red"))+
-          geom_hline(yintercept=0, colour="white", size=1))
-}
-
-#Density analysis
+                 axis.text.y=element_text(size=16))+theme_classic()
+# Find number of overlapped regions ---------------------------------------
 GR_merge=readRDS(GR_merge_file)
 #Only use merged data for H1
-
-GR_merge$CpGdiff=GR_merge$g1CG-GR_merge$g2CG
-#Figure 3C * check
-pdf('../downstream/output/graphs/Figure3/Figure3C_CpG_number_NME.pdf',width=3.5,height=3.5)
-plot_CpG_number(GR_merge[GR_merge$dNME_pval<=pval_cutoff])
-dev.off()
-#CpG density vs dNME 
-GR_merge$dNME_relative=GR_merge$NME1-GR_merge$NME2
-cor.test(GR_merge$dNME_relative[GR_merge$dNME_pval<=pval_cutoff], GR_merge$density_diff[GR_merge$dNME_pval<=pval_cutoff])
-#Figure 3D 
-NME_in=readRDS(NME_agnostic_file)
-CpG_hg19=readRDS('../downstream/input/CpG_hg19.rds')
-NME_in$CG_hg19=countOverlaps(NME_in,CpG_hg19)
-NME_in$density=NME_in$CG_hg19/width(NME_in)
-NME_in=NME_in[seqnames(NME_in)%in%paste0("chr",1:22)]
-cor.test(NME_in$density,NME_in$NME,method='pearson')#or pearson,0.15
-#Make boxplot of this
-#quantile(NME_in$density,prob=seq(0,1,0.2),na.rm=T)
-NME_in$density_quant=findInterval(NME_in$density,seq(0,0.1,0.01))
-#NME_in$density_quant[NME_in$density_quant==6]=5#11th quantile is the maximum number, move to 10th
-quant_conv=c(paste0(seq(0,0.09,0.01),'-',seq(0.01,0.1,0.01)),'>0.1')
-NME_in$density_quant=factor(quant_conv[NME_in$density_quant],levels=quant_conv)
-pdf('../downstream/output/graphs/Figure3/Figure3D_CpG_density_NME_boxplot.pdf',width=3.5,height=3.5)#Totally having 69530406 points
-ggplot(as.data.frame(mcols(NME_in)),aes(x=density_quant, y=NME))+
-  ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
-  ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
-dev.off()              
-
-
-# Plot density vs NME with points -----------------------------------------
-# NME_in_dt=data.table(NME=NME_in$NME,density=NME_in$density)
-# digits_round=4
-# NME_in_dt_agg=NME_in_dt[, list(NME=median(NME),Bottom25=quantile(NME,probs=0.25),
-#                                    top25=quantile(NME,probs=0.75)), 
-#                             by = list(density = round(density,digits=digits_round))]
-# NME_in_dt_agg$Bottom25= predict(loess(Bottom25~density,NME_in_dt_agg),newdata=NME_in_dt_agg$density)
-# NME_in_dt_agg$top25= predict(loess(top25~density,NME_in_dt_agg),newdata=NME_in_dt_agg$density)
-# png('../downstream/output/graphs/Figure3/Figure3D_CpG_density_NME.png',width=1080,height=1080)#Totally having 69530406 points
-# ggplot(NME_in_dt_agg,aes(x=density, y=NME))+
-#   ylim(c(0,1))+geom_smooth(method="loess",se=FALSE)+theme_glob+xlab("CpG density")+
-#   ylab("NME")+geom_ribbon(aes(ymin = Bottom25, ymax = top25), fill = "blue", alpha = .1)+
-#   theme(axis.title.x=element_text(hjust=0.5,size=48,face="bold"),
-#         axis.title.y=element_text(hjust=0.5,size=48,face="bold"),
-#         axis.text.x=element_text(size=46),
-#         axis.text.y=element_text(size=46))+
-#   geom_point(data=NME_in_dt,size=0.1,aes(x=density,y=NME),alpha=0.1)
-# dev.off()              
+GR_merge=GR_merge[!(GR_merge$Sample%in%c("rep1 - H1","rep2 - H1"))]
 genomic_features=readRDS(genomic_features_file)
-#Figure S5
-olap_islands=findOverlaps(NME_in,genomic_features$`CpG island`)
-olap_shores=findOverlaps(NME_in,genomic_features$`CpG shore`)
-olap_shelf=findOverlaps(NME_in,genomic_features$`CpG shelf`)
-olap_open_sea=findOverlaps(NME_in,genomic_features$`CpG open sea`)
+hyper_var_all=readRDS('../downstream/output/allele_agnostic_var.rds')#cor=0.211722 
+hyper_var_all=lapply(hyper_var_all,function(x) x[x$N>=2])
+#Figure 3C and D in different context
+#0.1744904 
+dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="hypervar_logvar")
+dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="mean")
+dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="var")
+hyper_var_all$NME_hypervar_calc$CV=sqrt(hyper_var_all$NME_hypervar_calc$var)/hyper_var_all$NME_hypervar_calc$mean
+dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="CV")
 
-CpG_density_NME=rbind(data.table(NME=NME_in$NME[queryHits(olap_islands)],feature='islands'),
-                      data.table(NME=NME_in$NME[queryHits(olap_shores)],feature='shores'),
-                      data.table(NME=NME_in$NME[queryHits(olap_shelf)],feature='shelf'),
-                      data.table(NME=NME_in$NME[queryHits(olap_open_sea)],feature='open sea'))
+dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="hypervar_logvar")
+dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="mean")
+dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="var")
+hyper_var_all$MML_hypervar_calc$CV=sqrt(hyper_var_all$MML_hypervar_calc$var)/hyper_var_all$MML_hypervar_calc$mean
+dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="CV")
 
 
-
-pdf('../downstream/output/graphs/FigureS5/NME_density_feature.pdf',width=3.5,height=3.5)
-# my_comparisons <- list( c("islands", "shores"), c("islands", "shelf"), c("islands", "open sea"),
-#                         c("shores", "shelf"),c("shores", "open sea"),c("shelf", "open sea"))
-ggplot(CpG_density_NME,aes(x=feature,y=NME))+geom_boxplot(outlier.shape = NA)+ 
-  theme_glob+xlab("Genomic Features")
-  #stat_compare_means(comparisons=my_comparisons,method = "wilcox.test")
-dev.off()
-
+# # NME vs VMR currently not in use--------------------------------------------------------------
+# NME_in=readRDS(NME_agnostic_file)
+# #Brain
+# load("../downstream/input/vmrs_hg19_brain.rda")
+# vmr_HC2=vmrs_hg19$HC2
+# vmr_HC1=vmrs_hg19$HC1
+# names(vmr_HC2)=NULL
+# names(vmr_HC1)=NULL
+# #Do HC2
+# vmr=do.call(c,vmr_HC2)
+# saveRDS(vmr,'../downstream/output/vmr_HC2.rds')
+# vmr=readRDS('../downstream/output/vmr_HC2.rds')
+# NME_in_brain=NME_in[NME_in$Sample%in%c('Brain_Hippocampus_middle_paired - 149','Brain_Hippocampus_middle_paired - 150')]
+# OR_quant=data.frame()
+# for(percent in unique(NME_in_brain$quant_score)){
+#   OR=OR_VMR(NME_in_brain,vmr,percent,NME_quant='quant_score')
+#   OR_quant=rbind(OR_quant,data.frame(quant=percent,OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.in[1],upperCI=OR$conf.in[2]))
+#   
+# }
+# write.csv(OR_quant,'../downstream/output/brain_VMR.csv')
+# 
+# #chromHMM state get enhancer
+# ah = AnnotationHub()
+# ENCODE_name=ENCODE_to_sample(unique(NME_in_brain$Sample))
+# ah_num=names(query(ah, c("chromhmmSegmentations", unique(ENCODE_name$ENCODE))))
+# chromHMM=ah[[ah_num]]
+# chromHMM_enc=chromHMM[chromHMM$abbr%in%c("7_Enh","6_EnhG")]
+# NME_in_brain_enc=subsetByOverlaps(NME_in_brain,chromHMM_enc)
+# vmr_enc=subsetByOverlaps(vmr,chromHMM_enc)
+# #Find nearest genes
+# genomic_features=readRDS(genomic_features_file)
+# genomic_features=genomic_features$TSS
+# NME_in_brain_enc=dist_calc(NME_in_brain_enc,genomic_features)
+# vmr_enc=dist_calc(vmr_enc,genomic_features)
+# #Find overlap between nearest genes
+# NME_in_brain_enc_highNME=NME_in_brain_enc[NME_in_brain_enc$NME>=quantile(NME_in_brain$NME,prob=0.99)]#0.87 cutoff
+# NME_in_brain_enc_highNME=as.data.table(mcols(NME_in_brain_enc_highNME))
+# NME_in_brain_enc_highNME=NME_in_brain_enc_highNME[,list(NME=mean(NME),dist=mean(abs(dist))),by=list(gene)]
+# NME_in_brain_enc_highNME=NME_in_brain_enc_highNME[order(NME,decreasing = T)]$gene
+# bg=unique(c(vmr_enc$gene,NME_in_brain_enc$gene))
+# NME_VMR=sum((bg %in%NME_in_brain_enc_highNME)&(bg %in%vmr_enc$gene))
+# NME_nonVMR=sum((bg %in%NME_in_brain_enc_highNME)&!(bg %in%vmr_enc$gene))
+# VMR_nonNME=sum(!(bg %in%NME_in_brain_enc_highNME)&(bg %in%vmr_enc$gene))
+# nonVMR_nonNME=sum(!(bg %in%NME_in_brain_enc_highNME)&!(bg %in%vmr_enc$gene))
+# 
+# fisher.test(matrix(c(NME_VMR,NME_nonVMR,VMR_nonNME,nonVMR_nonNME),nrow=2))
+# 
+# write(unique(NME_in_brain_enc_highNME[NME_in_brain_enc_highNME%in%vmr_enc$gene]),'../downstream/output/VMR_NME.txt')

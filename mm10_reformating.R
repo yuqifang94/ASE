@@ -1,5 +1,4 @@
-suppressMessages(library(GenomicRanges))
-suppressMessages(library(topGO))
+source('mainFunctions_sub.R')
 corfunc <- function(m1,m2,type='concordant') {
   if (type=='concordant') {
     rowSums(scalematrix(m1) * scalematrix(m2))/(ncol(m1)-1)
@@ -27,14 +26,14 @@ uc <- sapply(uc,function(gr) {
   am <- as.matrix(mcols(gr))
   rownames(am) <- grv
   am <- am[rownames(am) %in% dnase_gr,]
-  am <- am[,!grepl('day0',colnames(am))]
+  am <- am[,!grepl('P0',colnames(am))]
   am <- am[complete.cases(am),]
 })
 uc <- uc[sapply(uc,ncol) > 6]
 #jsd only
 #names(uc) <- sapply(uc,function(i) sub('_.*','',sub('_all-all','',colnames(i)[1])))
 names(uc) <- sapply(uc,function(i) sub('-.*','',colnames(i)[1]))
-for (i in 1:length(uc)) colnames(uc[[i]]) <- gsub('-all','',gsub(paste0(names(uc)[[i]],'_'),'',colnames(uc[[i]])))
+for (i in 1:length(uc)) colnames(uc[[i]]) <- gsub('-all','',gsub(paste0(names(uc)[[i]],'-'),'',colnames(uc[[i]])))
 #Do it for NME and MML
 grv <- paste0(as.character(seqnames(mml)),':',start(mml),'-',end(mml))
 grv2 <- paste0(as.character(seqnames(nme)),':',start(nme),'-',end(nme))
