@@ -32,6 +32,7 @@ plotMB<-function (results, rsid, reverseMotif = TRUE, effect = c("strong",
                 pwm.id & result$providerName == pwm.name.f, ]) == 
                 "-")
             if (doRev) {
+                #Changed
                 pwm <- pwms@listData[[pwm.i]]
                 
                 pwm <- pwm[, rev(1:ncol(pwm))]
@@ -39,6 +40,7 @@ plotMB<-function (results, rsid, reverseMotif = TRUE, effect = c("strong",
                   "A")
                 pwm <- pwm[c("A", "C", "G", 
                   "T"), ]
+                #Changed
                 pwms@listData[[pwm.i]] <- pwm
                 names(pwms@listData)[pwm.i] <- paste0(names(pwms)[pwm.i], 
                   "-:rc")
@@ -54,8 +56,10 @@ plotMB<-function (results, rsid, reverseMotif = TRUE, effect = c("strong",
                 pwm.id & result$providerName == pwm.name.f, ]) == 
                 "-")
             if (doRev) {
-                pwm <- pwms[[pwm.i]]
+                #Changed
+                pwm <- pwmspwms@listData[[pwm.i]]
                 pwm <- pwm[, rev(1:ncol(pwm))]
+                #Changed
                 pwms@listData[[pwm.i]] <- pwm
                 names(pwms)[pwm.i] <- paste0(names(pwms)[pwm.i], 
                   "-:r")

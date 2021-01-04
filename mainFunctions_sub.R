@@ -1,4 +1,5 @@
 # Dependencies in use -----------------------------------------------------
+#Need R/3.6.1, gcc/5.5.0
 if (!requireNamespace("rtracklayer", quietly = TRUE))
 {BiocManager::install("rtracklayer")}
 library(rtracklayer)
@@ -80,7 +81,7 @@ if (!requireNamespace("org.Hs.eg.db", quietly = TRUE))
 {BiocManager::install("org.Hs.eg.db")}
 library(org.Hs.eg.db)
 
-#hg38 genome
+#hg38 genome: not used maybe
 if (!requireNamespace("SNPlocs.Hsapiens.dbSNP151.GRCh38", quietly = TRUE)){
   BiocManager::install("SNPlocs.Hsapiens.dbSNP151.GRCh38")}
 library(SNPlocs.Hsapiens.dbSNP151.GRCh38)
@@ -135,10 +136,17 @@ library(topGO)
 #Motif analysis: need intel/18.0
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
-
 BiocManager::install("motifbreakR")
 library(motifbreakR)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("TFBSTools")
+library(TFBSTools)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
 
+BiocManager::install("MotifDb")
+library(MotifDb)
 # Not in use --------------------------------------------------------------
 # 
 # if (!requireNamespace("Repitools", quietly = TRUE))

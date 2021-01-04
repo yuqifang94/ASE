@@ -46,6 +46,7 @@ motifbreakR_parallel<-function (snpList, pwmList, threshold = 0.85, filterp = FA
   snpList <- snpList_cores
   rm(snpList_cores)
   cat('score SNPlist\n')
+  #Changed
   #Check if modification happened here
   x <- bplapply(snpList, motifbreakR:::scoreSnpList, pwmList = pwms$pwmList, 
               threshold = pwms$pwmThreshold, pwmList.pc = pwms$pwmListPseudoCount, 
