@@ -1,5 +1,43 @@
 # Dependencies in use -----------------------------------------------------
-#Need R/3.6.1, gcc/5.5.0
+#Need R/3.6.1, gcc/5.5.0, and atlas
+#clean run: remove: rm -r /home-net/home-4/yfang27@jhu.edu/R/x86_64-pc-linux-gnu-library/3.6/gcc/5.5/*
+#rm -r /scratch/users/yfang27@jhu.edu/yfang/temp_all/*
+
+#plot 
+if (!requireNamespace("ggfortify", quietly = TRUE))
+{
+  install.packages("glue")
+  BiocManager::install("ggfortify")}
+library(ggfortify)
+if (!requireNamespace("shiny", quietly = TRUE))
+{install.packages("htmltools")
+  BiocManager::install("shiny")}
+library(shiny)
+if (!requireNamespace("RColorBrewer", quietly = TRUE))
+{BiocManager::install("RColorBrewer")}
+library(RColorBrewer)
+if (!requireNamespace("ggplot2", quietly = TRUE))
+{BiocManager::install("ggplot2")}
+library(ggplot2)
+if (!requireNamespace("ggpubr", quietly = TRUE))
+{BiocManager::install("ggpubr")}
+library(ggpubr)
+
+if (!requireNamespace("lattice", quietly = TRUE))
+{install.packages("lattice")}
+library(lattice)
+if (!requireNamespace("gridExtra", quietly = TRUE))
+{BiocManager::install("gridExtra")}
+library(gridExtra)
+if (!requireNamespace("grid", quietly = TRUE))
+{BiocManager::install("grid")}
+library(grid)
+if (!requireNamespace("pander", quietly = TRUE))
+{install.packages("pander")}
+library(pander)
+if (!requireNamespace("preprocessCore", quietly = TRUE))
+{install.packages("preprocessCore")}
+library(preprocessCore)
 if (!requireNamespace("rtracklayer", quietly = TRUE))
 {BiocManager::install("rtracklayer")}
 library(rtracklayer)
@@ -27,46 +65,12 @@ library(readxl)
 if (!requireNamespace("reshape2", quietly = TRUE))
 {BiocManager::install("reshape2")}
 library(reshape2)
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-BiocManager::install("exomeCopy")
+if (!requireNamespace("exomeCopy", quietly = TRUE))
+{BiocManager::install("exomeCopy")}
 library(exomeCopy)
-
-#plot 
 if (!requireNamespace("pheatmap", quietly = TRUE))
 {BiocManager::install("pheatmap")}
 library(pheatmap)
-if (!requireNamespace("ggfortify", quietly = TRUE))
-{BiocManager::install("ggfortify")}
-library(ggfortify)
-if (!requireNamespace("RColorBrewer", quietly = TRUE))
-{BiocManager::install("RColorBrewer")}
-library(RColorBrewer)
-if (!requireNamespace("ggplot2", quietly = TRUE))
-{BiocManager::install("ggplot2")}
-library(ggplot2)
-if (!requireNamespace("ggpubr", quietly = TRUE))
-{BiocManager::install("ggpubr")}
-library(ggpubr)
-if (!requireNamespace("shiny", quietly = TRUE))
-{BiocManager::install("shiny",version="devel")}
-library(shiny)
-if (!requireNamespace("lattice", quietly = TRUE))
-{install.packages("lattice")}
-library(lattice)
-if (!requireNamespace("gridExtra", quietly = TRUE))
-{BiocManager::install("gridExtra")}
-library(gridExtra)
-if (!requireNamespace("grid", quietly = TRUE))
-{BiocManager::install("grid")}
-library(grid)
-if (!requireNamespace("pander", quietly = TRUE))
-{install.packages("pander")}
-library(pander)
-if (!requireNamespace("preprocessCore", quietly = TRUE))
-{install.packages("preprocessCore")}
-library(preprocessCore)
 #hg19 genome 
 if (!requireNamespace("TxDb.Hsapiens.UCSC.hg19.knownGene", quietly = TRUE))
 {BiocManager::install("TxDb.Hsapiens.UCSC.hg19.knownGene")}
@@ -133,7 +137,7 @@ if (!requireNamespace("topGO", quietly = TRUE))
 {BiocManager::install("topGO")}
 library(topGO)
 
-#Motif analysis: need intel/18.0
+#Motif analysis: need atlas, gcc/5.5.0, R/3.6.1
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install("motifbreakR")
@@ -144,7 +148,6 @@ BiocManager::install("TFBSTools")
 library(TFBSTools)
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
-
 BiocManager::install("MotifDb")
 library(MotifDb)
 # Not in use --------------------------------------------------------------
