@@ -1,6 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-library(Gmisc)
+
 #Define ggplot theme
 
 theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
@@ -223,7 +223,7 @@ variant_dNME_ASM_TF$ASM[sign(variant_dNME_ASM_TF$allele_diff_NME)==sign(variant_
 cTCF_loc=variant_dNME_ASM_TF[variant_dNME_ASM_TF$ASM=="Yes"]
 cTCF_loc=cTCF_loc[cTCF_loc$N>=4]
 cTCF_loc=cTCF_loc[order(cTCF_loc$dNME,decreasing=T)]
-library(motifbreakR)
+
 source('plotMB.R')
 pdf('../downstream/output/mouse_examples/motif_CTCF.pdf')
 plotMB(subsetByOverlaps(motif_gene_high_NME_TF,cTCF_loc[2]),'STL003-874104')

@@ -127,7 +127,12 @@ if (!requireNamespace("topGO", quietly = TRUE))
 {BiocManager::install("topGO")}
 library(topGO)
 
+#Motif analysis: need intel/18.0
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
 
+BiocManager::install("motifbreakR")
+library(motifbreakR)
 
 # Not in use --------------------------------------------------------------
 # 
