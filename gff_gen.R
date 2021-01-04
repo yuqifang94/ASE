@@ -61,26 +61,7 @@ species='mm10'
   GR_merge=readRDS(GR_merge_file)
   gff_gen(granges(unique(GR_merge)),cpgr,hg19_bl,'../downstream/output/human_ASM_region_allele_agnostic_250bp.gff','../downstream/output/human_ASM_region_allele_agnostic_250bp.gff')
 
-gff_gen<-function(TSS_break,cpgr,blacklist_region,rds_save_file,out_name){
-  olap=findOverlaps(TSS_break,cpgr)
-  CpG_df=data.frame(TSS_hit=queryHits(olap),CpG_start=start(cpgr)[subjectHits(olap)])
-  CpG_df_agg=aggregate(CpG_start~TSS_hit,CpG_df,function(x) paste(x,collapse=', '))
-  CpG_df_agg$N=unlist(lapply(CpG_df_agg$CpG_start,function(x) length(strsplit(x,', ')[[1]])))
-  CpG_df_agg$CpG_start=paste("[",CpG_df_agg[,2],"]",sep='')
-  TSS_break_out=TSS_break[CpG_df_agg[,1]]
-  strand(TSS_break_out)='*'
-  TSS_break_out$N=CpG_df_agg$N
-  TSS_break_out$CpGs=CpG_df_agg$CpG_start
-  #filter out blacklist region and region with N=1
-  
-  #TSS_break_out=TSS_break_out[TSS_break_out$N>1]
-  olap=findOverlaps(TSS_break_out,blacklist_region)
-  TSS_break_out=TSS_break_out[-queryHits(olap)]
-  TSS_break_out_gff=granges(TSS_break_out)
-  mcols(TSS_break_out_gff)=mcols(TSS_break_out)[,c('N','CpGs')]
-  export.gff3(sort(TSS_break_out_gff),out_name)
-  saveRDS(TSS_break_out,rds_save_file)
-}
+
 #hg19
 #about 4000 regions are affected, 1600200
 # sed -i 's/%2c/,/g' hg19_TSS_20kb_250bp.gff
