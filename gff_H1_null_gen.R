@@ -1,9 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-library(exomeCopy)
-library(Mus.musculus)
-library(TxDb.Mmusculus.UCSC.mm10.knownGene)
-library(BSgenome.Mmusculus.UCSC.mm10)
+
 species='mm10'
 
 #DNase vs non-DNase

@@ -138,17 +138,14 @@ if (!requireNamespace("topGO", quietly = TRUE))
 library(topGO)
 
 #Motif analysis: need atlas, gcc/5.5.0, R/3.6.1
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("motifbreakR")
+if (!requireNamespace("motifbreakR", quietly = TRUE)){
+BiocManager::install("motifbreakR")}
 library(motifbreakR)
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("TFBSTools")
+if (!requireNamespace("TFBSTools", quietly = TRUE)){
+BiocManager::install("TFBSTools")}
 library(TFBSTools)
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("MotifDb")
+if (!requireNamespace("MotifDb", quietly = TRUE))
+{BiocManager::install("MotifDb")}
 library(MotifDb)
 # Not in use --------------------------------------------------------------
 # 
