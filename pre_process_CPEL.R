@@ -322,6 +322,8 @@ gn <- sub('".*','',sub('.*gene_name "','',gtf[,9]))
 genes <- GRanges(seqnames=gtf[,1],IRanges(start=gtf[,4],end=gtf[,5]),strand = gtf[,7])
 genes$gene_name <- gn
 NME_in=dist_calc(NME_in,genes)
+#Percent gene covered?
+length(unique(NME_in[abs(NME_in$dist)<=3000]$gene))/length(genes[seqnames(genes)!="chrM"])#85%
 NME_in_dt=as.data.table(mcols(NME_in))
 NME_in_dt$region=paste0(seqnames(NME_in),':',start(NME_in),'-',end(NME_in))
 NME_in_dt$hyper_var=-100

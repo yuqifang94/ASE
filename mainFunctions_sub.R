@@ -26,6 +26,11 @@ library(readxl)
 if (!requireNamespace("reshape2", quietly = TRUE))
 {BiocManager::install("reshape2")}
 library(reshape2)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("exomeCopy")
+library(exomeCopy)
 
 #plot 
 if (!requireNamespace("pheatmap", quietly = TRUE))
