@@ -1,9 +1,7 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
 
-species='mm10'
-
-#DNase vs non-DNase
+#DNase vs non-DNase mouse
   
   DNAase=readRDS('../downstream/input/DNase_mm10_peak_merge_250bp.rds')
   control=readRDS('../downstream/input/DNase_mm10_peak_merge_250bp_control.rds')
@@ -28,7 +26,7 @@ species='mm10'
   out_name="../downstream/output/mm10_DNase_3kb_250bp.gff"
   #https://github.com/Boyle-Lab/Blacklist/blob/master/lists/Blacklist_v1/
   blacklist_region=import.bed('../downstream/input/mm10.blacklist.bed.gz')
-
+  gff_gen(TSS_break,cpgr,hg19_bl,'../downstream/output/mm10_DNase_250bp.rds','../downstream/output/mm10_DNase_250bp.gff')
 # Human agnostic analysis -------------------------------------------------
   #Get all CpG location
   chrs <- names(Hsapiens)[1:24]
