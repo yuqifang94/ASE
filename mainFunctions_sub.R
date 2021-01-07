@@ -1162,7 +1162,7 @@ read.agnostic.mouse<-function(in_dir,tissue,stage,stat_type,replicate){
 }
 #UC
 read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
-  
+
   cat('processing:',file_in,'\n')
   informME_in=import.bedGraph(file_in)
   if(length(informME_in)>0){
@@ -1173,46 +1173,41 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     #process file name
     file_in=strsplit(file_in,'\\/')[[1]]
     file_in=file_in[length(file_in)]
-    file_in=gsub('_uc.bedGraph','',file_in)
-    file_in=gsub('_jsd.bedGraph','',file_in)
-    comp= strsplit(file_in,'-vs-')[[1]]
-    comp= strsplit(file_in,'-vs-')[[1]]
+    comp= strsplit(strsplit(file_in,'_uc.bedGraph')[[1]],'-vs-')[[1]]
     strain=unlist(lapply(strsplit(comp,'_'),function(x) x[1]))
     #if  contain BL6DBA, use ref is BL6DBA
     strain=ifelse('BL6DBA'%in%strain,'BL6DBA','mm10')
-    comp=unlist(lapply(strsplit(comp,'-'),function(x) paste(x[-1],collapse = '-')))
+    comp=unlist(lapply(strsplit(comp,'_'),function(x) paste(x[-1],collapse = '_')))
     comp=comp[comp!='']
-    comp_stage=unlist(lapply(comp,function(x) {x_split=strsplit(x,'-')[[1]]
+    comp_stage=unlist(lapply(comp,function(x) {x_split=strsplit(x,'_')[[1]]
     x_split=x_split[-length(x_split)][-1]
-    x_split=paste(x_split,collapse = '-')
+    x_split=paste(x_split,collapse = '_')
     return(x_split)}))
-    tissue1=strsplit(comp[1],'-')[[1]][1]
-    tissue2=strsplit(comp[2],'-')[[1]][1]
+    tissue1=strsplit(comp[1],'_')[[1]][1]
+    tissue2=strsplit(comp[2],'_')[[1]][1]
     #if BL6DBA, the 1st comp_stage is empty
-    
+
     comp_stage=gsub('_5','.5',comp_stage)
     comp_stage=gsub('day','E',comp_stage)
     comp_stage=gsub('E0','P0',comp_stage)
     replicate=strsplit(comp[1],'_')[[1]][length(strsplit(comp[1],'_')[[1]])]
     replicate=gsub('merged','',replicate)
-    informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',comp_stage[2],'-',replicate)
+    informME_in$Sample=paste0(tissue1,'_',comp_stage[1],'-',tissue2,'_',comp_stage[2],'-',replicate)
     informME_in=informME_in[informME_in$N>=fileter_N]
     cat('Minimum N:',min(informME_in$N),'\n')
     #informME_in$Ref=strain
     if(matrix){
-      informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',tissue2,'-',comp_stage[2],'-',replicate)
       informME_in_dt=as.data.table(mcols(informME_in))[,c("score","Sample")]
       colnames(informME_in_dt)=c("UC","Sample")
       informME_in_dt$UC=as.numeric(informME_in_dt$UC)
       informME_in_dt$region=paste0(seqnames(informME_in),":",start(informME_in),"-",end(informME_in))
       informME_in_dt=informME_in_dt[match(gff_in,region),"UC"]
-      colnames(informME_in_dt)=paste0(tissue1,'-',comp_stage[1],'-',tissue2,'-',comp_stage[2],'-',replicate)
+      colnames(informME_in_dt)=paste0(tissue1,'_',comp_stage[1],'-',tissue2,'_',comp_stage[2],'-',replicate)
       return(informME_in_dt)
     }
     else{return(informME_in)}
   }
 }
-
 agnostic_matrix_conversion<-function(gr_in,stat='NME'){
   gr_out=granges(unique(gr_in))
   olap=findOverlaps(gr_in,gr_out,type='equal')
@@ -1420,257 +1415,256 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 # Currently Not in use ----------------------------------------------------
-
-
-#collapase variants
-variants_collapase<-function(varsDiff){
-  variants <- paste(as.character(varsDiff$REF),as.character(unlist(varsDiff$ALT)),sep="-")
-  # Combine same variants (ALT/REF -> REF/ALT)
-  variants[variants %in% c("A-C","C-A")] <- "A-C"
-  variants[variants %in% c("A-G","G-A")] <- "A-G"
-  variants[variants %in% c("A-T","T-A")] <- "A-T"
-  variants[variants %in% c("C-G","G-C")] <- "C-G"
-  variants[variants %in% c("C-T","T-C")] <- "C-T"
-  variants[variants %in% c("G-T","T-G")] <- "G-T"
-  return(variants)
-}
-
-#Merge allele agnositc data 
-allele_agnostic_merge<-function(GR_in,nme_in,mml_in,pval_cutoff=0.1){
-  NME_in=import.bedGraph(nme_in)
-  if(all(seqlevels(NME_in)==gsub('chr','',seqlevels(NME_in)))){seqlevels(NME_in)=paste('chr',seqlevels(NME_in),sep='')}
-  MML_in=import.bedGraph(mml_in)
-  if(all(seqlevels(MML_in)==gsub('chr','',seqlevels(MML_in)))){seqlevels(MML_in)=paste('chr',seqlevels(MML_in),sep='')}
-  olap=findOverlaps(NME_in,GR_in)
-  agnostic_diff_df=data.frame(NME=NME_in$score[queryHits(olap)],dNME=GR_in$dNME[subjectHits(olap)],
-                              dNME_pval=GR_in$dNME_pval[subjectHits(olap)],dMML=GR_in$dMML[subjectHits(olap)],
-                              dMML_pval=GR_in$dMML_pval[subjectHits(olap)],MML=MML_in$score[queryHits(olap)])
-  agnostic_diff_df$dNME_ASM=agnostic_diff_df$dNME_pval<=pval_cutoff
-  agnostic_diff_df$dMML_ASM=agnostic_diff_df$dMML_pval<=pval_cutoff
-  agnostic_diff_df$dNME_ASM_non_dMML=agnostic_diff_df$dMML_pval>pval_cutoff & agnostic_diff_df$dNME_pval<=pval_cutoff
-  agnostic_diff_df$sample=unique(GR_in$Sample)
-  return(agnostic_diff_df)
-  
-}
-
-#Processing RNA-seq data
-RNA_seq_process<-function(dir_in,fds,condition_rep=3){
-  files=paste(dir_in,fds,"/t_data.ctab",sep="")
-  tmp=read_tsv(files[1])
-  tx2gene <- tmp[, c("t_name", "gene_name")]
-  txi <- tximport(files, type = "stringtie", tx2gene = tx2gene)
-  txi[1:3]=lapply(txi[1:3],function(x) {colnames(x)=fds 
-  return(x)})
-  sampleTable <- data.frame(condition = factor(rep(c("genome1", "genome2"), each =condition_rep)))
-  rownames(sampleTable) <- colnames(txi$counts)
-  ####Perfrom differential RNA analysis
-  dds_RNA<- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
-  if(ncol(as.data.frame(assay(dds_RNA)))==2){
-    res_RNA<-as.data.frame(cpm(assay(dds_RNA)))
-    res_RNA$gene_name=rownames(res_RNA)
-    res_RNA=res_RNA[(res_RNA[,1]!=0&res_RNA[,2]!=0),]
-    res_RNA=res_RNA[(res_RNA[,1]>10&res_RNA[,2]>10),]
-    res_RNA$log2FoldChange=log2((res_RNA[,2])/(res_RNA[,1]))
-  }else{
-    dds_RNA<-DESeq(dds_RNA)
-    res_RNA<-results(dds_RNA,name= "condition_genome2_vs_genome1")
-  }
-  return(res_RNA)
-}
-
-#Tissue to germlayer
-tissue_to_germlayer<-function(GR_input){
-  GR_input$germlayer=NA
-  tissue_ectoderm=c("foreskin_keratinocyte_paired",
-                    "foreskin_melanocyte_paired",
-                    "ectoderm_paired",
-                    "brain_cerebellum_tissue_paired",
-                    "brain_germinal_matrix_tissue_paired",
-                    "Brain_substantia_nigra_paired",
-                    "Brain_Hippocampus_middle_paired" )
-  tissue_mesoderm=c("mesoderm_23_paired","Adipose_single",
-                    "Left_Ventricle_single","Psoas_Muscle_single" ,
-                    "Right_Ventricle_single","Right_Atrium_single","Spleen_single",
-                    "Adrenal_Gland_single","Aorta_single","Ovary_single")
-  tissue_endoderm=c("Small_Intestine_single","Lung_single","endoerm_27_paired",
-                    "Bladder_single" ,"Gastric_single", "Sigmoid_Colon_single",
-                    "Thymus_single","Esophagus_single", "Pancreas_single" ,"Liver_single")
-  tissue_ESC=c("rep1","rep2","merged","42_embryonic_stem_cell_single" , "stem_27_undifferentiated_paired")
-  GR_input$germlayer[GR_input$tissue %in% tissue_ectoderm]='ectoderm'
-  GR_input$germlayer[GR_input$tissue %in% tissue_mesoderm]='mesoderm'
-  GR_input$germlayer[GR_input$tissue %in% tissue_endoderm]='endoderm'
-  GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
-  return(GR_input)
-}
-
-
-
-
-
+# 
+# 
+# #collapase variants
+# variants_collapase<-function(varsDiff){
+#   variants <- paste(as.character(varsDiff$REF),as.character(unlist(varsDiff$ALT)),sep="-")
+#   # Combine same variants (ALT/REF -> REF/ALT)
+#   variants[variants %in% c("A-C","C-A")] <- "A-C"
+#   variants[variants %in% c("A-G","G-A")] <- "A-G"
+#   variants[variants %in% c("A-T","T-A")] <- "A-T"
+#   variants[variants %in% c("C-G","G-C")] <- "C-G"
+#   variants[variants %in% c("C-T","T-C")] <- "C-T"
+#   variants[variants %in% c("G-T","T-G")] <- "G-T"
+#   return(variants)
+# }
+# 
+# #Merge allele agnositc data 
+# allele_agnostic_merge<-function(GR_in,nme_in,mml_in,pval_cutoff=0.1){
+#   NME_in=import.bedGraph(nme_in)
+#   if(all(seqlevels(NME_in)==gsub('chr','',seqlevels(NME_in)))){seqlevels(NME_in)=paste('chr',seqlevels(NME_in),sep='')}
+#   MML_in=import.bedGraph(mml_in)
+#   if(all(seqlevels(MML_in)==gsub('chr','',seqlevels(MML_in)))){seqlevels(MML_in)=paste('chr',seqlevels(MML_in),sep='')}
+#   olap=findOverlaps(NME_in,GR_in)
+#   agnostic_diff_df=data.frame(NME=NME_in$score[queryHits(olap)],dNME=GR_in$dNME[subjectHits(olap)],
+#                               dNME_pval=GR_in$dNME_pval[subjectHits(olap)],dMML=GR_in$dMML[subjectHits(olap)],
+#                               dMML_pval=GR_in$dMML_pval[subjectHits(olap)],MML=MML_in$score[queryHits(olap)])
+#   agnostic_diff_df$dNME_ASM=agnostic_diff_df$dNME_pval<=pval_cutoff
+#   agnostic_diff_df$dMML_ASM=agnostic_diff_df$dMML_pval<=pval_cutoff
+#   agnostic_diff_df$dNME_ASM_non_dMML=agnostic_diff_df$dMML_pval>pval_cutoff & agnostic_diff_df$dNME_pval<=pval_cutoff
+#   agnostic_diff_df$sample=unique(GR_in$Sample)
+#   return(agnostic_diff_df)
+#   
+# }
+# 
+# #Processing RNA-seq data
+# RNA_seq_process<-function(dir_in,fds,condition_rep=3){
+#   files=paste(dir_in,fds,"/t_data.ctab",sep="")
+#   tmp=read_tsv(files[1])
+#   tx2gene <- tmp[, c("t_name", "gene_name")]
+#   txi <- tximport(files, type = "stringtie", tx2gene = tx2gene)
+#   txi[1:3]=lapply(txi[1:3],function(x) {colnames(x)=fds 
+#   return(x)})
+#   sampleTable <- data.frame(condition = factor(rep(c("genome1", "genome2"), each =condition_rep)))
+#   rownames(sampleTable) <- colnames(txi$counts)
+#   ####Perfrom differential RNA analysis
+#   dds_RNA<- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
+#   if(ncol(as.data.frame(assay(dds_RNA)))==2){
+#     res_RNA<-as.data.frame(cpm(assay(dds_RNA)))
+#     res_RNA$gene_name=rownames(res_RNA)
+#     res_RNA=res_RNA[(res_RNA[,1]!=0&res_RNA[,2]!=0),]
+#     res_RNA=res_RNA[(res_RNA[,1]>10&res_RNA[,2]>10),]
+#     res_RNA$log2FoldChange=log2((res_RNA[,2])/(res_RNA[,1]))
+#   }else{
+#     dds_RNA<-DESeq(dds_RNA)
+#     res_RNA<-results(dds_RNA,name= "condition_genome2_vs_genome1")
+#   }
+#   return(res_RNA)
+# }
+# 
+# #Tissue to germlayer
+# tissue_to_germlayer<-function(GR_input){
+#   GR_input$germlayer=NA
+#   tissue_ectoderm=c("foreskin_keratinocyte_paired",
+#                     "foreskin_melanocyte_paired",
+#                     "ectoderm_paired",
+#                     "brain_cerebellum_tissue_paired",
+#                     "brain_germinal_matrix_tissue_paired",
+#                     "Brain_substantia_nigra_paired",
+#                     "Brain_Hippocampus_middle_paired" )
+#   tissue_mesoderm=c("mesoderm_23_paired","Adipose_single",
+#                     "Left_Ventricle_single","Psoas_Muscle_single" ,
+#                     "Right_Ventricle_single","Right_Atrium_single","Spleen_single",
+#                     "Adrenal_Gland_single","Aorta_single","Ovary_single")
+#   tissue_endoderm=c("Small_Intestine_single","Lung_single","endoerm_27_paired",
+#                     "Bladder_single" ,"Gastric_single", "Sigmoid_Colon_single",
+#                     "Thymus_single","Esophagus_single", "Pancreas_single" ,"Liver_single")
+#   tissue_ESC=c("rep1","rep2","merged","42_embryonic_stem_cell_single" , "stem_27_undifferentiated_paired")
+#   GR_input$germlayer[GR_input$tissue %in% tissue_ectoderm]='ectoderm'
+#   GR_input$germlayer[GR_input$tissue %in% tissue_mesoderm]='mesoderm'
+#   GR_input$germlayer[GR_input$tissue %in% tissue_endoderm]='endoderm'
+#   GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
+#   return(GR_input)
+# }
+# 
+# 
 
 
 
-OR_VMR<-function(NME_dat,vmr,percent,NME_quant='quant_score'){
-  NME_dat$VMR=FALSE
-  olap=findOverlaps(NME_dat,vmr)
-  NME_dat$VMR[unique(queryHits(olap))]=TRUE
-  NME_VMR=sum((elementMetadata(NME_dat)[[NME_quant]]%in%percent)&NME_dat$VMR)
-  nonNME_VMR=sum((!elementMetadata(NME_dat)[[NME_quant]]%in%percent)&NME_dat$VMR)
-  nonNME_nonVMR=sum((!elementMetadata(NME_dat)[[NME_quant]]%in%percent)&!NME_dat$VMR)
-  NME_nonVMR=sum((elementMetadata(NME_dat)[[NME_quant]]%in%percent)&!NME_dat$VMR)
-  #print(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
-  fisher.test(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
-}
+# 
+# 
+# 
+# OR_VMR<-function(NME_dat,vmr,percent,NME_quant='quant_score'){
+#   NME_dat$VMR=FALSE
+#   olap=findOverlaps(NME_dat,vmr)
+#   NME_dat$VMR[unique(queryHits(olap))]=TRUE
+#   NME_VMR=sum((elementMetadata(NME_dat)[[NME_quant]]%in%percent)&NME_dat$VMR)
+#   nonNME_VMR=sum((!elementMetadata(NME_dat)[[NME_quant]]%in%percent)&NME_dat$VMR)
+#   nonNME_nonVMR=sum((!elementMetadata(NME_dat)[[NME_quant]]%in%percent)&!NME_dat$VMR)
+#   NME_nonVMR=sum((elementMetadata(NME_dat)[[NME_quant]]%in%percent)&!NME_dat$VMR)
+#   #print(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
+#   fisher.test(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
+# }
+# 
+# get_traits_GWAS<-function(variant_in,trait_gr_in,pval_cutoff=0.1,count_cutoff=3,stat='dNME_pval',CMH=FALSE,maxgap=500,ncores=15){
+#   traits_ls=mclapply(trait_gr_in,get_traits_GWAS_all_trait,
+#                    variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH,maxgap=maxgap,
+#                    mc.cores=ncores)
+#   return(traits_ls)
+#   #list(do.call(rbind,lapply(traits_ls,function(x)x[[1]])),do.call(rbind,lapply(traits_ls,function(x)x[[2]])))
+# }
+# get_traits_GWAS_all_trait<-function(trait_gr,variant_in,pval_cutoff,count_cutoff,stat,CMH,maxgap=500){
+#   #trait_gr=trait_gr[trait_gr$trait%in%trait]
+#   trait=unique(trait_gr$`DISEASE/TRAIT`)
+#   OR_output=data.frame()
+#   CMH_df=data.frame()
+#   dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
+#   dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
+#   dNME_traits_gr=findOverlaps(dNME_sig,trait_gr,maxgap = maxgap)
+#   # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+#   # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+#   # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+#   # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+#   dNME_trait=length(unique(queryHits(dNME_traits_gr)))
+#   dNME_non_trait=length(dNME_sig)-dNME_trait
+#   non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
+#   non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
+#   trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+#   journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
+#   trait_gr_out=trait_gr[subjectHits(dNME_traits_gr)]
+#   mcols(trait_gr_out)=mcols(trait_gr_out)[c('MAPPED_GENE','STRONGEST SNP-RISK ALLELE','DISEASE/TRAIT')]
+#   names(mcols(trait_gr_out))=c('genes','risk allele','traits')
+#   rm(dNME_sig)
+#   rm(dNME_non_sig)
+#   rm(trait_gr)
+#   gc()
+#   if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+#     
+#     CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+#                       count=trait_count,subject='All')
+#     cat('processing trait',trait,'\n')
+#     
+#     if(length(CMH_df)>0){
+#       if (CMH){return(CMH_df)}
+#       else{
+#         
+#         OR=CMH_test(CMH_df)
+#         OR_output=cbind(t(CMH_df$count),data.frame(trait=trait,OR=OR$estimate,
+#                                                    p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+#         colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+#         OR_output$journal=journal
+#         
+#         return(list(OR_output,trait_gr_out))
+#       }
+#     }
+#   }
+# }
+# #Modify this to adapt trait analysis
+# get_traits_GWAS_all_trait_single<-function(variant_in,trait_gr,pval_cutoff,count_cutoff,stat,CMH,maxgap){
+#  
+#   OR_output=data.frame()
+#   CMH_df=data.frame()
+#   dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
+#   dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
+#   
+#   # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+#   # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+#   # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+#   # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+#   dNME_trait=length(subsetByOverlaps(dNME_sig,trait_gr,maxgap = maxgap))
+#   dNME_non_trait=length(dNME_sig)-dNME_trait
+#   non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
+#   non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
+#   trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+#   rm(dNME_sig)
+#   rm(dNME_non_sig)
+#   rm(trait_gr)
+#   gc()
+#   if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+#     
+#     CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+#                       count=trait_count,subject='All')
+# 
+#     
+#     if(length(CMH_df)>0){
+#       if (CMH){return(CMH_df)}
+#       else{
+#         
+#         OR=CMH_test(CMH_df)
+#         OR_output=cbind(t(CMH_df$count),data.frame(OR=OR$estimate,
+#                                                    p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+#         colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+#         OR_output$journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
+#         return(OR_output)
+#       }
+#     }
+#   }
+# }
+# 
+# 
+# 
+# get_traits_GWAS_trait<-function(trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
+#   traits_sp_ls=lapply(unique(variant_in$germlayer),get_traits_GWAS_sp_trait,trait=trait,
+#                       variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH)
+#   traits_sp=do.call(rbind,traits_sp_ls)
+#   if(CMH&length(traits_sp)>0){
+#     OR=CMH_test(traits_sp)
+#     OR_output=data.frame(trait=trait,OR=OR$estimate,p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2])
+#     return(OR_output)
+#   }else if(!CMH){
+#     return(traits_sp)
+#   }
+# 
+# 
+# }
+# 
+# 
+# 
+# 
+# get_traits_GWAS_sp_trait<-function(sp,trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
+#  
+#       OR_output=data.frame()
+#       CMH_df=data.frame()
+#       variant_in_sp=variant_in[variant_in$germlayer==sp&!is.na(variant_in$trait),]
+#  
+#       dNME_sig=variant_in_sp[,stat]<=pval_cutoff
+#       dNME_non_sig=variant_in_sp[,stat]>pval_cutoff
+#     
+#       dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+#       non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+#       dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+#       non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+#       trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+#       if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+#        
+#         CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+#                                        count=trait_count,subject=sp)
+#         cat('processing',sp,'with trait',trait,'\n')
+# 
+#       if(length(CMH_df)>0){
+#         if (CMH){return(CMH_df)}
+#         else{
+#           OR=CMH_test(CMH_df)
+#           OR_output=cbind(t(CMH_df$count),data.frame(subject=sp,trait=trait,OR=OR$estimate,
+#                                                      p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+#           colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+#           return(OR_output)
+#         }
+#       }
+#      }
+# }
 
-get_traits_GWAS<-function(variant_in,trait_gr_in,pval_cutoff=0.1,count_cutoff=3,stat='dNME_pval',CMH=FALSE,maxgap=500,ncores=15){
-  traits_ls=mclapply(trait_gr_in,get_traits_GWAS_all_trait,
-                   variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH,maxgap=maxgap,
-                   mc.cores=ncores)
-  return(traits_ls)
-  #list(do.call(rbind,lapply(traits_ls,function(x)x[[1]])),do.call(rbind,lapply(traits_ls,function(x)x[[2]])))
-}
-get_traits_GWAS_all_trait<-function(trait_gr,variant_in,pval_cutoff,count_cutoff,stat,CMH,maxgap=500){
-  #trait_gr=trait_gr[trait_gr$trait%in%trait]
-  trait=unique(trait_gr$`DISEASE/TRAIT`)
-  OR_output=data.frame()
-  CMH_df=data.frame()
-  dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
-  dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
-  dNME_traits_gr=findOverlaps(dNME_sig,trait_gr,maxgap = maxgap)
-  # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
-  # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
-  # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
-  # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
-  dNME_trait=length(unique(queryHits(dNME_traits_gr)))
-  dNME_non_trait=length(dNME_sig)-dNME_trait
-  non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
-  non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
-  trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
-  journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
-  trait_gr_out=trait_gr[subjectHits(dNME_traits_gr)]
-  mcols(trait_gr_out)=mcols(trait_gr_out)[c('MAPPED_GENE','STRONGEST SNP-RISK ALLELE','DISEASE/TRAIT')]
-  names(mcols(trait_gr_out))=c('genes','risk allele','traits')
-  rm(dNME_sig)
-  rm(dNME_non_sig)
-  rm(trait_gr)
-  gc()
-  if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
-    
-    CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
-                      count=trait_count,subject='All')
-    cat('processing trait',trait,'\n')
-    
-    if(length(CMH_df)>0){
-      if (CMH){return(CMH_df)}
-      else{
-        
-        OR=CMH_test(CMH_df)
-        OR_output=cbind(t(CMH_df$count),data.frame(trait=trait,OR=OR$estimate,
-                                                   p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
-        colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
-        OR_output$journal=journal
-        
-        return(list(OR_output,trait_gr_out))
-      }
-    }
-  }
-}
-#Modify this to adapt trait analysis
-get_traits_GWAS_all_trait_single<-function(variant_in,trait_gr,pval_cutoff,count_cutoff,stat,CMH,maxgap){
- 
-  OR_output=data.frame()
-  CMH_df=data.frame()
-  dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
-  dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
-  
-  # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
-  # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
-  # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
-  # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
-  dNME_trait=length(subsetByOverlaps(dNME_sig,trait_gr,maxgap = maxgap))
-  dNME_non_trait=length(dNME_sig)-dNME_trait
-  non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
-  non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
-  trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
-  rm(dNME_sig)
-  rm(dNME_non_sig)
-  rm(trait_gr)
-  gc()
-  if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
-    
-    CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
-                      count=trait_count,subject='All')
-
-    
-    if(length(CMH_df)>0){
-      if (CMH){return(CMH_df)}
-      else{
-        
-        OR=CMH_test(CMH_df)
-        OR_output=cbind(t(CMH_df$count),data.frame(OR=OR$estimate,
-                                                   p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
-        colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
-        OR_output$journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
-        return(OR_output)
-      }
-    }
-  }
-}
-
-
-
-get_traits_GWAS_trait<-function(trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
-  traits_sp_ls=lapply(unique(variant_in$germlayer),get_traits_GWAS_sp_trait,trait=trait,
-                      variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH)
-  traits_sp=do.call(rbind,traits_sp_ls)
-  if(CMH&length(traits_sp)>0){
-    OR=CMH_test(traits_sp)
-    OR_output=data.frame(trait=trait,OR=OR$estimate,p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2])
-    return(OR_output)
-  }else if(!CMH){
-    return(traits_sp)
-  }
-
-
-}
-
-
-
-
-get_traits_GWAS_sp_trait<-function(sp,trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
- 
-      OR_output=data.frame()
-      CMH_df=data.frame()
-      variant_in_sp=variant_in[variant_in$germlayer==sp&!is.na(variant_in$trait),]
- 
-      dNME_sig=variant_in_sp[,stat]<=pval_cutoff
-      dNME_non_sig=variant_in_sp[,stat]>pval_cutoff
-    
-      dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
-      non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
-      dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
-      non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
-      trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
-      if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
-       
-        CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
-                                       count=trait_count,subject=sp)
-        cat('processing',sp,'with trait',trait,'\n')
-
-      if(length(CMH_df)>0){
-        if (CMH){return(CMH_df)}
-        else{
-          OR=CMH_test(CMH_df)
-          OR_output=cbind(t(CMH_df$count),data.frame(subject=sp,trait=trait,OR=OR$estimate,
-                                                     p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
-          colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
-          return(OR_output)
-        }
-      }
-     }
-}
-
-# # Currently not in use ----------------------------------------------------
 # 
 # 
 # ASM_het_enrichment<-function(gr_in){
