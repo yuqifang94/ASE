@@ -1192,7 +1192,7 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     comp_stage=gsub('E0','P0',comp_stage)
     replicate=strsplit(comp[1],'_')[[1]][length(strsplit(comp[1],'_')[[1]])]
     replicate=gsub('merged','',replicate)
-    informME_in$Sample=paste0(tissue1,'_',comp_stage[1],'-',tissue2,'_',comp_stage[2],'-',replicate)
+    informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',tissue2,'-',comp_stage[2],'-',replicate)
     informME_in=informME_in[informME_in$N>=fileter_N]
     cat('Minimum N:',min(informME_in$N),'\n')
     #informME_in$Ref=strain
