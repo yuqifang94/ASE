@@ -1,16 +1,5 @@
 source('mainFunctions_sub.R')
-corfunc <- function(m1,m2,type='concordant') {
-  if (type=='concordant') {
-    rowSums(scalematrix(m1) * scalematrix(m2))/(ncol(m1)-1)
-  } else {
-    scalematrix(t(m1)) %*% t(scalematrix(t(m2)))/(nrow(m1)-1)            
-  }
-}
-scalematrix <- function(data) {
-  cm <- rowMeans(data)
-  csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
-  (data - cm) / csd
-}
+
 #Get the tissue x region
 #get nme and mml
 mml <- readRDS('../downstream/input/MML_matrix_mouse_all_dedup_N2.rds')

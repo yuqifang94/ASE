@@ -75,49 +75,58 @@ dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="var",dir='../downstream/o
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="mean",dir='../downstream/output/graphs/FigureS13/')
 # motif preprocessing for Ken ----------------------------------------------------------
 #See mouse_motif_processing.R
-# Motif analysis example in mouse -----------------------------------------
-#read in significant motif
-plot_motif_tissue<-function(tissue){
-  FDR_cutoff=0.05
+# add information to Ken's list -------------------------------------------
+#Motif prefer high ent
+motif_human=fread('../downstream/output/graphs/motif_preference_table/All_regions/table1_motif_prefer_high_NME.csv')
+shared_motif=fread('../downstream/input/mouse_motif_enriched_Ken/perfer_high_NME_overlap_motif_dNME.csv')$V2[-1]
+shared_motif=data.table(shared_motif=shared_motif,prob_human= motif_human[match(shared_motif,motif_human$TF)]$Proportion)
+ken_dir='../downstream/input/mouse_motif_enriched_Ken/'
+file_in=dir(ken_dir,pattern="OR_residual.csv")
+for(fn in file_in){
+  Ken_in=fread(paste0(ken_dir,fn))
+  tissue=gsub("_OR_residual.csv",'',fn)
+  shared_motif[[tissue]]=Ken_in[match(shared_motif$shared_motif,gsub('.*_','',Ken_in$V1))]$residual     
+
+}
+plot_motif_binding<-function(motif,tissue,UC_raw,mml,nme,CpG_mm10){
   motif_tissue=data.table()
   #target_regions_cluster_all=GRanges()
-  target_regions=readRDS(paste0('../downstream/input/motif_target/',tissue,'_TF_motif_site.rds'))
-  chromHMM_in=readRDS('../downstream/output/chromHMM_enhancer.rds')
-  chromHMM_ts=chromHMM_in[chromHMM_in$tissue==tissue]
+  target_regions=readRDS(paste0('../downstream/input/motif_target/',tissue,'_motif_site_dNME.rds'))
+  names(target_regions)=gsub('.*_','',names(target_regions))
+  #chromHMM_in=readRDS('../downstream/output/chromHMM_enhancer.rds')
+  #chromHMM_ts=chromHMM_in[chromHMM_in$tissue==tissue]
   region_in=fread(paste0('../downstream/input/mm10_cluster_all/',tissue,'.csv'))
   region_in=region_in[chromHMM_enhancer==TRUE]
   region_in_all=data.table()
   for(i in 1:10){
-    motif_in=fread(paste0('../downstream/input/mouse_motif_cluster/',tissue,'/motif_',tissue,'_cluster_',i,'_enhancer.csv'))
-    motif_in$cluster=i
-    motif_in=motif_in[FDR<=FDR_cutoff]
     
-    if(length(motif_in$motif)>0){
+    if(length(motif)>0){
       #read in GO result
       GO_in=fread(paste0('../downstream/output/mm10_result/chromHMM_enhancer/cluster_GO/mm10_cluster_chromHMM/',tissue,'-',i,'_cluster_GO.csv'))
-      GO_in=GO_in[FC>=1.5][1:5]
+      GO_in=GO_in[FC>=1.5&FDR<=0.1][1:5]
       GO_in_gene=unique(unlist(strsplit(GO_in$gene,";")))
       #read in all regions
       region_in_clu=region_in[cluster==i]
-      target_regions_cluster=fastDoCall('c',lapply(motif_in$motif,function(x){
+      target_regions_cluster=do.call(c,unlist(lapply(motif,function(x){
         target_regions_out=unique(target_regions[[x]][target_regions[[x]]$cluster==i])
+        if(length(target_regions_out)>0){
         target_regions_out$motif=x
-        return(target_regions_out)  }))
-      target_regions_cluster=target_regions_cluster[target_regions_cluster$gene %in% GO_in_gene]
+        
+        return(target_regions_out)}
+        })))
+      #target_regions_cluster=target_regions_cluster[target_regions_cluster$gene %in% GO_in_gene]
       olap=findOverlaps(convert_GR(region_in_clu$region),target_regions_cluster)
       region_in_clu=region_in_clu[queryHits(olap)]
-      region_in_clu$gene_Jason=region_in_clu$gene
-      region_in_clu$gene=NULL
+      #region_in_clu$gene_Jason=region_in_clu$gene
+      region_in_clu$gene_top_GO=region_in_clu$gene %in% GO_in_gene
+      #region_in_clu$gene=NULL
       region_in_clu=cbind(region_in_clu,as.data.table(mcols(target_regions_cluster[subjectHits(olap)])))
       region_in_all=rbind(region_in_all,region_in_clu)
     }
-    motif_tissue=rbind(motif_tissue,motif_in)
+    
     
   }
   
-  UC_raw=readRDS('../downstream/output/uc_matrix_DNase.rds')
-  mml <- readRDS('../downstream/output/mml_matrix_DNase.rds')
-  nme <- readRDS('../downstream/output/nme_matrix_DNase.rds')
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
   UC=UC_raw[[tissue]][,colnames(UC_raw[[tissue]])%in% timeorder]
   UC <-UC[unique(region_in_all$region),order(match(colnames(UC),timeorder))]
@@ -135,10 +144,9 @@ plot_motif_tissue<-function(tissue){
   dmml=stat_differential(mml,UC,tissue)
   dnme=stat_differential(nme,UC,tissue)
   
-  region_in_all_region=region_in_all[order(dNME_maxJSD,decreasing=T),list(cluster=paste(unique(cluster),collapse = ';'),
-                                                                          motif=paste(unique(motif),collapse = ';'),
-                                                                          dNME_maxJSD=dNME_maxJSD),
-                                     by=list(region,gene,distance)]
+  region_in_all_region=region_in_all[order(dNME_maxJSD,decreasing=T),list(motif=paste(unique(motif),collapse = ';')),
+                                     by=list(region,gene,distance,dNME_maxJSD,gene_top_GO)]
+  region_in_all_region$N=countOverlaps(convert_GR(region_in_all_region$region),CpG_mm10)
   theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                    axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                    axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
@@ -149,35 +157,45 @@ plot_motif_tissue<-function(tissue){
   dnme_out=dnme[region_in_all$region,]
   colnames(dnme_out)=paste0('dNME-',colnames(dnme_out))
   region_in_all=cbind(region_in_all,as.data.table(dmml_out),as.data.table(dnme_out))
-  pdf(paste0('../downstream/output/graphs/Figure7/',tissue,'_motif.pdf'),width=5,height=5)
+  pdf(paste0('../downstream/output/graphs/Figure7/',tissue,'_motif_dNME_only.pdf'),width=5,height=5)
   for(rg in region_in_all_region$region){
     region_stat=data.table(stage=colnames(UC),
-                           UC=UC[rg,],
-                           dmml=dmml[rg,],
+                           #UC=scale(UC[rg,])[,1],
+                           #dmml=scale(dmml[rg,])[,1],
                            dnme=dnme[rg,]
     )
-    region_stat=melt.data.table(region_stat,id.var='stage',variable.name = "stat")
+    #nme_cor=cor(region_stat$UC,region_stat$dnme,method='spearman')
+    #mml_cor=cor(region_stat$UC,region_stat$dmml,method='spearman')
+    # region_stat=melt.data.table(region_stat,id.var='stage',variable.name = "stat")
+    # 
+    # print(ggplot(region_stat,aes(x=stage,y=value,group=stat,color=stat))+geom_point(size=1)+geom_line(stat = "identity")+
+    #         theme_glob+theme(axis.text.x= element_text(angle = 90, vjust = 0.5, hjust=1),legend.position = "bottom",plot.title = element_text(hjust = 0.5))+
+    #         scale_color_manual(values=c(UC="black", dmml="blue", dnme="red"))+ylab('Scaled value')+
+    #         ggtitle(paste0('dnme cor:',round(nme_cor,digits = 3),'\n',
+    #                        'dmml cor:',round(mml_cor,digits = 3),'\n',
+    #                        paste(region_in_all_region[region==rg,],collapse='\n'))))
     
-    print(ggplot(region_stat,aes(x=stage,y=value,group=stat,color=stat))+geom_point(size=1)+geom_line(stat = "identity")+
+    print(ggplot(region_stat,aes(x=stage,y=dnme))+geom_point(size=1)+geom_line(stat = "identity",aes(group=1))+
             theme_glob+theme(axis.text.x= element_text(angle = 90, vjust = 0.5, hjust=1),legend.position = "bottom",plot.title = element_text(hjust = 0.5))+
-            scale_color_manual(values=c(UC="black", dmml="blue", dnme="red"))+
+            ylab('dNME')+
             ggtitle(paste(region_in_all_region[region==rg,],collapse='\n')))
-    
-    
   }
   dev.off()
-  return(region_in_all)
+  return(list(region_in_all_region,region_stat))
 }
-heart_motif=plot_motif_tissue("heart")
-limb_motif=plot_motif_tissue("limb")
-forebrain_motif=plot_motif_tissue("forebrain")
-#Find number of CG
+UC_raw=readRDS('../downstream/output/uc_matrix_DNase.rds')
+mml <- readRDS('../downstream/output/mml_matrix_DNase.rds')
+nme <- readRDS('../downstream/output/nme_matrix_DNase.rds')
 CpG_mm10=getCpgSitesmm10()
-heart_motif$N=countOverlaps(convert_GR(heart_motif$region),CpG_mm10)
-heart_motif[order(N,decreasing=T)]
 
+heart_regions=plot_motif_binding(shared_motif$shared_motif,"heart",UC_raw,mml,nme,CpG_mm10)
 
-# Currently Not in use ----------------------------------------------------
+#saveRDS(heart_regions,'../downstream/output/heart_regions.rds')
+
+limb_regions=plot_motif_binding(shared_motif$shared_motif,"limb",UC_raw,mml,nme,CpG_mm10)
+#saveRDS(limb_regions,'../downstream/output/limb_regions.rds')
+forebrain_regions=plot_motif_binding(shared_motif$shared_motif,"forebrain",UC_raw,mml,nme,CpG_mm10)
+#saveRDS(forebrain_regions,'../downstream/output/forebrain_regions.rds')
 # Getting dNME in each targeted motif -------------------------------------
 dnme=readRDS('../downstream/output/dnme_matrix_DNase.rds')
 motif_target_dir='../downstream/input/motif_target/'

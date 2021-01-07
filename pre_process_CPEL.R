@@ -1,7 +1,8 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
 ##############################Updated CPEL pipeline modify it accordingly###############
-CpG_hg19=readRDS('../downstream/input/CpG_hg19.rds')
+CpG_hg19=getCpgSitesH19()
+saveRDS(CpG_hg19,'../downstream/input/CpG_hg19.rds')
 subjects=c("H9","HUES64","skin03","STL001","STL002","STL003","STL011","H1","HuFGM02","112","149","150")
 #read in vcf files
 #Fix the issue with genome file order does not equal to the ref/alt order, calculate the CG or het CG in genome 1 based on actual ref/alt order
@@ -111,8 +112,8 @@ saveRDS(variant_HetCpG_meta,variant_HetCpG_meta_file)
 #human allele-agnostic analysis is from +/- 20k of TSS
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/allele_agnostic_20kb/'
-all_regions=import.gff3('../downstream/output/human_20kb_allele_agnostic_250bp.gff')
-mcols(all_regions)=mcols(all_regions)[,c("N","score")]
+#all_regions=import.gff3('../downstream/output/human_20kb_allele_agnostic_250bp.gff')
+#mcols(all_regions)=mcols(all_regions)[,c("N","score")]
 NME_in=GRanges()
 MML_in=GRanges()
 for(fn in  dir(in_dir)){
@@ -220,7 +221,7 @@ in_dir='../downstream/data/agnostic_DNase/'
 all_regions=granges(import.gff3('../downstream/output/human_DNase_allele_agnostic_250bp.gff'))
 NME_in=GRanges()
 MML_in=GRanges()
-for(fn in  dir(in_dir,pattern="bedGraph")){
+for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
   cat('Reading in',fn,'\n')
   stat_in=toupper(sub('.*_','',sub('.bedGraph','',fn)))
   sample_in=sub('_phased.*','',sub('.bedGraph','',fn))
@@ -254,7 +255,7 @@ saveRDS(MML_in,"../downstream/output/allele_agnostic_hg19_DNase_MML_homogeneous2
 in_dir='../downstream/data/allele_specific_region_agnostic/'
 NME_in=GRanges()
 MML_in=GRanges()
-for(fn in  dir(in_dir,pattern="bedGraph")){
+for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
   cat('Reading in',fn,'\n')
   stat_in=toupper(sub('.*_','',sub('.bedGraph','',fn)))
   sample_in=sub('_phased.*','',sub('.bedGraph','',fn))
@@ -311,6 +312,81 @@ GR_merge_tb=rbind(GR_merge_tb,GR_merge_tb_asm)
 GR_merge_tb=dcast.data.table(GR_merge_tb,Sample+region~statistics,value.var = "score")
 saveRDS(GR_merge_tb,'../downstream/output/GR_merge_ASM_comp.rds')
 GR_merge_tb=readRDS('../downstream/output/GR_merge_ASM_comp.rds')
+#Read in mouse dMML, dNME, UC
+tissue=c(rep('kidney',4),rep('Lung',4),rep('forebrain',8),rep('liver',7),
+         rep('heart',8),rep('hindbrain',8),rep('midbrain',8),
+         rep('limb',6),rep('EFP',6),rep('NT',5),rep('intestine',4),rep('stomach',4))
+stage=c('day14_5','day15_5','day16_5','day0',
+        'day14_5','day15_5','day16_5','day0',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
+        'day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5',
+        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5',
+        'day11_5','day12_5','day13_5','day14_5','day15_5',
+        'day14_5','day15_5','day16_5','day0',
+        'day14_5','day15_5','day16_5', 'day0')
+
+sample=paste(tissue,stage,sep='-')
+meta_df=data.frame(tissue=tissue,stage=stage,sample=sample,stringsAsFactors = F)
+in_dir='../downstream/data/mouse_analysis/'
+#Read in MML and NME
+read_bed_out=mclapply(1:nrow(meta_df),function(i){
+  NME_in=read.agnostic.mouse(in_dir,meta_df$tissue[i],meta_df$stage[i],'nme',replicate='all')
+  
+  MML_in=read.agnostic.mouse(in_dir,meta_df$tissue[i],meta_df$stage[i],'mml',replicate='all')
+  
+  NME_in$NME=NME_in$score
+  MML_in$MML=MML_in$score
+  return(list(MML_in,NME_in))},mc.cores=20)
+
+MML_in=fastDoCall('c',lapply(read_bed_out,function(x) x[[1]]))
+NME_in=fastDoCall('c',lapply(read_bed_out,function(x) x[[2]]))
+
+saveRDS(NME_in,'../downstream/output/NME_agnostic_mouse_all_merged.rds')
+saveRDS(MML_in,'../downstream/output/MML_agnostic_mouse_all_merged.rds')
+#Convert to matrix
+NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2])# 0.735 region have all data
+MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2],'MML')#0.735 region have all data
+saveRDS(NME_in_matrix,'../downstream/input/NME_matrix_mouse_all_dedup_N2.rds')
+saveRDS(MML_in_matrix,'../downstream/input/MML_matrix_mouse_all_dedup_N2.rds')
+rm(MML_in)
+rm(NME_in)
+rm(MML_in_matrix)
+rm(NME_in_matrix)
+gc()
+#UC_run_before_MDS folder
+in_dir='../downstream/data/mouse_analysis/UC_run_before_MDS/'
+UC_in=GRanges()
+UC_in_ls=mclapply(dir(in_dir,pattern = 'mm10.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
+UC_in$UC=UC_in$score
+return(UC_in)},mc.cores=24)
+UC_in=fastDoCall('c',UC_in_ls)
+UC_in=UC_in[UC_in$N>=2]
+#saveRDS(UC_in,'UC_agnostic_mouse_dedup_N2_all_time_fix_UC.rds')#74% regiOn have all data
+#UC_in_matrix=agnostic_matrix_conversion(UC_in,'UC')#duplicated regions due to error,waiting for one more to finish
+UC_in$tissue=sub('-.*','',UC_in$Sample)
+UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=12)
+names(UC_in_matrix_ls)=unique(UC_in$tissue)
+saveRDS(UC_in_matrix_ls,'../downstream/input/UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds')#74% regiOn have all data
+
+#read in UC for MDS
+in_dir='../downstream/data/mouse_analysis/'
+MDS_file=dir(in_dir,pattern = 'mm10.*uc.bedGraph')
+
+gff_in=import.gff3('../mm10_allele_agnostic_analysis.gff')
+gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
+UC_out=data.table(region=gff_in)
+
+UC_in=fastDoCall('cbind',
+                 mclapply(MDS_file,function(x){
+                   read.agnostic.mouse.uc(paste(in_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=24))
+#saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
+UC_out=cbind(UC_out,UC_in)
+saveRDS(UC_out,'../downstream/input/UC_agnostic_mouse_N2_MDS_fix.rds')#74% regiOn have all data
+
 
 #Read in mouse NME
 NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged.rds')

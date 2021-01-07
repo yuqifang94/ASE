@@ -1180,14 +1180,14 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     strain=unlist(lapply(strsplit(comp,'_'),function(x) x[1]))
     #if  contain BL6DBA, use ref is BL6DBA
     strain=ifelse('BL6DBA'%in%strain,'BL6DBA','mm10')
-    comp=unlist(lapply(strsplit(comp,'_'),function(x) paste(x[-1],collapse = '_')))
+    comp=unlist(lapply(strsplit(comp,'-'),function(x) paste(x[-1],collapse = '-')))
     comp=comp[comp!='']
-    comp_stage=unlist(lapply(comp,function(x) {x_split=strsplit(x,'_')[[1]]
+    comp_stage=unlist(lapply(comp,function(x) {x_split=strsplit(x,'-')[[1]]
     x_split=x_split[-length(x_split)][-1]
-    x_split=paste(x_split,collapse = '_')
+    x_split=paste(x_split,collapse = '-')
     return(x_split)}))
-    tissue1=strsplit(comp[1],'_')[[1]][1]
-    tissue2=strsplit(comp[2],'_')[[1]][1]
+    tissue1=strsplit(comp[1],'-')[[1]][1]
+    tissue2=strsplit(comp[2],'-')[[1]][1]
     #if BL6DBA, the 1st comp_stage is empty
     
     comp_stage=gsub('_5','.5',comp_stage)

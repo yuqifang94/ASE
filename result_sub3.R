@@ -95,7 +95,10 @@ GR_merge$CpGdiff=GR_merge$g1CG-GR_merge$g2CG
 #CpG density vs dNME,here uses an extended density 
 GR_merge$dNME_relative=GR_merge$NME1-GR_merge$NME2
 GR_merge_dt=as.data.table(mcols(GR_merge))
+#abs difference
 GR_merge_dt$density_diff=GR_merge_dt[,(CG_allele_extend_g1-CG_allele_extend_g2)/CGcont_exp ]
+#ratio
+GR_merge_dt$density_diff=GR_merge_dt[,(CG_allele_extend_g1/CG_allele_extend_g2)]
 cor.test(GR_merge_dt[dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$dNME_relative, 
          GR_merge_dt[dNME_pval<=pval_cutoff&dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$density_diff)
 
@@ -114,9 +117,19 @@ ggplot(GR_merge_dt[dNME_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_s
   theme_glob+ylab('relative dNME')+theme(legend.position = "none")
 
 dev.off()
-pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dNME.pdf',width=7,height=7)
-ggplot(GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0],aes(x=as.factor(round(density_diff,digits = 2)),y=dNME_relative))+geom_violin(fill='light blue')+
-  xlab("CpG density difference")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
+pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dNME_ratio.pdf',width=7,height=7)
+ggplot(GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0],aes(x=as.factor(round(density_diff,digits = 1)),y=dNME_relative))+geom_violin(fill='light blue')+
+  xlab("CpG density ratio")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
+  theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()
+
+pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dNME_quantile.pdf',width=7,height=7)
+GR_merge_dt$density_diff=GR_merge_dt[,(CG_allele_extend_g1-CG_allele_extend_g2)/CGcont_exp ]
+GR_merge_dt_S4=GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0]
+GR_merge_dt_S4$density_diff=findInterval(GR_merge_dt_S4$density_diff,quantile(GR_merge_dt_S4$density_diff,prob=seq(0,0.9,0.1)))
+GR_merge_dt_S4$density_diff=factor(paste0(GR_merge_dt_S4$density_diff*10,'%'),levels=paste0( seq(0,100,10),"%"))
+ggplot(GR_merge_dt_S4,aes(x=density_diff,y=dNME_relative))+geom_violin(fill='light blue')+
+  xlab("CpG density quantile")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
   theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 dev.off()
 # ggplot(GR_merge_dNME[dNME_pval<=pval_cutoff&CpGdiff!=0],aes(x=dNME_relative_more_less))+geom_density()+xlab("relative dNME")+theme_glob
