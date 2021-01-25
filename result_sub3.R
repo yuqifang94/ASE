@@ -118,7 +118,7 @@ ggplot(GR_merge_dt[dNME_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_s
 
 dev.off()
 pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dNME_ratio.pdf',width=7,height=7)
-ggplot(GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0],aes(x=as.factor(round(density_diff,digits = 1)),y=dNME_relative))+geom_violin(fill='light blue')+
+ggplot(GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=1],aes(x=as.factor(round(density_diff,digits = 1)),y=dNME_relative))+geom_violin(fill='light blue')+
   xlab("CpG density ratio")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
   theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 dev.off()
@@ -129,7 +129,7 @@ GR_merge_dt_S4=GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_S4$density_diff=findInterval(GR_merge_dt_S4$density_diff,quantile(GR_merge_dt_S4$density_diff,prob=seq(0,0.9,0.1)))
 GR_merge_dt_S4$density_diff=factor(paste0(GR_merge_dt_S4$density_diff*10,'%'),levels=paste0( seq(0,100,10),"%"))
 ggplot(GR_merge_dt_S4,aes(x=density_diff,y=dNME_relative))+geom_violin(fill='light blue')+
-  xlab("CpG density quantile")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
+  xlab("CpG density difference quantile")+ylab("relative dNME")+stat_summary(fun=median, geom="point")+theme_glob+
   theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 dev.off()
 # ggplot(GR_merge_dNME[dNME_pval<=pval_cutoff&CpGdiff!=0],aes(x=dNME_relative_more_less))+geom_density()+xlab("relative dNME")+theme_glob
@@ -274,3 +274,14 @@ dev.off()
 #                                            olap_GO=sum(region_olap_GO%in%csv_in[GO_result!=""]$region)))
 # }
 
+#Find which one lose CG increase Entropy and motif prefer higher ent
+motif_gene <- readRDS(motif_gene_file)
+
+olap=findOverlaps(variant_HetCpG_meta,motif_gene)
+variant_HetCpG_meta_motif=variant_HetCpG_meta[queryHits(olap)]
+variant_HetCpG_meta_motif$ref_score=motif_gene$scoreRef[subjectHits(olap)]
+variant_HetCpG_meta_motif$alt_score=motif_gene$scoreRef[queryHits(olap)]
+variant_HetCpG_meta_lose_CG=variant_HetCpG_meta_motif[grepl('CG',variant_HetCpG_meta_motif$REF_tri)&!(grepl('CG',variant_HetCpG_meta_motif$ALT_tri))]
+
+binom.test(sum(variant_HetCpG_meta_lose_CG$ref_score<variant_HetCpG_meta_lose_CG$alt_score),length(variant_HetCpG_meta_lose_CG),
+          p=sum(variant_HetCpG_meta_motif$ref_score<variant_HetCpG_meta_motif$alt_score)/length(variant_HetCpG_meta_motif))

@@ -2,7 +2,6 @@
 #Need R/3.6.1, gcc/5.5.0, and atlas
 #clean run: remove: rm -r /home-net/home-4/yfang27@jhu.edu/R/x86_64-pc-linux-gnu-library/3.6/gcc/5.5/*
 #rm -r /scratch/users/yfang27@jhu.edu/yfang/temp_all/*
-
 #plot 
 if (!requireNamespace("ggfortify", quietly = TRUE))
 {
@@ -208,7 +207,7 @@ gff_gen<-function(TSS_break,cpgr,blacklist_region,rds_save_file,out_name){
   TSS_break_out=TSS_break_out[-queryHits(olap)]
   TSS_break_out_gff=granges(TSS_break_out)
   mcols(TSS_break_out_gff)=mcols(TSS_break_out)[,c('N','CpGs')]
-  export.gff3(sort(TSS_break_out_gff),out_name)
+  export.gff3(sort(unique(TSS_break_out_gff)),out_name)
   saveRDS(TSS_break_out,rds_save_file)
 }
 #Checking chromosome name
@@ -509,7 +508,7 @@ getGeneralFeats_CpG <- function(CpGdir,enhancerDir='',chrsOfInterest=paste("chr"
   intergenic <- setdiff(outGR[["genome-wide"]],outGR[["gene body"]],ignore.strand=TRUE)
   outGR[["intergenic"]] <- setGenomeLengths(intergenic)
   #Use annotation hub for TSS, promoter have something to do with strand
-  proms <- promoters(genes,upstream=2000,downstream=1000)
+  proms <- promoters(genes,upstream=2000,downstream=1000)#ask Michael about this
   outGR[["promoter"]] <- setGenomeLengths(proms)
   TSS<-promoters(genes,upstream=0,downstream=0)
   outGR[["TSS"]] <- setGenomeLengths(TSS)
@@ -907,7 +906,9 @@ chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_p
   count_table=list()
   count_table_N=data.frame()
   for(states in unique(chromHMM$name)){
+    
     OR=testEnrichmentFeature_stat(GR_merge_sp,chromHMM[chromHMM$name==states])
+    if(!is.null(OR)){
     #Get contengency table
     count_table[[states]]=OR[[1]]
     OR=OR[[2]]
@@ -915,6 +916,7 @@ chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_p
     out_df=rbind(out_df,
                  data.frame(state=states,OR=OR$estimate,p_value=OR$p.value,
                             lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+    }
     # }
   }
   return(list(out_df,count_table))
@@ -923,7 +925,7 @@ chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_p
 chromHMM_combine<-function(chromHMM_in){
   cont_table_all=list()
   #ChromHMM, list object, each is a sample, within sample ,each is a state
-  for (states in names(chromHMM_in[[1]][[2]])){
+  for (states in unique(unlist(lapply(chromHMM_dMML_all_ls,function(x) names(x[[2]]))))){
     #extract 2x2 table for each states for each sample, return a list of sample with its contengency table
     chromHMM_in_cont=lapply(chromHMM_in, function(x,states) x[[2]][[states]],states=states)
     #For each state, construct a CMH table, 4 columns
@@ -1194,6 +1196,9 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     replicate=gsub('merged','',replicate)
     informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',tissue2,'-',comp_stage[2],'-',replicate)
     informME_in=informME_in[informME_in$N>=fileter_N]
+    informME_in$tissue=tissue
+    informME_in$stage=paste0(comp_stage[1],'-',comp_stage[2])
+    informME_in$replicate=replicate
     cat('Minimum N:',min(informME_in$N),'\n')
     #informME_in$Ref=strain
     if(matrix){
@@ -1254,7 +1259,24 @@ scalematrix <- function(data) {
   csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
   (data - cm) / csd
 }
+convert_GR<-function(x,direction="GR"){
+  if(direction=="GR"){
+  strand=unlist(lapply(strsplit(x,','),function(x)x[2]))
+  strand=ifelse(is.na(strand),"*",strand)
+  x=ifelse(is.na(strand),x,sub(paste0(',\\','-'),'',sub(paste0(',\\','+'),'',x)))
+  
+  gr=GRanges(seqnames=sub(':.*','',x),
+             IRanges(start=as.numeric(sub('-.*','',sub('.*:','',x))),
+                     end=as.numeric(sub('.*-','',x))),strand=strand)
+  return(gr)}else
+    if(direction=="DT"){
 
+      x_dt=as.data.table(mcols(x))
+      x_dt$region=paste0(seqnames(x),':',start(x),'-',end(x))
+      return(x_dt)
+    }
+  
+}
 #GO annotation
 GO_run<-function(gl,back,cluster,ptcount=0){
   geneList <- factor(as.integer(back %in% gl))
@@ -1262,10 +1284,12 @@ GO_run<-function(gl,back,cluster,ptcount=0){
   suppressMessages({GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,geneSel=function(a) {a},
                                   annot = annFUN.org, mapping = "org.Mm.eg.db", ID = "Symbol")
   resultFisher <- runTest(GOdata, algorithm = "classic", statistic = "fisher")})
+  pval <- score(resultFisher)
+  pval_adj <- p.adjust(pval, method="BH")
   sigres <- GenTable(GOdata, classicFisher = resultFisher, topNodes = length(resultFisher@score),orderBy="classicFisher",numChar=1000)
+  sigres$FDR <- pval_adj[sigres$GO.ID]
   sigres$classicFisher[sigres$classicFisher=="< 1e-30"] <- 0
   sigres <- sigres[sigres$Annotated >= 10,]
-  sigres$FDR <- p.adjust(sigres$classicFisher,method="fdr")
   fc <- ((sigres[,"Significant"]+ptcount)/(sum(GOdata@allScores[GOdata@feasible]==1)+ptcount))/((sigres[,"Annotated"]+ptcount)/(sum(GOdata@feasible)+ptcount))
   sigres <- data.frame(sigres,FC=fc)
   sigres <- sigres[order(sigres$FDR,-sigres$FC),]
@@ -1318,8 +1342,6 @@ GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
           
           #GO annotation for chromHMM 
           GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
-          write.csv(GO_out_cluster[FC>=1.5],
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/',sp,'_cluster_GO.csv'),row.names = F,quote = T)
           csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
           #GO annotation for other types of regions
           GO_out_cluster_NME=GO_run(csv_in_ts_clu[nme_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
@@ -1330,6 +1352,16 @@ GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
           GO_out_cluster_NME_MML=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
           GO_out_cluster_non_NME_non_MML=GO_run(csv_in_ts_clu[nme_cor<0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
           
+          write.csv(GO_out_cluster,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/all_regions/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_NME_only,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_only/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_MML_only,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/MML_only/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_NME_MML,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_MML/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_non_NME_non_MML,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/None_NME_MML/',sp,'_cluster_GO.csv'))
           #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
           return(list(GO_out_cluster_all=GO_out_cluster,GO_out_cluster_NME=GO_out_cluster_NME,GO_out_cluster_non_MML=GO_out_cluster_non_MML,csv_in_ts_clu=csv_in_ts_clu,
                       GO_out_cluster_NME_only=GO_out_cluster_NME_only,GO_out_cluster_MML=GO_out_cluster_MML,GO_out_cluster_MML_only=GO_out_cluster_MML_only,
@@ -1346,6 +1378,80 @@ GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
   return(GO_out_all)
 }
 
+GO_run_tissue_perm<-function(tissue,dir_in,enc_type,dist_cutoff=NA,permute=F){
+  if(permute){enc_type=paste0('permute',enc_type)}
+  GO_out_all=list()
+  dir_out=paste0('../downstream/output/mm10_result/',dir_in)
+  ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  dir_out=paste0(dir_out,'/',enc_type,'_',dist_cutoff)
+  ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  GO_out=paste0(dir_out,'/cluster_GO/')
+  ifelse(!dir.exists(file.path(GO_out)), dir.create(file.path(GO_out)), FALSE)
+  gene_out=paste0(dir_out,'/all_gene_list/')
+  ifelse(!dir.exists(file.path(gene_out)), dir.create(file.path(gene_out)), FALSE)
+  
+  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
+  print(csv_files)
+  for (ts in tissue){
+    cat("Processing:",ts,'\n')
+    fn=paste0(ts,'.csv')
+    #read in csv file for given tissue
+    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
+   
+    #Note some times Jason use dNME_maxJSD_rank
+    csv_in_ts=csv_in_ts[order(dNME_maxUC_rank,decreasing = F)]
+    # Getting enhancer
+    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
+      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
+        if(enc_type=="promoter"){csv_in_ts=csv_in_ts}else 
+        if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}else{
+          if(enc_type=="bin_enhancer"){
+            enhancer=readRDS("../downstream/output/bin_enhancer.rds")
+            csv_in_gr=convert_GR(csv_in_ts$region)
+            mcols(csv_in_gr)=csv_in_ts
+            olap=findOverlaps(csv_in_gr,enhancer)
+            csv_in_gr=csv_in_gr[queryHits(olap)]
+            csv_in_gr$gene=enhancer$`Target Gene`[subjectHits(olap)]
+            csv_in_gr$distance=NA
+            csv_in_ts=as.data.table(mcols(csv_in_gr))
+          }
+          
+        }
+    if(!is.na(dist_cutoff)){csv_in_ts=csv_in_ts[abs(distance)<=dist_cutoff]}
+    if(permute){csv_in_ts$cluster=sample(csv_in_ts$cluster,length(csv_in_ts$cluster))}
+    #GO annotation
+    if(nrow(csv_in_ts)>1){
+      #GO annotation for each cluster
+      csv_out=lapply(1:10,function(clu){
+        sp=paste0(ts,'-',clu)
+        csv_in_ts_clu=csv_in_ts[cluster==clu]
+        csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxUC_rank,decreasing=F)]
+        #Add NME and mml cor
+        # csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
+        # csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
+        
+        if(nrow(csv_in_ts_clu)>1){
+          
+          #GO annotation for chromHMM 
+          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
+          csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
+        
+          
+          write.csv(GO_out_cluster,row.names = F,quote = T,
+                    file=paste0(GO_out,sp,'_cluster_GO.csv'))
+          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
+          return(list(GO_out_cluster_all=GO_out_cluster,csv_in_ts_clu=csv_in_ts_clu))
+        }
+        
+      })
+      GO_out_all[[ts]]=csv_out
+      write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxUC,decreasing=T)],
+                file=paste0(gene_out,ts,'_all.csv'))
+    }
+    
+  }
+  return(GO_out_all)
+}
 
 dcast_matrix<-function(dt_in,value_in,colnames_order=colnames_order){
   dt_in=dcast.data.table(dt_in,Term~cluster,value.var  = value_in)
@@ -1363,7 +1469,7 @@ makeColorRampPalette <- function(colors, cutoff.fraction, num.colors.in.palette)
   return(c(ramp1, ramp2))
 }
 library(pheatmap)
-plot_GO_heatmap<-function(selected_tissue,GO_anno,GO_out){
+plot_GO_heatmap<-function(selected_tissue,GO_anno,GO_out,enc_type){
   GO_tissue=list()
   for(tissue in selected_tissue){
     GO_in=GO_out[[tissue]]
@@ -1398,7 +1504,51 @@ plot_GO_heatmap<-function(selected_tissue,GO_anno,GO_out){
     pheatmap(scalematrix(GO_in_main),cluster_rows =F,cluster_cols = F,
              show_colnames = T,show_rownames = T,display_numbers=GO_in_FDR,border_color = NA,
              color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),
-             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_chromHMM.pdf'),
+             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_',enc_type,'.pdf'),
+             cellwidth=60,cellheight=25,annotation_colors = list(cluster=c2),annotation_col = colann, annotation_legend = F,
+             fontsize=30,legend = F,labels_col=col_label$sig_num)
+    #dev.off()
+    GO_tissue[[tissue]]=GO_in_main
+    #,breaks=breaksList,color=col(length(breaksList))
+  }
+  
+}
+plot_GO_heatmap_perm<-function(selected_tissue,GO_anno,GO_out){
+  GO_tissue=list()
+  for(tissue in selected_tissue){
+    GO_in=GO_out[[tissue]]
+    GO_in=fastDoCall('rbind',lapply(GO_in,function(x) {
+      x=x[[GO_anno]]
+      x$sig_num=sum(x$FDR<=0.1)
+      return(x)
+    }))
+    
+    
+    GO_in=GO_in[,.(GO.ID,Term,classicFisher,FDR,FC,cluster,sig_num)]
+    GO_in_top=do.call(c,lapply(1:10,function(x) {
+      
+      return(GO_in[cluster==x][FC>=1.5&FDR<=0.1][order(FDR,-FC,decreasing=F)][1:5]$GO.ID)
+    }))
+    GO_in=GO_in[GO.ID%in%GO_in_top]
+    GO_in$log10FDR=-log10(GO_in$FDR)
+    GO_in_main= dcast_matrix(GO_in,"FC")
+    GO_in_main=GO_in_main[order(max.col(GO_in_main),decreasing = F),]
+    GO_in_FDR= dcast_matrix(GO_in,"FDR")
+    #GO_in_FDR_log10= dcast_matrix(GO_in,"log10FDR")
+    GO_in_FDR[GO_in_FDR<=0.1]="*"
+    GO_in_FDR[GO_in_FDR>0.1]=""
+    GO_in_FDR=GO_in_FDR[rownames(GO_in_main),]
+    col_label=unique(GO_in[,.(cluster,sig_num)])
+    col=colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))
+    c2 <- brewer.pal(10,'Set3')
+    names(c2) <- 1:10
+    breaksList = seq(-1, 1, by = 0.01)
+    colann= data.frame(cluster=as.character(1:10))
+    #pdf(paste0('../downstream/output/graphs/Figure6/GO_', tissue,'_',GO_anno,'_FC.pdf'),width=25,height=14)
+    pheatmap(scalematrix(GO_in_main),cluster_rows =F,cluster_cols = F,
+             show_colnames = T,show_rownames = T,display_numbers=GO_in_FDR,border_color = NA,
+             color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),
+             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM_perm/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_chromHMM.pdf'),
              cellwidth=60,cellheight=25,annotation_colors = list(cluster=c2),annotation_col = colann, annotation_legend = F,
              fontsize=30,legend = F,labels_col=col_label$sig_num)
     #dev.off()
@@ -2519,17 +2669,7 @@ matrix_conv<-function(dt_in,value.var){
 #   variant_in=variant_in[sign(variant_in$NME2-variant_in$NME1) == sign(variant_in$alleleDiff)]
 #   return(variant_in)
 # }
-# convert_GR<-function(x){
-#   strand=unlist(lapply(strsplit(x,','),function(x)x[2]))
-#   strand=ifelse(is.na(strand),"*",strand)
-#   x=ifelse(is.na(strand),x,sub(paste0(',\\','-'),'',sub(paste0(',\\','+'),'',x)))
-# 
-#   gr=GRanges(seqnames=sub(':.*','',x),
-#              IRanges(start=as.numeric(sub('-.*','',sub('.*:','',x))),
-#                      end=as.numeric(sub('.*-','',x))),strand=strand)
-#   return(gr)
-#   
-# }
+
 # trait_variant=function(x,traits) {
 #   variant=NA
 #   

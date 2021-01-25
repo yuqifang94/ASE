@@ -5,9 +5,10 @@ source("mainFunctions_sub.R")
   
   DNAase=readRDS('../downstream/input/DNase_mm10_peak_merge_250bp.rds')
   control=readRDS('../downstream/input/DNase_mm10_peak_merge_250bp_control.rds')
-  
+  PRC_binding=readRDS('../downstream/output/mm10_PRC.rds')
+  PRC_binding=granges(PRC_binding)
   # enhancers=readRDS('../downstream/input/enhancers_HACER.rds')
-  rds_save_file="../downstream/input/mm10_DNase.rds"
+  rds_save_file="../downstream/input/mm10_agnostic.rds"
   
   chrs <- names(Mmusculus)[1:21]#2276796
   cgs <- lapply(chrs, function(x) start(matchPattern("CG", Mmusculus[[x]])))
@@ -19,14 +20,15 @@ source("mainFunctions_sub.R")
   TSS$gene_name=AnnotationDbi::select(Mus.musculus,key=as.character(TSS$gene_id),
                                       keytype="ENTREZID",columns=c("SYMBOL"))$SYMBOL
   
+  PRC_binding$region_type="PRC"
   DNAase$region_type='DNase'
   control$region_type='control'
-  TSS_break=c(DNAase,control)
+  TSS_break=c(DNAase,control,PRC_binding)
   TSS_break=dist_calc(TSS_break,TSS)
-  out_name="../downstream/output/mm10_DNase_3kb_250bp.gff"
+
   #https://github.com/Boyle-Lab/Blacklist/blob/master/lists/Blacklist_v1/
   blacklist_region=import.bed('../downstream/input/mm10.blacklist.bed.gz')
-  gff_gen(TSS_break,cpgr,hg19_bl,'../downstream/output/mm10_DNase_250bp.rds','../downstream/output/mm10_DNase_250bp.gff')
+  gff_gen(TSS_break,cpgr,blacklist_region,'../downstream/output/mm10_allele_agnostic_analysis.rds','../downstream/output/mm10_allele_agnostic_analysis.gff')
 # Human agnostic analysis -------------------------------------------------
   #Get all CpG location
   chrs <- names(Hsapiens)[1:24]
@@ -70,15 +72,13 @@ source("mainFunctions_sub.R")
 #mm10
 # sed -i 's/%2c/,/g' mm10_allele_agnostic_analysis.gff
 # sed -i 's/];$/]/g' mm10_allele_agnostic_analysis.gff
-#mm10 DNase
-# sed -i 's/%2c/,/g' mm10_DNase_3kb_250bp.gff
-# sed -i 's/];/]/g' mm10_DNase_3kb_250bp.gff
-# sed -i 's/rtracklayer/\./g' mm10_DNase_3kb_250bp.gff
-# sed -i 's/sequence_feature/\./g' mm10_DNase_3kb_250bp.gff
-#mm10 PRC
-# sed -i 's/%2c/,/g' mm10_PRC_250bp.gff
-# sed -i 's/];/]/g' mm10_PRC_250bp.gff
-# sed -i 's/rtracklayer/\./g' mm10_PRC_250bp.gff
-# sed -i 's/sequence_feature/\./g' mm10_PRC_250bp.gff
+  # sed -i 's/rtracklayer/\./g' mm10_allele_agnostic_analysis.gff
+  # sed -i 's/sequence_feature/\./g' mm10_allele_agnostic_analysis.gff
 
 #filter regions
+
+
+# generating sbatching arguments ------------------------------------------
+
+  
+  

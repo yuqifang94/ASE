@@ -388,7 +388,7 @@ UC_out=cbind(UC_out,UC_in)
 saveRDS(UC_out,'../downstream/input/UC_agnostic_mouse_N2_MDS_fix.rds')#74% regiOn have all data
 
 
-#Read in mouse NME
+#Read in mouse NME and scRNA
 NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged.rds')
 dir='../downstream/data/Mouse_C1/'
 NME_in=NME_in[NME_in$tissue=="limb"&NME_in$N>=2]

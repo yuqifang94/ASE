@@ -184,6 +184,8 @@ plot_motif_binding<-function(motif,tissue,UC_raw,mml,nme,CpG_mm10){
   return(list(region_in_all_region,region_stat))
 }
 UC_raw=readRDS('../downstream/output/uc_matrix_DNase.rds')
+UC_raw_control=readRDS('../downstream/output/uc_matrix_.rds')
+mean(unlist(lapply(UC_raw,function(x) quantile(x,prob=0.95))))
 mml <- readRDS('../downstream/output/mml_matrix_DNase.rds')
 nme <- readRDS('../downstream/output/nme_matrix_DNase.rds')
 CpG_mm10=getCpgSitesmm10()
@@ -295,8 +297,119 @@ dev.off()
 }
 
 # prepare regions for Ken -------------------------------------------------
-dMML_cor=readRDS('../downstream/input/dmmlcor.rds')
-dNME_cor=readRDS('../downstream/input/dNMEcor.rds')
+#Prepare for Jason
+UC_raw=readRDS('../downstream/output/uc_matrix_DNase.rds')
+cutoffs=do.call(rbind,lapply(UC_raw,function(x) quantile(x,prob=c(0.7,0.8,0.9,0.95,0.975,0.99,0.999,0.9999))))
+colMeans(cutoffs)
+
+#prediction
+cor_dt_classify=list()
+lv=0.50
+FDR_cor_cutoff=0.25
+for(cor_in in cor_dt){
+
+  #Use selected regions to predict
+  model <- lm(dNME_cor~dMML_cor+0, data = cor_in)
+  predict_out=predict(model, newdata =cor_in, interval = "prediction",level=lv)
+  colnames(predict_out)=paste0('dNME_',colnames(predict_out))
+  cor_in=cbind(cor_in,predict_out)
+  cor_in_fitting=data.table(dMML_cor=unique(round(cor_in$dMML_cor,digits = 3)))
+  cor_in_fitting=cbind(cor_in_fitting,predict(model, newdata =cor_in_fitting, interval = "prediction",level=lv))
+  cor_in[dNME_upr>1]$dNME_upr=1
+  cor_in[dNME_lwr<(-1)]$dNME_lwr=-1
+  tissue=unique(cor_in$tissue)
+  dNME_cutoff=min(cor_in[dNME_FDR<=FDR_cor_cutoff]$dNME_cor)
+  dMML_cutoff=min(cor_in[dMML_FDR<=FDR_cor_cutoff]$dMML_cor)
+  cor_in$significant="NA"
+  cor_in[(dNME_FDR>FDR_cor_cutoff&dMML_FDR>FDR_cor_cutoff)]$significant="Not Significant"
+  cor_in[(dNME_FDR<=FDR_cor_cutoff|dMML_FDR<=FDR_cor_cutoff)&(dNME_cor>dNME_lwr&dNME_cor<dNME_upr)]$significant="Correlated One significant"
+  cor_in[(dNME_FDR<=FDR_cor_cutoff&dMML_FDR<=FDR_cor_cutoff)&(dNME_cor>dNME_lwr&dNME_cor<dNME_upr)]$significant="Correlated both significant"
+  cor_in[(dNME_FDR<=FDR_cor_cutoff)&(dNME_cor>=dNME_upr)]$significant="dNME correlated"
+  cor_in[(dMML_FDR<=FDR_cor_cutoff)&(dNME_cor<=dNME_lwr)]$significant="dMML correlated"
+  sig_levels=c("Not Significant",
+               "Correlated One significant",
+               "Correlated both significant",
+               "dNME correlated",
+               "dMML correlated")
+  cor_in$significant=factor(cor_in$significant,levels=sig_levels)
+
+  col_theme=c("grey","purple","green","red","blue")
+  png(paste0('../downstream/output/dmml_dnme_cor/',tissue,'_dNME_dMML_dots_0_inter_',lv,'.png'),width=7,height=7,units = "in",res=96)
+  print(ggplot(cor_in,aes(x=dMML_cor,y=dNME_cor))+
+          geom_point(aes(color=significant),alpha=0.1)+
+          theme(legend.position = "bottom")+ 
+          scale_color_manual(breaks= sig_levels, values = col_theme)+
+          geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=fit),size=1)+
+          geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=lwr),size=1,linetype='dashed')+
+          geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=upr),size=1,linetype='dashed')+
+         geom_hline(yintercept = dNME_cutoff,size=1,color="black")+geom_vline(xintercept = dMML_cutoff,size=1,color="black"))
+ 
+  
+  dev.off()
+  cor_dt_classify[[tissue]]=cor_in
+}
+#correlation cutoff
+cor_dt_classify_plot=fastDoCall('rbind',cor_dt_classify)
+pdf('../downstream/output/dmml_dnme_cor/bar_plot_0_inter_50.pdf')
+ggplot(cor_dt_classify_plot,aes(x=tissue))+geom_bar(stat="count",aes(group=significant,fill=significant))+theme(legend.position = 'bottom')
+dev.off()
+mml <- readRDS('../downstream/output/mml_matrix_DNase.rds')
+nme <- readRDS('../downstream/output/nme_matrix_DNase.rds')
+timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+for(tissue in names(UC_raw)){
+  UC=UC_raw[[tissue]][,colnames(UC_raw[[tissue]])%in% timeorder]
+  
+  stat_differential<-function(stat_in,UC,tissue){
+    
+    diff_out <- sapply(colnames(UC),function(i) {
+      time <- strsplit(i,'-')
+      sapply(time,function(time_in)
+      {abs(stat_in[rownames(UC),paste0(tissue,'-',time_in[1],'-all')]-stat_in[rownames(UC),paste0(tissue,'-',time_in[2],'-all')])})
+    })
+    colnames(diff_out)=colnames(UC)
+    rownames(diff_out)=rownames(UC)
+    return(diff_out)
+  }
+  dmml=stat_differential(mml,UC,tissue)
+  dnme=stat_differential(nme,UC,tissue)
+  #Merge them into single data table
+  dmml_dt=as.data.table(scalematrix(dmml))
+  dmml_dt$region=rownames(dmml)
+  dnme_dt=as.data.table(scalematrix(dnme))
+  dnme_dt$region=rownames(dnme)
+  UC_dt=as.data.table(UC)
+  UC_dt$region=rownames(UC)
+  dmml_dt=melt.data.table(dmml_dt,id='region')
+  dnme_dt=melt.data.table(dnme_dt,id='region')
+  UC_dt=melt.data.table(UC_dt,id='region')
+  dmml_dt=dmml_dt[order(region,variable)]
+  dnme_dt=dnme_dt[order(region,variable)]
+  UC_dt=UC_dt[order(region,variable)]
+  plot_dt=data.table(region=dmml_dt$region,
+                     stage=dmml_dt$stage,
+                     dmml=dmml_dt$value,
+                     dnme=dnme_dt$value,
+                     UC=UC_dt$value)
+  plot_dt$dmml_cor=dMML_cor[[tissue]][plot_dt$region]
+  plot_dt$dnme_cor=dNME_cor[[tissue]][plot_dt$region]
+  plot_dt=plot_dt[!is.na(dmml_cor)]
+  # jpeg('../downstream/output/dmml_UC_scale2.jpeg')
+  # ggplot(plot_dt[dmml_cor>=0.7&region=="chr10:100015944-100016193"],aes(x=dmml,y=UC))+geom_point(alpha=1)
+  # dev.off()
+  png(paste0('../downstream/output/dmml_dnme_cor/dnme_UC_scale_cor',tissue,'.png'))
+  print(ggplot(plot_dt[dnme_cor>=0.7],aes(x=dnme,y=UC))+geom_point(alpha=0.01)+geom_smooth())
+  dev.off()
+  png(paste0('../downstream/output/dnme_UC_scale_all',tissue,'.png'))
+  print(ggplot(plot_dt,aes(x=dnme,y=UC))+geom_point(alpha=0.01)+geom_smooth())
+  dev.off()
+  png(paste0('../downstream/output/dmml_UC_scale_cor',tissue,'.png'))
+  print(ggplot(plot_dt[dmml_cor>=0.7],aes(x=dmml,y=UC))+geom_point(alpha=0.01)+geom_smooth())
+  dev.off()
+  png(paste0('../downstream/output/dmml_UC_scale_all',tissue,'.png'))
+  print(ggplot(plot_dt,aes(x=dmml,y=UC))+geom_point(alpha=0.01)+geom_smooth())
+  dev.off()
+}
+
 dir_in='../downstream/input/mm10_cluster_all/'
 region_out=list()
 for(fn in dir(dir_in,pattern='.csv')){
@@ -313,3 +426,187 @@ for(fn in dir(dir_in,pattern='.csv')){
   region_out[[tissue]]=csv_in
 }
 saveRDS(region_out,'../downstream/output/region_annotation.rds')
+
+#Correlation setting:
+#Try truncated mltivariate:tmvtnorm: A Package for the Truncated Multivariate Normal Distribution
+#Getting fitted data and correlation outside the fitted data
+dMML_cor=readRDS('../downstream/input/dmmlcor.rds')
+dNME_cor=readRDS('../downstream/input/dNMEcor.rds')
+dmml_perm=readRDS('../downstream/input/permudmmlcor.rds')
+dnme_perm=readRDS('../downstream/input/permudnmecor.rds')
+FDR_cor<-function(real_value,perm){
+  cor_null=ecdf(perm)
+  cor_pval=1-cor_null(real_value)
+  print(length(perm))
+  return(p.adjust(cor_pval,method='BH'))
+}
+convert_matrix<-function(perm_in,tissue,stat){
+  perm_in_dt=as.data.table(perm_in)
+  perm_in_dt$region=rownames(perm_in)
+  perm_in_dt$tissue="tissue"
+  perm_in_dt=melt.data.table(perm_in_dt,id.vars=c('region','tissue'))
+  perm_in_dt$variable=paste0(stat,"_perm")
+  return(perm_in_dt)
+  
+}
+#Merge into data table
+cor_dt=lapply(names(dNME_cor),function(x) {
+  regions=names(dNME_cor[[x]])
+  out_dt=data.table(region=regions,
+                    dMML_cor=dMML_cor[[x]][regions],
+                    dNME_cor=dNME_cor[[x]][regions],
+                    tissue=x)
+  dMML_perm_in=convert_matrix(dmml_perm[[x]],x,'dmml')
+  dNME_perm_in=convert_matrix(dnme_perm[[x]],x,'dnme')
+  out_dt$dMML_FDR=FDR_cor(out_dt$dMML_cor,dMML_perm_in$value)
+  out_dt$dNME_FDR=FDR_cor(out_dt$dNME_cor,dNME_perm_in$value)
+  dNME_cutoff=min(out_dt[dNME_FDR<=0.25]$dNME_cor)
+  dMML_cutoff=min(out_dt[dMML_FDR<=0.25]$dMML_cor)
+  out_dt_mt=melt.data.table(out_dt,id.vars = c('region','tissue'))
+  out_dt_mt=rbind(out_dt_mt,dMML_perm_in,dNME_perm_in)
+  # pdf(paste0('../downstream/output/dmml_dnme_cor/',x,'_dMML_permute_real.pdf'))
+  # print(ggplot(out_dt_mt[variable%in%c("dMML_cor","dmml_perm")],aes(x=value,group=variable,color=variable))+geom_density(size=1)+
+  #         theme(legend.position = "bottom")+geom_vline(xintercept = dMML_cutoff,size=1,color="purple"))
+  # 
+  # dev.off()
+  # 
+  # pdf(paste0('../downstream/output/dmml_dnme_cor/',x,'_dNME_permute_real.pdf'))
+  # print(ggplot(out_dt_mt[variable%in%c("dNME_cor","dnme_perm")],aes(x=value,group=variable,color=variable))+geom_density(size=1)+
+  #         theme(legend.position = "bottom")+geom_vline(xintercept = dNME_cutoff,size=1,color="purple"))
+  # 
+  # dev.off()
+  return(out_dt)
+  
+  
+})
+
+library(tmvtnorm)
+library(metR)
+cor_dt=lapply(cor_dt,function(x) x[!grepl("X",region)&!grepl("Y",region)])
+
+# density estimation ------------------------------------------------------
+
+#Estimate bandwidth using ucv:
+library(MASS)
+tissue_in=cor_dt[[4]]
+tissue_in_mt=as.matrix(tissue_in[,list(dMML_cor,dNME_cor)])
+bw_opt=ucv(tissue_in_mt)
+
+#Using mle on all data below FDR=0.25
+set.seed(12345)
+FDR_cor_cutoff=0.25
+contour_data_out=list()
+estimage_out=list()
+x_seq <- seq(-1, 1, by=0.001)
+y_seq <- seq(-1, 1, by=0.001)
+for(cor_mv_norm in cor_dt){
+  tissue=unique(cor_mv_norm$tissue)
+  cor_mv_norm_trunc=cor_mv_norm[(dMML_FDR>FDR_cor_cutoff)&(dNME_FDR>FDR_cor_cutoff)]
+  #cor_mv_norm_trunc=cor_mv_norm[(dMML_cor<=0)&(dNME_cor<=0)]
+  #Use range instead of max due to decimal problem
+  upper=c(range(cor_mv_norm_trunc$dMML_cor)[2],range(cor_mv_norm_trunc$dNME_cor)[2])
+  #There's some digit problem?
+  cor_mv_norm_trunc[dMML_cor<(-1)]$dMML_cor=-1
+  cor_mv_norm_trunc[dNME_cor<(-1)]$dNME_cor=-1
+  cor_mv_norm_trunc[dMML_cor>(1)]$dMML_cor=1
+  cor_mv_norm_trunc[dNME_cor>(1)]$dNME_cor=1
+  lower=c(-1,-1)
+  trunc_matrix=as.matrix(cor_mv_norm_trunc[,list(dMML_cor,dNME_cor)])
+  mle.fit1 <- mle.tmvnorm(trunc_matrix, lower=lower, upper=upper,method = "L-BFGS-B",lower.bounds=c(-1,-1),upper.bounds = c(1,1))
+  mle.fit1_sum=summary(mle.fit1)
+  
+  mu= mle.fit1_sum@coef[c('mu_1','mu_2'),"Estimate"]
+  sigma= matrix(mle.fit1_sum@coef[c('sigma_1.1','sigma_1.2',"sigma_1.2","sigma_2.2"),"Estimate"],nrow=2,byrow=T)
+
+  contour_data=as.data.table(expand.grid(x_seq,y_seq))
+  colnames(contour_data)=c("x_seq","y_seq")
+  contour_data$MD=mahalanobis(as.matrix(contour_data[,.(x_seq,y_seq)]),center=mu,cov=sigma)
+  contour_data$density=NA
+  # for (i in 1:nrow(contour_data)){
+  # 
+  #     #prepare for contour
+  #   contour_data$density[i] = dmvnorm(contour_data[i,.(x_seq,y_seq)], mean=mu,sigma=sigma)
+  # 
+  # }
+  # jpeg(paste0('../downstream/output/dmml_dnme_cor/truncated_nrom_small_0_',tissue,'.jpg'))
+  # print(ggplot(cor_mv_norm[(dMML_FDR>FDR_cor_cutoff)&(dNME_FDR>FDR_cor_cutoff)],aes(x=dMML_cor,y=dNME_cor))+ geom_point(alpha=0.01)+
+  #   geom_vline(xintercept = upper[1],size=1)+geom_hline(yintercept = upper[2],size=1)+
+  #   geom_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data,breaks=seq(1,5,1),color='red')+ 
+  #   geom_label_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data,breaks=seq(1,5,1))+
+  #   geom_point(mapping=aes(x=mu1,y=mu2),data=data.frame(mu1=mu[1],mu2=mu[2]),size=2,color='blue'))
+  #  dev.off()
+   contour_data_out[[tissue]]=contour_data
+   estimage_out[[tissue]]=list(mu=mu,sigma=sigma)
+   gc()
+  #geom_contour_fill()+ scale_fill_gradient2(high = "blue",low="white")+
+}
+#Use distance cutoff: 4
+MD_cutoff=4
+FDR_cutoff=0.25
+cor_mv_norm_MD_out=list()
+col_theme=c("red","blue","green","purple")
+sig_levels=c("dMML_only","Both","dNME_only","None")
+for(cor_mv_norm_MD in cor_dt){
+  tissue=unique(cor_mv_norm_MD$tissue)
+  estimage_tissue=estimage_out[[tissue]]
+  cor_mv_norm_MD$MD=mahalanobis(as.matrix(cor_mv_norm_MD[,.(dMML_cor,dNME_cor)]),center=estimage_tissue$mu,cov=estimage_tissue$sigma)
+  cor_mv_norm_MD$cor_type="NA"
+  cor_mv_norm_MD[MD<=MD_cutoff&(dMML_FDR<=FDR_cutoff|dNME_FDR<=FDR_cutoff)]$cor_type="Both"
+  cor_mv_norm_MD[(dMML_FDR>FDR_cutoff&dNME_FDR>FDR_cutoff)]$cor_type="None"
+  cor_mv_norm_MD[MD>MD_cutoff&dNME_FDR<=FDR_cutoff]$cor_type="dNME_only"
+  cor_mv_norm_MD[MD>MD_cutoff&dMML_FDR<=FDR_cutoff]$cor_type="dMML_only"
+  dNME_cutoff=min(cor_mv_norm_MD[dNME_FDR<=FDR_cutoff]$dNME_cor)
+  dMML_cutoff=min(cor_mv_norm_MD[dMML_FDR<=FDR_cutoff]$dMML_cor)
+
+  cor_mv_norm_MD$cor_type=factor(cor_mv_norm_MD$cor_type,levels=sig_levels)
+  
+
+  png(paste0('../downstream/output/dmml_dnme_cor/cor_type_',tissue,'_025_4_md.png'),width=7,height=7,units = "in",res=96)
+  print(
+    ggplot(cor_mv_norm_MD,aes(x=dMML_cor,y=dNME_cor))+
+          geom_point(aes(color=cor_type),alpha=0.1)+
+          theme(legend.position = "bottom")+ 
+          scale_color_manual(breaks= sig_levels, values = col_theme)+
+          geom_hline(yintercept = dNME_cutoff,size=1,color="black")+geom_vline(xintercept = dMML_cutoff,size=1,color="black")+
+          geom_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data_out[[tissue]],breaks=MD_cutoff,color='black')
+    )
+  
+dev.off()
+cor_mv_norm_MD_out[[tissue]]=cor_mv_norm_MD
+}
+ 
+cor_mv_norm_MD_out=fastDoCall('rbind',cor_mv_norm_MD_out)
+cor_mv_norm_MD_out_plot=cor_mv_norm_MD_out[,.N,by=c("tissue","cor_type")][,list(prop=N/sum(N),cor_type=cor_type),by=tissue]
+pdf('../downstream/output/dmml_dnme_cor/bar_plot_025_4_trunc.pdf')
+ggplot(cor_mv_norm_MD_out_plot,aes(x=tissue,y=prop))+geom_bar(stat="identity",aes(group=cor_type,fill=cor_type))+theme(legend.position = 'bottom')+
+  scale_fill_manual(breaks= sig_levels, values = col_theme)
+dev.off()
+library(fpc)
+for(i in 1:length(cor_dt)){
+  df=cor_dt[[i]][,.(dMML_cor,dNME_cor)]
+  tissue=unique(cor_dt[[i]]$tissue)
+  for(eps in seq(0.001,0.01,0.001)){
+    png(paste0('../downstream/output/dmml_dnme_cor/DBscan_',eps,'_',tissue,'.png'),width=7,height=7,units = "in",res=96)
+    print(plot(fpc::dbscan(df, eps = eps, MinPts = 10),df, main = "DBSCAN", frame = FALSE))
+    dev.off()
+    
+  }
+}
+library(mclust)
+cor_dt_mc_out_all=list()
+set.seed(123)
+for(i in 1:length(cor_dt)){
+  cor_dt_ts=cor_dt[[i]]
+  cor_dt_mt=as.matrix(cor_dt_ts[,.(dMML_cor,dNME_cor)])
+  tissue=unique(cor_dt_ts$tissue)
+  cor_dt_mc_out=list()
+  for(g in 3:12){
+    cor_dt_mc_out[[as.character(g)]]=Mclust(cor_dt_mt,G=g)
+    png(paste0('../downstream/output/dmml_dnme_cor/mcluster_',tissue,'_',g,'.png'),width=7,height=7,units = "in",res=96)
+    plot( cor_dt_mc_out[[as.character(g)]], what = 'classification')
+    dev.off()
+    
+  }
+  cor_dt_mc_out_all[[tissue]]=cor_dt_mc_out
+}
+

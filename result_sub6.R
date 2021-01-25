@@ -110,6 +110,7 @@ dir_in='mm10_cluster_all'
 nme_cor <- readRDS('../downstream/input/dnmecor.rds')
 mml_cor <- readRDS('../downstream/input/dmmlcor.rds')
 tissue=unique(sub(".csv*","",dir(paste0('../downstream/input/',dir_in),pattern="csv")))
+
 #All regions cluster, using enhancer vs non enhancer
 GO_out_all=GO_run_tissue(tissue,dir_in,nme_cor,mml_cor,"chromHMM_enhancer")
 saveRDS(GO_out_all,'../downstream/output/GO_out_all_chromHMM_all_stat.rds')
@@ -117,6 +118,138 @@ GO_out_all=GO_run_tissue(tissue,dir_in,nme_cor,mml_cor,"non_chromHMM_enhancer")
 saveRDS(GO_out_all,'../downstream/output/GO_out_all_non_chromHMM_all_stat.rds')
 GO_out_all=GO_run_tissue(tissue,dir_in,nme_cor,mml_cor,"all_regions")
 saveRDS(GO_out_all,'../downstream/output/GO_out_all_all_regions_all_stat.rds')
+
+
+# zerocutoff --------------------------------------------------------------
+dir_in='zero_cutoff_mm10'
+tissue=c('heart','forebrain','limb')
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer")
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"bin_enhancer")
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer",dist_cutoff = 10000)
+dir_in='dmml_dnme_cluster/dMML'
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'chromHMM_dMML')
+dir_in='dmml_dnme_cluster/dNME'
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'chromHMM_10k')
+plot_GO_heatmap(c('forebrain','heart'),"GO_out_cluster_all",GO_out_all,'chromHMM_all')
+#Permuted data
+dir_in='ucrandom_all'
+tissue=c('heart','forebrain','limb')
+GO_out_all_perm=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_perm)
+
+# dMML cluster dNME cluster check -----------------------------------------
+dMML_cluster=readRDS('../downstream/input/dmml_dnme_cluster/cluster/dMML.rds')
+dNME_cluster=readRDS('../downstream/input/dmml_dnme_cluster/cluster/dNME.rds')
+dir_in='../downstream/input/mm10_cluster_all/'
+dir_out_dNME='../downstream/input/dmml_dnme_cluster/dNME/'
+dir_out_dMML='../downstream/input/dmml_dnme_cluster/dMML/'
+for(fn in dir(dir_in,pattern='csv')){
+  
+  tissue=gsub('.csv','',fn)
+  csv_in=fread(paste0(dir_in,fn))
+  dMML_out=csv_in
+  dMML_out$cluster=dMML_cluster[[tissue]][dMML_out$region]
+  dNME_out=csv_in
+  dNME_out$cluster=dNME_cluster[[tissue]][dNME_out$region]
+  write.csv(dMML_out,paste0(dir_out_dMML,tissue,'.csv'),row.names = F)
+  write.csv(dNME_out,paste0(dir_out_dNME,tissue,'.csv'),row.names = F)
+}
+
+# recover GO run for all chromHMM for heart and forebrain -----------------
+GO_out_all=list()
+for(tissue in c('heart','forebrain')){
+  dir_in='../downstream/output/mm10_result/zero_cutoff_mm10/chromHMM_enhancer_NA/cluster_GO/'
+  GO_out_tissue=vector(mode = "list", length = 10)
+  for(i in 1:10){
+    GO_out_tissue[[i]]$GO_out_cluster_all=fread(paste0(dir_in,tissue,'-',i,'_cluster_GO.csv'))
+    
+  }
+  GO_out_all[[tissue]]=GO_out_tissue
+}
+GO_out_all=list()
+for(tissue in c('heart','forebrain')){
+  dir_in='../downstream/output/mm10_result/zero_cutoff_mm10/permutechromHMM_enhancer_10000/cluster_GO/'
+  GO_out_tissue=vector(mode = "list", length = 10)
+  for(i in 1:10){
+    GO_out_tissue[[i]]$GO_out_cluster_all=fread(paste0(dir_in,tissue,'-',i,'_cluster_GO.csv'))
+    
+  }
+  GO_out_all[[tissue]]=GO_out_tissue
+}
+
+
+# Check overlap between all data and permuted data ------------------------
+heart_original=fread('../downstream/input/mm10_cluster_all/heart.csv')
+limb_original=fread('../downstream/input/mm10_cluster_all/limb.csv')
+heart_perm=fread('../downstream/input/ucrandom_all/heart.csv')
+limb_perm=fread('../downstream/input/ucrandom_all/limb.csv')
+#Find overlapped regions for all
+original=heart_original$region
+perm=heart_perm$region
+region_dt=data.table(region_type=factor(c('original only','both','perm only'),levels=c('original only','both','perm only')),
+                     number_regions=c(sum(!original%in%perm),sum(original%in%perm),sum(!perm%in%original)))
+region_dt$number_regions=region_dt$number_regions/sum(region_dt$number_regions)
+
+ggplot(region_dt,aes(x='all',y=number_regions,group=region_type,fill=region_type))+geom_bar(stat='identity')+ylab('percent region')
+
+region_dt_clu=lapply(unique(heart_original$cluster),function(x){
+  
+  original=heart_original[cluster==x]$region
+  perm=heart_perm[cluster==x]$region
+  region_dt_x=data.table(region_type=factor(c('original only','both','perm only'),levels=c('original only','both','perm only')),
+                       number_regions=c(sum(!original%in%perm),sum(original%in%perm),sum(!perm%in%original)))
+  region_dt_x$number_regions=region_dt_x$number_regions/sum(region_dt_x$number_regions)
+  region_dt_x$clu=x
+  return(region_dt_x)
+})
+region_dt_clu=do.call(rbind,region_dt_clu)
+region_dt_clu$clu=factor(region_dt_clu$clu,levels=c(1:10))
+ggplot(region_dt_clu,aes(x=clu,y=number_regions,group=region_type,fill=region_type))+geom_bar(stat='identity')+ylab('percent region')
+
+#Check chromHMM regions
+
+original=heart_original[chromHMM_enhancer ==TRUE]$region
+perm=heart_perm[chromHMM_enhancer ==TRUE]$region
+region_dt=data.table(region_type=factor(c('original only','both','perm only'),levels=c('original only','both','perm only')),
+                     number_regions=c(sum(!original%in%perm),sum(original%in%perm),sum(!perm%in%original)))
+region_dt$number_regions=region_dt$number_regions/sum(region_dt$number_regions)
+ggplot(region_dt,aes(x='all',y=number_regions,group=region_type,fill=region_type))+geom_bar(stat='identity')+ylab('percent region')
+#Check genes
+
+original=unique(heart_original[chromHMM_enhancer ==TRUE]$gene)
+perm=unique(heart_perm[chromHMM_enhancer ==TRUE]$gene)
+gene_dt=data.table(region_type=factor(c('original only','both','perm only'),levels=c('original only','both','perm only')),
+                     number_regions=c(sum(!original%in%perm),sum(original%in%perm),sum(!perm%in%original)))
+gene_dt$number_regions=gene_dt$number_regions/sum(gene_dt$number_regions)
+ggplot(gene_dt,aes(x='all',y=number_regions,group=region_type,fill=region_type))+geom_bar(stat='identity')+ylab('percent region')
+
+gene_dt_clu=lapply(unique(heart_original$cluster),function(x){
+  
+  original=heart_original[cluster==x&chromHMM_enhancer ==TRUE]$gene
+  perm=heart_perm[cluster==x&chromHMM_enhancer ==TRUE]$gene
+  gene_dt_x=data.table(region_type=factor(c('original only','both','perm only'),levels=c('original only','both','perm only')),
+                         number_regions=c(sum(!original%in%perm),sum(original%in%perm),sum(!perm%in%original)))
+  #gene_dt_x$number_regions=gene_dt_x$number_regions/sum(gene_dt_x$number_regions)
+  gene_dt_x$clu=x
+  return(gene_dt_x)
+})
+gene_dt_clu=do.call(rbind,gene_dt_clu)
+gene_dt_clu$clu=factor(gene_dt_clu$clu,levels=c(1:10))
+ggplot(gene_dt_clu,aes(x=clu,y=number_regions,group=region_type,fill=region_type))+geom_bar(stat='identity')+ylab('percent region')
+
+tissue=c('heart','forebrain','limb')
+GO_out_all_Top30=GO_run_tissue_perm(tissue,'Top_30_cutoff',"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top30)
+
+GO_out_all_Top_20=GO_run_tissue_perm(tissue,'Top_20_cutoff',"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top_20)
+
+GO_out_all_Top_10=GO_run_tissue_perm(tissue,'Top_10_cutoff',"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top_10)
+
+GO_out_all_Top_1=GO_run_tissue_perm(tissue,'Top_1_cutoff',"chromHMM_enhancer")
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top_1)
 #add bin enhancer if necessary
 #Plotting GO annotations
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all)
@@ -124,6 +257,9 @@ plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_NME_only",GO_out_a
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_MML_only",GO_out_all)
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_NME_MML",GO_out_all)
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_non_NME_non_MML",GO_out_all)
+
+
+plot_GO_heatmap_perm(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top30)
 # dir_in='mm10_cluster_chromHMM'
 # GO_out_all=GO_run_tissue(tissue,dir_in,nme_cor,mml_cor,"chromHMM_enhancer")
 # saveRDS(GO_out_all,'../downstream/output/GO_out_chromHMM_chromHMM_all_stat.rds')

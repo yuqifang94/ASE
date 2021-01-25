@@ -110,7 +110,6 @@ print(ggplot(OR_barplot,aes(x=allele,y=OR))+
   theme_glob)
 dev.off()
 # Finding the overlap between monoallelic expressed gene ------------------
-#Need to check *
 MAE_BAE_data_Gimelbrant <- as.data.frame(read_excel("../downstream/input/MAE_BAE_data_Gimelbrant.xlsx"),stringsAsFactors=F)
 #Enrichment in MAE dMML , not quiet enriched
 MAE=MAE_BAE_data_Gimelbrant$Gene[ MAE_BAE_data_Gimelbrant$`MAE=1_BAE=0`==1]
@@ -127,9 +126,9 @@ ah = AnnotationHub()
 ENCODE_name=ENCODE_to_sample(unique(GR_merge$Sample))
 chromHMM_dMML_all_ls=list()
 ah_gr=GRanges()
-#Do it for all available data
+#Do it for all available data, check
 suppressMessages({for (sp in ENCODE_name$sample[!is.na(ENCODE_name$ENCODE)]){
-ah_num=names(query(ah, c("chromhmmSegmentations", ENCODE_name$ENCODE[ENCODE_name$sample==sp])))
+ah_num=names(AnnotationHub::query(ah, c("chromhmmSegmentations", ENCODE_name$ENCODE[ENCODE_name$sample==sp])))
   chromHMM=ah[[ah_num]]
   chromHMM_dMML_all_ls[[sp]]=chromHMM_OR(GR_merge, chromHMM,sp,stat="dMML_pval")
   # }
@@ -144,6 +143,7 @@ chromHMM_dMML_all=chromHMM_dMML_all[order(chromHMM_dMML_all$OR,decreasing=F),]
 chromHMM_dMML_all$states=factor(chromHMM_dMML_all$states,levels=chromHMM_dMML_all$states)
 chromHMM_dMML_all$FDR=p.adjust(chromHMM_dMML_all$p_value,method='BH')
 chromHMM_dMML_all$star=add.significance.stars(chromHMM_dMML_all$FDR, cutoffs = c(0.05, 0.01, 0.001))
+chromHMM_dMML_all$states=factor(chromHMM_dMML_all$states,levels=chromHMM_dMML_all$states[order(chromHMM_dMML_all$OR,decreasing=F)])
 pdf('../downstream/output/graphs/Figure2/Figure2C_crhomHMM.pdf',width=5,height=5)
 print(ggplot(chromHMM_dMML_all,aes(x=states,y=OR,fill=states))+geom_bar(stat="identity",color="black",position=position_dodge(0.9))+
   geom_errorbar(aes(ymin=lower_CI,ymax=upper_CI),width=0.2,position=position_dodge(0.9))+ coord_flip()+

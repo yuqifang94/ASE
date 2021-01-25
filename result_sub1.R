@@ -13,7 +13,6 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
 # Find number of overlapped regions ---------------------------------------
 GR_merge=readRDS(GR_merge_file)
 #Only use merged data for H1
-GR_merge=GR_merge[!(GR_merge$Sample%in%c("rep1 - H1","rep2 - H1"))]
 dMML=sum(GR_merge$dMML_pval<=pval_cutoff)
 dNME=sum(GR_merge$dNME_pval<=pval_cutoff)
 dMML_dNME=sum(GR_merge$dNME_pval<=pval_cutoff&GR_merge$dMML_pval<=pval_cutoff)
@@ -21,12 +20,12 @@ cat('Number of regions:',length(GR_merge),'\n')
 cat('Number of dMML:',dMML,'\n')
 cat('Number of dNME:',dNME,'\n')
 cat('Number of dNME and dMML:',dMML_dNME,'\n')
-# #Run it tonight
-# olap_merge=c()
-# for(i in 1:50000){olap_merge=c(olap_merge,length(subsetByOverlaps(GR_merge[sample(1:length(GR_merge),dMML,replace=F)],
-#                                                                   GR_merge[sample(1:length(GR_merge),dNME,replace=F)],type='equal')))}
-# sum(olap_merge<=dMML_dNME)/length(olap_merge)#=0
-# saveRDS(olap_merge,'../downstream/output/olap_merge.rds')
+#Run it tonight
+olap_merge=c()
+for(i in 1:50000){olap_merge=c(olap_merge,length(subsetByOverlaps(GR_merge[sample(1:length(GR_merge),dMML,replace=F)],
+                                                                  GR_merge[sample(1:length(GR_merge),dNME,replace=F)],type='equal')))}
+sum(olap_merge<=dMML_dNME)/length(olap_merge)#=0
+saveRDS(olap_merge,'../downstream/output/olap_merge.rds')
 #Examples:
 #dNME example1:
 subsetByOverlaps(GR_merge[GR_merge$Sample=="ectoderm_paired - HUES64"],GRanges(seqnames="chr14",IRanges(start=104552150,end=104552495)))
