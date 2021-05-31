@@ -184,10 +184,10 @@ library(MASS)
 
 #global pval cutoff file names
 pval_cutoff=0.1 #Onuchic use 0.1
-gff_in_file='../downstream/input/gff_in.rds'
+gff_in_file='../downstream/input/human_analysis/gff_in.rds'
 variant_HetCpG_file='../downstream/input/human_analysis/variant_HetCpG_new.rds'
-GR_file='../downstream/output/GRs_final1.rds'
-GR_allele_file='../downstream/output/GRs_allele_final1.rds'
+GR_file='../downstream/output/human_analysis/CPEL_outputs/GRs_final1.rds'
+GR_allele_file='../downstream/output/human_analysis/CPEL_outputs/GRs_allele_final1.rds'
 hetCpG_gff_file='../downstream/input/hetCpG_gff_final1.rds'
 GR_merge_file="../downstream/output/human_analysis/CPEL_outputs/GR_merge_final12_ls.rds"
 variant_HetCpG_meta_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_final1_ls.rds'

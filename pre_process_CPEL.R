@@ -6,19 +6,22 @@ CpG_hg19=getCpgSitesH19()
 saveRDS(CpG_hg19,'../downstream/input/human_analysis/CpG_hg19.rds')
 
 
-subjects=c("H9","HUES64","skin03","STL001","STL002","STL003","STL011","H1","HuFGM02","112","149","150")
+subjects=c("H9","HUES64","skin03","STL001","STL002","STL003",
+           "STL011","H1","HuFGM02","112","149","150")
 # reading in vcf files ----------------------------------------------------
-
+#Linux for converting vcf to vcf.gz in ../downstream/data/vcfFiles/:
+#for fn in *.vcf; do bgzip -c $fn > $fn.gz; done
 variant_HetCpG=lapply(subjects,function(x) extractHetCpG('../downstream/data/vcfFiles/',x)) 
 names(variant_HetCpG)=subjects
 saveRDS(variant_HetCpG,variant_HetCpG_file)
-#Note the first line cannot be NA
+
+# reading in statisticsc for each sample -------------------------------
 GR=import.subject('../downstream/data/bedGraph_diff/')
 saveRDS(GR,GR_file)
 GR_allele=import.subject('../downstream/data/bedGraph_allele/',calc='allele')
 saveRDS(GR_allele,GR_allele_file)
-###Checking if GR_allele match gff matched###########################
-#Reading in regions to define the region analyzed, check if all x,y,MT are excluded
+
+# reading in analyzed regions for each sample -----------------------------
 gff_in=readAllGff('../downstream/data/gff_file/',subjects)
 saveRDS(gff_in,gff_in_file)
  for(subj in subjects){
