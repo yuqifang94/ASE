@@ -1,0 +1,2 @@
+grep -oP '[0-9]{8,8}' paper_draft_for_reference.txt |sort|uniq >unique_ref.txt
+sed -z 's/\n/;/g;s/;$/\n/' unique_ref.txt
