@@ -101,7 +101,7 @@ for(ts in names(cluster_out)){
   cluster_region_out[[ts]]=region_out
   
   cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
-  write.csv(region_out,paste0(dir_out,ts,'.csv'))
+  write.csv(region_out,paste0(dir_out,'cluster_assigned/',ts,'.csv'))
 }
 cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/cluster_all_region_assignment_filtered_001.rds'
 saveRDS(cluster_region_out,cluster_region_out_fn)
@@ -143,7 +143,7 @@ d <- sapply(d,function(i) {
   i <- i[complete.cases(i),]
 })
 
-mat_out=matrix(ncol=39)
+mat_out=matrix(ncol=39,nrow=0)
 rowann_out=data.frame()
 row_gap=c(0)
 for (n in names(d)) {
@@ -189,7 +189,7 @@ names(c4) <- sort(unique(colann[,1]))
 #          annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4,dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)))
 # dev.off()
 
-tiff('../downstream/output/mouse_analysis/clustering/heatmap_acrosstissue/all_sc_N17_ft_kmeans_10run_filtered_all_001.tiff',width=5000,height=5000,res=300)
+tiff('../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_01/all_sc_N17_ft_kmeans_10run_filtered_all_001.tiff',width=5000,height=5000,res=300)
 #png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
 pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
          annotation_col = colann,show_colnames = F,show_rownames = F,
@@ -198,4 +198,48 @@ pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,clust
                                   #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)
          ))
 dev.off()
+
+# #Add GO analysis for all regions ----------------------------------------
+dir_out_cluster='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_01/'
+folder_out=paste0(dir_out_cluster,'cluster_assigned/')
+dir_out_GO='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_001/'
+UC_merge=readRDS('../downstream/input/mouse_analysis/UC_only_all_regions.rds')#Define all analyzed regions, were using UC_merge_max_loc_cluster01.rds,4626
+cutoff_fn='001'
+#Runnning
+tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+#prepare enhancer background gene list
+uc_gr=lapply(UC_merge,function(x) rownames(x))
+uc_gr=Reduce(intersect,uc_gr)
+uc_gr=convert_GR(uc_gr)
+enhancer=readRDS('../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds')
+enhancer_bg=subsetByOverlaps(enhancer,uc_gr)
+bg_enhancer=unique(enhancer_bg$`Target Gene`)
+#Prepare promoter background gene
+tss=get_mm10_tss()
+
+bg_promoter=names(subsetByOverlaps(tss,uc_gr,maxgap = 2000))
+enc_type="enhancer"
+region_type='all'
+GO_out_all=list()
+for(ts in tissue_all){
+  if(enc_type=="enhancer"){
+    bg=bg_enhancer
+  }else 
+    if(enc_type=="promoter"){
+      bg=bg_promoter
+      
+    }
+  GO_out_all[[region_type]][[ts]]=GO_run_tissue(ts,folder_out,enc_type=enc_type,region_type_sel=region_type,bg=bg,DNase=F)
+  GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){
+    return(list(GO_out_cluster_all=x$GO_out_cluster_all,
+                csv_in_ts_clu=cbind(x$csv_in_ts_clu,as.data.table(UC_merge[[ts]][x$csv_in_ts_clu$region,!grepl('max',colnames(UC_merge[[ts]]))]))))
+    
+    
+  })
+  
+}
+saveRDS(GO_out_all,paste0(dir_out_GO,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
+#Non of GO terms is significant
+plot_GO_heatmap_all(tissue_all,GO_out_all[[region_type]],region_type=region_type,enc_type="enhancer",ptcount=0,FDR_cutoff=0.2,
+                    dir_plot=paste0('../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/UC_',cutoff_fn,'/'))
 

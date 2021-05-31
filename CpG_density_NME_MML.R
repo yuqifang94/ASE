@@ -251,12 +251,10 @@ dev.off()
 # ggarrange(plotlist=SNP_box, nrow=4,ncol=3,common.legend = T,legend="bottom")
 # dev.off()
 #Two catogries do not need this since they're complmentary
-OR_all_SNP_change=data.table()
+OR_calc(variant_HetCpG_meta_dt[dNME_pval<=pval_cutoff],'Gain CG',"CpG_change")
 
-for(sn in unique(variant_HetCpG_meta_dt$CpG_change)){
-  OR_all_SNP_change=rbind(OR_all_SNP_change,OR_calc(variant_HetCpG_meta_dt[dNME_pval<=pval_cutoff],sn,"CpG_change"))
-  
-}
+
+
 OR_all_SNP_change=OR_all_SNP_change[order(OR,decreasing=F)]
 OR_all_SNP_change$SNP=factor(OR_all_SNP_change$SNP,levels=OR_all_SNP_change$SNP)
 OR_all_SNP_change$FDR=p.adjust(OR_all_SNP_change$pvalue,method='BH')

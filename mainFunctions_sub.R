@@ -2318,7 +2318,7 @@ assign_regions<-function(tissue_out_filtered,folder_in,DNAase){
   
 }
 GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR_dir='../downstream/input/FeDMR_Ecker/',
-                    motif_Ken_dir='../downstream/input/Ken_motif_binding_site/',FDR_cutoff=0.1,mm10_CpG=cgs){
+                    motif_Ken_dir='../downstream/input/Ken_motif_binding_site/',FDR_cutoff=0.1,mm10_CpG=cgs,out_dir='../downstream/output/mouse_analysis/GO_analysis/GO_sheets/'){
   #Annotate cluster
   
   #est_time_table=fread('../downstream/input/mouse_analysis/clustering/tissue_specific/heatmap_uc_01/uc_01_tissue_clu_anno.csv')
@@ -2349,7 +2349,7 @@ GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR
         return(GO_sig[,list(GO.ID,Term,Annotated,Significant,Expected,FC,p_cond,FDR,genes)])
         }
       }))
-      write.csv(gene_sig_ts,paste0('../downstream/output/mouse_analysis/GO_analysis/GO_sheets/',ts,'_',GO_type,'.csv'),row.names=F)
+      write.csv(gene_sig_ts,paste0(out_dir,ts,'_',GO_type,'.csv'),row.names=F)
       
     }
     #   if(!is.null(gene_sig_ts)&length(gene_sig_ts)>0){
