@@ -1,11 +1,14 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-##############################Updated CPEL pipeline modify it accordingly###############
+
+# get all hg19 CpG site ---------------------------------------------------
 CpG_hg19=getCpgSitesH19()
 saveRDS(CpG_hg19,'../downstream/input/human_analysis/CpG_hg19.rds')
+
+
 subjects=c("H9","HUES64","skin03","STL001","STL002","STL003","STL011","H1","HuFGM02","112","149","150")
-#read in vcf files
-#Fix the issue with genome file order does not equal to the ref/alt order, calculate the CG or het CG in genome 1 based on actual ref/alt order
+# reading in vcf files ----------------------------------------------------
+
 variant_HetCpG=lapply(subjects,function(x) extractHetCpG('../downstream/data/vcfFiles/',x)) 
 names(variant_HetCpG)=subjects
 saveRDS(variant_HetCpG,variant_HetCpG_file)
