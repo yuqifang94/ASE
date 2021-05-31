@@ -325,3 +325,162 @@ for(fn in dir('../downstream/input/mm10_cluster/')){
   csv_in$promoter_gene[csv_in_olap$queryHits]=csv_in_olap$V1
   write.csv(csv_in,paste0('../downstream/input/mm10_cluster/',sub('.csv','_promoter.csv',fn)))
 }
+
+GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
+  GO_out_all=list()
+  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
+  for (ts in tissue){
+    cat("Processing:",ts,'\n')
+    fn=paste0(ts,'.csv')
+    #read in csv file for given tissue
+    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
+    csv_in_ts=csv_in_ts[order(dNME_maxJSD_rank,decreasing = F)]
+    # Getting enhancer
+    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
+      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
+        if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}
+    #GO annotation
+    if(nrow(csv_in_ts)>1){
+      #GO annotation for each cluster
+      csv_out=lapply(1:10,function(clu){
+        sp=paste0(ts,'-',clu)
+        csv_in_ts_clu=csv_in_ts[cluster==clu]
+        csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxJSD_rank,decreasing=F)]
+        #Add NME and mml cor
+        csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
+        csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
+        
+        if(nrow(csv_in_ts_clu)>1){
+          
+          #GO annotation for chromHMM 
+          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
+          csv_in_ts_clu$GO_result=unlist(lapply(unique(csv_in_ts_clu$gene),function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
+          #GO annotation for other types of regions
+          GO_out_cluster_NME=GO_run(csv_in_ts_clu[nme_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_NME_only=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_MML=GO_run(csv_in_ts_clu[mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_MML_only=GO_run(csv_in_ts_clu[mml_cor>=0.7&nme_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_non_MML=GO_run(csv_in_ts_clu[mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_NME_MML=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          GO_out_cluster_non_NME_non_MML=GO_run(csv_in_ts_clu[nme_cor<0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
+          
+          write.csv(GO_out_cluster,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/all_regions/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_NME_only,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_only/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_MML_only,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/MML_only/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_NME_MML,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_MML/',sp,'_cluster_GO.csv'))
+          write.csv(GO_out_cluster_non_NME_non_MML,row.names = F,quote = T,
+                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/None_NME_MML/',sp,'_cluster_GO.csv'))
+          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
+          return(list(GO_out_cluster_all=GO_out_cluster,GO_out_cluster_NME=GO_out_cluster_NME,GO_out_cluster_non_MML=GO_out_cluster_non_MML,csv_in_ts_clu=csv_in_ts_clu,
+                      GO_out_cluster_NME_only=GO_out_cluster_NME_only,GO_out_cluster_MML=GO_out_cluster_MML,GO_out_cluster_MML_only=GO_out_cluster_MML_only,
+                      GO_out_cluster_non_NME_non_MML=GO_out_cluster_non_NME_non_MML,GO_out_cluster_NME_MML=GO_out_cluster_NME_MML))
+        }
+        
+      })
+      GO_out_all[[ts]]=csv_out
+      write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxJSD,decreasing=T)],
+                file=paste0('../downstream/output/mm10_result/',enc_type,'/enhancer_gene_list/',dir_in,'/',ts,'_all.csv'))
+    }
+    
+  }
+  return(GO_out_all)
+}
+
+GO_run_tissue_perm<-function(tissue,dir_in,enc_type,dist_cutoff=NA,permute=F){
+  if(permute){enc_type=paste0('permute',enc_type)}
+  GO_out_all=list()
+  # dir_out=paste0('../downstream/output/mm10_result/',dir_in)
+  # ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  # dir_out=paste0(dir_out,'/',enc_type,'_',dist_cutoff)
+  # ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  # GO_out=paste0(dir_out,'/cluster_GO/')
+  # ifelse(!dir.exists(file.path(GO_out)), dir.create(file.path(GO_out)), FALSE)
+  # gene_out=paste0(dir_out,'/all_gene_list/')
+  # ifelse(!dir.exists(file.path(gene_out)), dir.create(file.path(gene_out)), FALSE)
+  
+  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
+  print(csv_files)
+  for (ts in tissue){
+    cat("Processing:",ts,'\n')
+    fn=paste0(ts,'.csv')
+    #read in csv file for given tissue
+    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
+    
+    #Note some times Jason use dNME_maxJSD_rank
+    #csv_in_ts=csv_in_ts[order(dNME_maxUC_rank,decreasing = F)]
+    # Getting enhancer
+    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
+      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
+        if(enc_type=="promoter"){csv_in_ts=csv_in_ts}else 
+          if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}else
+            if(enc_type=="bin_enhancer"){
+              enhancer=readRDS("../downstream/output/bin_enhancer.rds")
+              csv_in_gr=convert_GR(csv_in_ts$region)
+              mcols(csv_in_gr)=csv_in_ts
+              olap=findOverlaps(csv_in_gr,enhancer)
+              csv_in_gr=csv_in_gr[queryHits(olap)]
+              csv_in_gr$gene=enhancer$`Target Gene`[subjectHits(olap)]
+              csv_in_gr$distance=NA
+              csv_in_ts=as.data.table(mcols(csv_in_gr))
+            }else
+              if(enc_type=="FANTOM5"){
+                #heart 47831 regions
+                enhancer=import.bed('../downstream/input/F5.mm10.enhancers.bed.gz')
+                csv_in_gr=convert_GR(csv_in_ts$region)
+                olap=findOverlaps(csv_in_gr,enhancer)
+                print("Filtering")
+                csv_in_ts=csv_in_ts[queryHits(olap)]
+              }else
+                if(enc_type=="chromHMM_enhancer_union"){
+                  csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer_union]
+                  
+                }else
+                  if(enc_type=="chromHMM_enhancer_tissuespecific"){
+                    csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer_tissuespecific]
+                    
+                  }
+    
+    
+    if(!is.na(dist_cutoff)){csv_in_ts=csv_in_ts[abs(distance)<=dist_cutoff]}
+    if(permute){csv_in_ts$cluster=sample(csv_in_ts$cluster,length(csv_in_ts$cluster))}
+    print(csv_in_ts)
+    #GO annotation
+    if(nrow(csv_in_ts)>1){
+      #GO annotation for each cluster
+      csv_out=mclapply(1:10,function(clu){
+        sp=paste0(ts,'-',clu)
+        csv_in_ts_clu=csv_in_ts[cluster==clu]
+        #csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxUC_rank,decreasing=F)]
+        #Add NME and mml cor
+        # csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
+        # csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
+        
+        if(nrow(csv_in_ts_clu)>1){
+          Sys.sleep(clu*30)
+          cat('start processing cluster:',clu,'\n')
+          tt1=proc.time()[[3]]
+          #GO annotation for chromHMM 
+          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
+          csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
+          cat('Finish processing cluster:',clu,'in:',proc.time()[[3]]-tt1,'\n')
+          
+          # write.csv(GO_out_cluster,row.names = F,quote = T,
+          #           file=paste0(GO_out,sp,'_cluster_GO.csv'))
+          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
+          return(list(GO_out_cluster_all=GO_out_cluster,csv_in_ts_clu=csv_in_ts_clu))
+        }
+        
+      },mc.cores=10)
+      print(csv_out[[1]])
+      GO_out_all[[ts]]=csv_out
+      # write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxUC,decreasing=T)],
+      #           file=paste0(gene_out,ts,'_all.csv'))
+    }
+    
+  }
+  return(GO_out_all)
+}

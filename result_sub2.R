@@ -52,7 +52,7 @@ dev.off()
 
 #Figure 2A,B
 library(readxl)
-Imprinted_Genes <- as.data.frame(read_excel("../downstream/input/Imprinted Genes.xlsx"))
+Imprinted_Genes <- as.data.frame(read_excel("../downstream/input/human_analysis/imprinting_ASE/Imprinted Genes.xlsx"))
 Imprinted_Genes$Expressed_allele= Imprinted_Genes$`Expressed Allele`
 #ecdf: Figure 2A
 GR_merge_genes_promoter=GR_merge[!is.na(GR_merge$genes_promoter)]
@@ -68,9 +68,9 @@ write.csv(GR_merge_genes_df[dMML_pvalue<=pval_cutoff&imprinted=="Imprinted"],'..
 #Getting ecdf
 ecdf_df_out=data.frame()
 for(type in unique(GR_merge_genes_df$imprinted)){
-  GR_merge_genes_promoter_estimate=ecdf(GR_merge_genes_promoter$dMML[GR_merge_genes_df$imprinted==type])
+  GR_merge_genes_promoter_estimate=ecdf(GR_merge_genes_promoter$dMML[GR_merge_genes_promoter$imprinted==type])
   imprinted_uq=seq(0,1,0.001)
-  ecdf_df_out=rbind(ecdf_df_out,data.frame(dMML=imprinted_uq,quant=GR_merge_genes_promoter_estimate(imprinted_uq),imprinted=type,stringsAsFactors = F))
+  ecdf_df_out=rbind(ecdf_df_out,data.frame(stat_diff=imprinted_uq,quant=GR_merge_genes_promoter_estimate(imprinted_uq),imprinted=type,stringsAsFactors = F))
 }
 #Getting density ecdf files
 
@@ -80,6 +80,36 @@ print(ggplot(ecdf_df_out,aes(x=dMML,y=quant,group=imprinted,color=imprinted))+ge
  # print(ggplot(GR_merge_genes_df,aes(x=dMML,fill=imprinted,color=imprinted))+geom_density(size=1.5,alpha=0.4)+
  #         xlab('dMML')+theme(legend.position = 'bottom')+theme_glob)
 dev.off()
+
+#Getting ecdf for dNME
+ecdf_df_out_dNME=data.frame()
+for(type in unique(GR_merge_genes_df$imprinted)){
+  GR_merge_genes_promoter_estimate=ecdf(GR_merge_genes_promoter$dNME[GR_merge_genes_promoter$imprinted==type])
+  imprinted_uq=seq(0,1,0.001)
+  ecdf_df_out_dNME=rbind(ecdf_df_out_dNME,data.frame(stat_diff=imprinted_uq,quant=GR_merge_genes_promoter_estimate(imprinted_uq),imprinted=type,stringsAsFactors = F))
+}
+ecdf_df_out_dNME$stat_type='dNME'
+ecdf_df_out$stat_type='dMML'
+ecdf_df_out_dNME$imprinted=paste0('dNME-',ecdf_df_out_dNME$imprinted)
+ecdf_df_out$imprinted=paste0('dMML-',ecdf_df_out$imprinted)
+ecdf_df_out=rbind(ecdf_df_out,ecdf_df_out_dNME)
+
+GR_merge_non_promoter_estimate=ecdf(GR_merge[is.na(GR_merge$genes_promoter)]$dNME)
+ecdf_df_out=rbind(rbind(ecdf_df_out,data.frame(dNME=imprinted_uq,quant=GR_merge_non_promoter_estimate(imprinted_uq),imprinted='Non-promoter',stringsAsFactors = F)))
+#Getting density ecdf files
+
+pdf('../downstream/output/graphs/Figure2/imprinted_dNME.pdf',width=3.5,height=3.5)
+ggplot(ecdf_df_out,aes(x=stat_diff,y=quant,group=imprinted,color=imprinted,alpha=stat_type))+geom_line(size=1.5)+xlab('differential stats')+
+        ylab('cumulative probability')+theme_glob+theme(legend.position = 'bottom')+ scale_alpha_manual(name = "stat_type", values = c(1,.25))+
+  scale_color_manual(name='imprinted',values=c('red','blue','red','blue'))+
+  guides(color=guide_legend(nrow=2,byrow=TRUE),stat_type=guide_legend(nrow=2,byrow=TRUE))
+# print(ggplot(GR_merge_genes_df,aes(x=dMML,fill=imprinted,color=imprinted))+geom_density(size=1.5,alpha=0.4)+
+#         xlab('dMML')+theme(legend.position = 'bottom')+theme_glob)
+dev.off()
+ggplot(data=as.data.frame(mcols(GR_merge)),aes(x=dMML,y=dNME))+geom_smooth()+
+  geom_density2d(geom = "raster",  aes(fill = after_stat(density)), contour = FALSE,n=200)+
+  xlab('dMML')+ylab('dNME')+geom_abline(slope=1,intercept = 0)+xlim(c(0,1))+ylim(c(0,1))
+
 
 #Bar plot Figure 2B
 dMML_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',Imprinted_Genes$Gene),
@@ -110,10 +140,12 @@ print(ggplot(OR_barplot,aes(x=allele,y=OR))+
   theme_glob)
 dev.off()
 # Finding the overlap between monoallelic expressed gene ------------------
-MAE_BAE_data_Gimelbrant <- as.data.frame(read_excel("../downstream/input/MAE_BAE_data_Gimelbrant.xlsx"),stringsAsFactors=F)
+MAE_BAE_data_Gimelbrant <- as.data.frame(read_excel("../downstream/input/human_analysis/imprinting_ASE/MAE_BAE_data_Gimelbrant.xlsx"),stringsAsFactors=F)
 #Enrichment in MAE dMML , not quiet enriched
 MAE=MAE_BAE_data_Gimelbrant$Gene[ MAE_BAE_data_Gimelbrant$`MAE=1_BAE=0`==1]
 #dMML enrichment promoter
+write.csv(unique(unlist(GR_merge[GR_merge$dMML_pval<=pval_cutoff]$genes_promoter[GR_merge[GR_merge$dMML_pval<=pval_cutoff]$genes_promoter%in% MAE_BAE_data_Gimelbrant$Gene])),
+          '../downstream/output/human_analysis/dMML_analysis/MAE_genes.csv')
 dMML_MAE=MAE_enrich(GR_merge[GR_merge$genes_promoter%in% MAE_BAE_data_Gimelbrant$Gene],
            pval_cutoff=0.1,genes='genes_promoter',stat='dMML_pval',MAE=MAE)
 dNME_MAE=MAE_enrich(GR_merge[GR_merge$genes_promoter%in% MAE_BAE_data_Gimelbrant$Gene],

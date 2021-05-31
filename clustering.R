@@ -1,0 +1,365 @@
+rm(list=ls())
+source('mainFunctions_sub.R')
+# clustering K-means --------------------------------------------------------------
+dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/uc_01/'
+total_run=10
+#Convert into df with major
+cutoffs=0.1
+cluster_out=list()
+for(fn in c(paste0('uc_',cutoffs,'_',1:10,'.rds'))){
+  cluster_in=readRDS(paste0(dir_in,fn))
+  for(ts in names(cluster_in)){
+    if(fn==paste0('uc_',cutoffs,'_',1,'.rds')){
+      cluster_out[[ts]]=data.table(regions=names(cluster_in[[ts]]),cluster_1=cluster_in[[ts]])
+    }else{
+      cluster_out[[ts]][[paste0("cluster_",gsub(paste0('uc_|.rds|',cutoffs,'_'),'',fn))]]=cluster_in[[ts]][ cluster_out[[ts]]$region]
+      
+      
+    }
+  }
+  
+  
+}
+#Find major cluster use cluster_1 as reference
+cluster_out=lapply(cluster_out,function(x){
+  for(i in 1:10){
+    
+    x[[paste0("major_cluster_",i)]]=as.numeric(NA)
+    x[[paste0("major_cluster_in_",i)]]=as.numeric(NA)
+    #For each cluster, find major cluster
+    for(j in 1:10){
+      x[cluster_1==j][[paste0("major_cluster_",i)]]= as.numeric(names(which.max(table(x[cluster_1==j][[paste0("cluster_",i)]]))))  
+      x[cluster_1==j][[paste0("major_cluster_in_",i)]]=x[cluster_1==j][[paste0("major_cluster_",i)]]==x[cluster_1==j][[paste0("cluster_",i)]]#If in major cluster
+    }
+  }
+  x$percent_cluster_in=rowSums(x[,grepl("major_cluster_in",colnames(x)),with=FALSE])/(total_run)
+  return(x)
+  
+})
+
+
+
+
+pdf('../downstream/output/mouse_analysis/clustering/proportion_run_kmeans_10_all_regions.pdf',width=3,height=3)
+for(ts in names(cluster_out)){
+  hist(cluster_out[[ts]]$percent_cluster_in,xlab="Proportion of runs in major cluster",main=ts)
+  
+  
+}
+dev.off()
+
+# created merged object for all UC, dMML and dNME ----------------------------------------
+#in cpelasm
+mml <- readRDS('compliment_MML_NME_model/MML_matrix_mouse_all_dedup_N2_all_regions.rds')
+mml=convert_GR(mml,direction="matrix")
+nme <- readRDS('compliment_MML_NME_model/NME_matrix_mouse_all_dedup_N2_all_regions.rds')
+nme=convert_GR(nme,direction="matrix")
+uc=readRDS('allele_agnostic_uc_complement/UC_agnostic_mouse_matrix_dedup_N2_all_non_MDS.rds')
+uc=lapply(uc,convert_GR,direction="matrix")
+UC_merge=lapply(names(uc),function(x){
+  uc_in=uc[[x]]
+  mml_in=mml[,grepl(x,colnames(mml))]
+  nme_in=nme[,grepl(x,colnames(nme))]
+  regions=intersect(intersect(rownames(uc_in),rownames(mml_in)),rownames(nme_in))
+  uc_in=uc_in[regions,]
+  
+  colnames(nme_in)=gsub('.*-','',gsub("-all","",colnames(nme_in)))
+  colnames(mml_in)=gsub('.*-','',gsub("-all","",colnames(mml_in)))
+  mml_in=mml_in[regions,]
+  nme_in=nme_in[regions,]
+  time_series=gsub(paste0(x,'-'),'',gsub("-all","",colnames(uc_in)))
+  dnme=do.call(cbind,lapply(time_series,function(x){
+    return(abs(nme_in[,gsub('-.*','',x)]-nme_in[,gsub('.*-','',x)]))
+    
+  }))
+  dmml=do.call(cbind,lapply(time_series,function(x){
+    return(abs(mml_in[,gsub('-.*','',x)]-mml_in[,gsub('.*-','',x)]))
+    
+  }))
+  colnames(uc_in)=paste0("UC-",colnames(uc_in))
+  colnames(dmml)=paste0("dMML-",time_series)
+  colnames(dnme)=paste0("dNME-",time_series)
+  return(cbind(uc_in,dmml,dnme))
+})
+names(UC_merge)=names(uc)
+saveRDS(UC_merge,'UC_dMML_dNME_all_regions.rds')
+UC_merge_max_loc=lapply(UC_merge,function(x){
+  cat("Percent all data:",sum(rowSums(is.na(x))==0)/nrow(x),'\n')
+  x=as.data.frame(x[rowSums(is.na(x))==0,])
+  uc_dt=  x[,grepl("UC-",colnames(x))]
+  dNME_dt=  x[,grepl("dNME-",colnames(x))]
+  dMML_dt=  x[,grepl("dMML-",colnames(x))]
+
+  x$dMML_max_pair=apply(dMML_dt,1,max)
+  x$dNME_max_pair=apply(dNME_dt,1,max)
+  x$UC_max_pair=apply(uc_dt,1,max)
+  x$dMML_max_time=gsub('dMML-','',colnames(dMML_dt)[apply(dMML_dt,1,which.max)])
+  x$dNME_max_time=gsub('dNME-','',colnames(dNME_dt)[apply(dNME_dt,1,which.max)])
+ 
+  uc_max=apply(uc_dt,1,which.max)
+  x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
+  x$dNME_max_UC_pair=dNME_dt[cbind(seq_along(uc_max), uc_max)]
+  #x$UC_max_UC_pair=uc_dt[cbind(seq_along(uc_max), uc_max)]
+  x$dMML_max_UC_pair=dMML_dt[cbind(seq_along(uc_max), uc_max)]
+  adj_time=paste0(paste0("E",10:15,'.5'),'-',paste0("E",11:16,'.5'))
+  uc_max_adj=unlist(apply(x[,(grep(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))],1,which.max))
+  
+  x$UC_max_time_adj=gsub('UC-','',colnames(x))[(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][uc_max_adj]
+  x$dNME_max_UC_pair_adj=x[,(grepl(paste0('dNME-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$UC_max_UC_pair_adj=x[,(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$dMML_max_UC_pair_adj=x[,(grepl(paste0('dMML-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  return(x)
+  
+})
+names(UC_merge_max_loc)=names(UC_merge)
+saveRDS(UC_merge_max_loc,'UC_merge_max_loc_all_regions.rds')
+
+cluster=readRDS('/ibox/afeinbe2/yfang/full_mouse_genome_analysis/clustering/fulltscluster/uc_0.1_1.rds')
+UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
+  print(x)
+  return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
+  
+})
+names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
+saveRDS(UC_merge_max_loc_sub,'UC_merge_max_loc_cluster01.rds')
+
+
+
+# # Prepare folder of desired regions: ../downstream/input/ts_cluster_0_1/ ----------------------------------------------
+# uc=readRDS('../downstream/output/uc_matrix_DNase.rds')
+# analyzed_regions=readRDS('../downstream/output/mm10_allele_agnostic_analysis.rds')
+# analyzed_regions_N17_N2=analyzed_regions[analyzed_regions$N>=2&analyzed_regions$N<=17]
+# analyzed_regions_N17_N2=paste0(seqnames(analyzed_regions_N17_N2),":",start(analyzed_regions_N17_N2),'-',end(analyzed_regions_N17_N2))
+# uc_ft=lapply(uc,function(x) x[rownames(x) %in%analyzed_regions_N17_N2, ])
+# for(x in names(uc_ft)){
+#   
+#   cat(x,':',nrow(uc_ft[[x]])/nrow(uc[[x]]),'\n')
+# }
+# 
+# # EFP : 0.9766308 
+# # NT : 0.9742735 
+# # forebrain : 0.9732378 
+# # heart : 0.9737051 
+# # hindbrain : 0.9741982 
+# # limb : 0.97602 
+# # liver : 0.972034 
+# # midbrain : 0.9730241 
+# saveRDS(uc_ft,'../downstream/output/uc_matrix_DNase_ft_N17.rds')
+# UC_merge=readRDS('../downstream/output/UC_merge_max_loc.rds')
+# UC_merge=lapply(UC_merge,function(x) x[rownames(x) %in%analyzed_regions_N17_N2, ])
+# saveRDS(UC_merge,'../downstream/output/UC_merge_max_loc_ft_N17.rds')
+# Find regions belong to major cluster ------------------------------------
+UC_merge=readRDS('../downstream/input/mouse_analysis/UC_merge_max_loc_cluster01.rds')
+dir_out='../downstream/input/mouse_analysis/clustering/tissue_specific/currently_in_use/ts_cluster_0_1/'
+cluster_region_out=list()
+for(ts in names(cluster_out)){
+  cluster_out_ts=cluster_out[[ts]]
+  UC_ts=UC_merge[[ts]][,grepl('UC-',colnames(UC_merge[[ts]]))]
+
+  #Define core clusters
+  core_cluster=cluster_out_ts[percent_cluster_in==1]
+  core_cluster=core_cluster[,list(regions,cluster_1,percent_cluster_in)]
+  core_cluster=cbind(core_cluster,UC_ts[core_cluster$regions,])
+  cols=colnames(core_cluster)[grepl(".5-E",colnames(core_cluster))]
+  #find patterns of core clusters
+  core_cluster_pattern=core_cluster[,lapply(.SD,mean),.SDcols=cols,by=cluster_1]
+  core_cluster_pattern=core_cluster_pattern[order(cluster_1)]
+  #Find cluster to assign
+  cluster_to_assign=cluster_out_ts[percent_cluster_in>=0.5&percent_cluster_in<1]
+
+  cluster_to_assign_UC=UC_ts[cluster_to_assign$regions,]
+  #Each row is a region, each column is a cluster
+  core_cluster_pattern_mt=as.matrix(core_cluster_pattern[,-1])
+  rownames(core_cluster_pattern_mt)=core_cluster_pattern$cluster_1
+  cor_cluster_out=cor(t(cluster_to_assign_UC),t(core_cluster_pattern_mt))
+  #prepare to assign,make sure rows are consistent
+  cor_cluster_out=cor_cluster_out[cluster_to_assign$regions,]
+  cluster_to_assign$correlation=rowMax(cor_cluster_out)
+  cluster_to_assign$cluster=colnames(cor_cluster_out)[apply(cor_cluster_out,1,which.max)]
+  #Summary
+  cluster_to_assign=cluster_to_assign[,list(regions,cluster,correlation)]
+  cluster_to_assign$region_type="noncore_cluster"
+  core_cluster$cluster=core_cluster$cluster_1
+  core_cluster$correlation=1
+  core_cluster$region_type="core_cluster"
+  region_out=rbind(core_cluster[,list(regions,cluster,correlation,region_type)],cluster_to_assign[,list(regions,cluster,correlation,region_type)])
+  region_out$tissue=ts
+  region_out=region_out
+  UC_max_ts=UC_merge[[ts]][,grepl('max',colnames(UC_merge[[ts]]))]
+  
+  UC_max_ts$UC_max_time_adj =gsub(paste0(ts,'-|-all'),'',UC_max_ts$UC_max_time_adj )
+  UC_max_ts$UC_max_time  =gsub(paste0(ts,'-|-all'),'',UC_max_ts$UC_max_time  )
+  region_out=cbind(region_out,UC_max_ts[region_out$regions,])
+  cluster_region_out[[ts]]=region_out
+  
+  cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
+  write.csv(region_out,paste0(dir_out,ts,'.csv'))
+}
+cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/cluster_all_region_assignment_filtered.rds'
+saveRDS(cluster_region_out,cluster_region_out_fn)
+# Put regions with other info ----------------------------------------------------
+
+lapply(names(cluster_out),function(x){
+  cluster_out_ts=cluster_out[[x]]
+  UC_merge_max_loc_sub_ts=UC_merge_max_loc_sub[[x]]
+  
+})
+# Percent left for: EFP 0.9209754 
+# Percent left for: NT 0.9990584 
+# Percent left for: forebrain 0.9823054 
+# Percent left for: heart 0.9347036 
+# Percent left for: hindbrain 0.9234645 
+# Percent left for: limb 0.9862634 
+# Percent left for: liver 0.8056983 
+# Percent left for: midbrain 0.9104696 
+#change based on method
+# cluster_result=readRDS('../downstream/input/uc_cluster_filterN17/uc_0.1.rds')
+cluster_result=readRDS(cluster_region_out_fn)
+
+#dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/ts_cluster_0_1_unfiltered/'
+#Plot non-repeats
+
+re_web=readRDS('../downstream/output/mouse_analysis/repeats/re_web.rds')
+dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/currently_in_use/ts_cluster_0_1_non_repeats/'
+ lapply(dir(dir_in,pattern='csv'),function(x){
+     
+       csv_in=fread(paste0(dir_in,x))
+       olap=findOverlaps(convert_GR(csv_in$regions,direction='GR'),re_web,minoverlap =0.5*mean(width(convert_GR(csv_in$regions,direction='GR'))))
+       cat('percent removed for ',unique(csv_in$tisue),'is ',length(unique(queryHits(olap)))/nrow(csv_in),'\n')
+       write.csv(csv_in[-unique(queryHits(olap))],paste0(dir_in,x),row.names = F)
+       
+         
+         
+})
+
+# summary_stat=data.table()
+# for(fn in dir(dir_in,pattern='csv')){
+#   csv_in=fread(paste0(dir_in,fn))
+#   tissue=gsub('.csv','',fn)
+#   remain_region=csv_in$region%in%cluster_result[[tissue]]$regions
+#   total_region=nrow(csv_in)
+#   cluster_result_ts=cluster_result[[tissue]]$cluster
+#   names(cluster_result_ts)=cluster_result[[tissue]]$regions
+#   csv_in=csv_in[remain_region]
+#   #Looking into the detail
+#   csv_in$old_cluster=csv_in$cluster
+#   csv_in$cluster=cluster_result_ts[csv_in$region]
+#   for(clu in 1:10){
+#     #Find the major cluster goes into
+#     csv_in_clu=csv_in[old_cluster==clu]  
+#     major_cluster=names(which.max(table(csv_in_clu$cluster)))
+#     
+#     summary_stat=rbind(summary_stat,
+#                        data.table(remained_region=sum(remain_region),
+#                                   total_region=total_region,
+#                                   consistent_region=sum(csv_in_clu$cluster==major_cluster),
+#                                   tissue=tissue,
+#                                   cluster=clu,
+#                                   total_region_cluster=nrow(csv_in_clu)))
+#   }
+#   csv_in$old_cluster=NULL
+#   write.csv(csv_in,paste0(dir_out,fn),row.names = F)
+# }
+# summary_stat$percent_consistent=summary_stat$consistent_region/summary_stat$total_region_cluster
+# saveRDS(summary_stat,'../downstream/output/CpG_N17_filter_clustering_consistencyv2.rds')
+# write.csv(summary_stat,'../downstream/output/percent_consistent_N17_kmeans.csv')
+# hist(summary_stat$percent_consistent,main="kmeans",xlab="proportion of region having consistent assignment")
+
+
+# Plot heatmap ------------------------------------------------------------
+
+library(RColorBrewer)
+library(pheatmap)
+library(gplots)
+source('mainFunctions_sub.R')
+UC_merge=readRDS('../downstream/input/mouse_analysis/UC_only_all_regions.rds')
+UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
+d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
+names(d)=names(UC_merge)
+dmml <-readRDS('../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds')
+dnme <-readRDS('../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds')
+#dmml <- sapply(dmml,abs)
+#dnme <- sapply(dnme,abs)
+tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+#clu <- readRDS('../downstream/input/Jason_UC_cluster/uc_0.1.rds')
+clu=readRDS(cluster_region_out_fn)
+clu=lapply(clu,function(x){
+  out=as.numeric(x$cluster)
+  names(out)=x$regions
+  return(out)
+  
+  })
+d=d[tissue_all]
+d=lapply(d,function(x) {
+  
+  colnames(x)=gsub(paste0('UC-|-all|',paste(tissue_all,'-',sep='',collapse = '|')),'',colnames(x))
+  return(x)
+  })
+d <- sapply(d,function(i) {
+  
+  i <- i[rowSums(i) > 0,]
+  i <- i[,colnames(i) %in% timeorder]
+  i <- i[,order(match(colnames(i),timeorder))]
+  
+  #i <- scalematrix(i)
+  i <- i[complete.cases(i),]
+})
+
+mat_out=matrix(ncol=39)
+rowann_out=data.frame()
+row_gap=c(0)
+for (n in names(d)) {
+  cl <- clu[[n]]
+  cl <- sort(cl)
+  mat <- do.call(cbind,sapply(tissue_all,function(i) {
+    tmp <- matrix(NA,nrow=length(cl),ncol=ncol(d[[i]]),dimnames = list(names(cl),colnames(d[[i]])))
+    
+    rn <- intersect(names(cl),rownames(d[[i]]))
+    tmp[rn,] <- as.matrix(d[[i]][rn,])
+    
+    colnames(tmp) <- paste0(i,':',colnames(tmp))
+    
+    tmp
+  }))
+  mat_out=rbind(mat_out,mat)
+  print(head(mat_out))
+  rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                       #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                       #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                       stringsAsFactors = F)
+  rownames(rowann) <- rownames(mat)
+  rowann <- rowann[,ncol(rowann):1]
+  rowann_out=rbind(rowann_out,rowann)
+  #row_gap=c(row_gap,row_gap[length(row_gap)]+cumsum(rle(sub(':.*','',cl))$lengths))
+  row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
+}
+sum(rowSums(is.na(mat_out))!=0)/nrow(mat_out)
+#Refine plotting parameters
+colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
+rownames(colann) <- colnames(mat_out)
+
+
+c1 <- mouse_color()
+c2 <- brewer.pal(10,'Set3')
+names(c2) <- 1:10
+c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
+names(c4) <- sort(unique(colann[,1]))
+# tiff(paste0('../downstream/output/heatmap_acrosstissue/',n,'.tiff'),width=3000,height=3000,res=300)
+# #png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
+# pheatmap(mat,cluster_rows = F,annotation_row = rowann,cluster_cols = F,
+#          annotation_col = colann,show_colnames = F,show_rownames = F,
+#          gaps_row = row_gap,gaps_col = cumsum(rle(colann[,1])$lengths),
+#          annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4,dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)))
+# dev.off()
+
+tiff('../downstream/output/mouse_analysis/clustering/heatmap_acrosstissue/all_sc_N17_ft_kmeans_10run_filtered_all.tiff',width=5000,height=5000,res=300)
+#png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
+pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
+         annotation_col = colann,show_colnames = F,show_rownames = F,
+         gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
+         annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4
+                                  #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)
+                                  ))
+dev.off()
+

@@ -1,7 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
 #read in JSD data
-UC_raw=readRDS('../downstream/output/uc_matrix_DNase.rds')
 theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
@@ -9,26 +8,36 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.text.y=element_text(size=16))+theme_classic()
 # violin plot -----------------------------------------------------------
 #From mm10_reformating.R
-UC_in=readRDS('../downstream/output/uc_matrix_DNase.rds')
-dnme=readRDS('../downstream/output/dnme_matrix_DNase.rds')
-dmml=readRDS('../downstream/output/dnme_matrix_DNase.rds')
+UC=readRDS('../downstream/output/mouse_analysis/CPEL_outputs/uc_matrix_DNase.rds')
+dnme=readRDS('../downstream/output/mouse_analysis/CPEL_outputs/dnme_matrix_DNase.rds')
+dmml=readRDS('../downstream/output/mouse_analysis/CPEL_outputs/dmml_matrix_DNase.rds')
+bin_enhancer_in=readRDS('../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds')
+gtf=fread('../downstream/input/mouse_analysis/grcm38.gtf',data.table=F)
+promoter_in=gtf <- gtf[gtf[,3]=='gene',]
+type <- sub('\".*','',sub('.*gene_type \"','',gtf[,9]))
+gtf <- gtf[type=='protein_coding',]
+gn <- sub('".*','',sub('.*gene_name "','',gtf[,9]))
+gr <- GRanges(seqnames=gtf[,1],IRanges(start=gtf[,4],end=gtf[,5]),strand = gtf[,7])
+names(gr) <- gn
+tss <- promoters(gr,upstream=0,downstream=1)
 matrix_all=list()
 for(sp in names(UC)){
   dmml_in=dmml[[sp]]
   dnme_in=dnme[[sp]]
   UC_in=UC[[sp]]
+  region_intersect=intersect(rownames(UC_in),intersect(rownames(dmml_in),rownames(dnme_in)))
   colnames(dmml_in)=paste0(colnames(dmml_in),'_','dMML')
   colnames(dnme_in)=paste0(colnames(dnme_in),'_','dNME')
   colnames(UC_in)=paste0(colnames(UC_in),'_','UC')
-  matrix_tissue=as.data.table(cbind(UC_in,dmml_in[rownames(UC_in),],dnme_in[rownames(UC_in),]),keep.rownames = T)
+  matrix_tissue=as.data.table(cbind(UC_in[region_intersect,],dmml_in[region_intersect,],dnme_in[region_intersect,]),keep.rownames = T)
   colnames(matrix_tissue)[1]="regions"
-  olap_chromHMM=findOverlaps(convert_GR(matrix_tissue$regions),chromHMM[chromHMM$tissue==sp])
-  olap_promoter=findOverlaps(convert_GR(matrix_tissue$regions),promoters)
+  olap_enhancer=findOverlaps(convert_GR(matrix_tissue$regions),bin_enhancer_in)
+  olap_promoter=findOverlaps(convert_GR(matrix_tissue$regions),tss,maxgap = 2000)
   matrix_tissue$promoter=FALSE
   matrix_tissue$enhancer=FALSE
   matrix_tissue$tissue=sp
   matrix_tissue$promoter[queryHits(olap_promoter)]=TRUE
-  matrix_tissue$enhancer[queryHits(olap_chromHMM)]=TRUE
+  matrix_tissue$enhancer[queryHits(olap_enhancer)]=TRUE
   matrix_tissue=melt.data.table(matrix_tissue,id.vars = c("regions","promoter","enhancer","tissue"))
   matrix_tissue$stage=sub('_.*','',matrix_tissue$variable)
   matrix_tissue$stat=sub('.*_','',matrix_tissue$variable)
@@ -53,7 +62,7 @@ matrix_all_promoter=matrix_all[promoter==TRUE]
 matrix_all_promoter$region_type="promoter"
 matrix_all=rbind(matrix_all_non_reg,matrix_all_enhancer,matrix_all_promoter)
 cat(paste0(round(table(matrix_all$region_type)/length(matrix_all$region_type)*100,digits=2),"%"),"\n")
-matrix_all_max_change=matrix_all[,list(value=max(value)),by=list(stat,regions,stage,tissue,region_type)]
+matrix_all_max_change=matrix_all[,list(value=max(value)),by=list(stat,regions,tissue,region_type)]#add stage, it same as matrix_all
 # matrix_all_agg=matrix_all[,list(dMML=median(dMML_quant),dNME=median(dNME_quant),UC=median(UC),
 #                                 dMML_top25=quantile(dMML,prob=0.75),dNME_top25=quantile(dNME,prob=0.75),
 #                                 dMML_bottom25=quantile(dMML,prob=0.25),dNME_bottom25=quantile(dNME,prob=0.25)),by=list(UC_quant,region_type)]
@@ -65,12 +74,22 @@ matrix_all_max_change=matrix_all[,list(value=max(value)),by=list(stat,regions,st
 # ggarrange(dNME_plot,dMML_plot,nrow=2,ncol=1,common.legend=T)
 # dev.off()
 
-pdf('../downstream/output/graphs/Figure5/FigureS7_dNME_dMML_enhancer_boxplot_max.pdf',width=3.5,height=3.5)
+pdf('../downstream/output/graphs/Figure5/FigureS10_dNME_dMML_enhancer_boxplot_max.pdf',width=3.5,height=3.5)
 ggplot(matrix_all_max_change[region_type!="Non-regulatory"&stat!="UC"],aes(x=stat,y=value,fill=region_type))+geom_boxplot(outlier.shape = NA)+theme_glob+
    xlab('')+ylab('')+theme(legend.position = "bottom",legend.title = element_blank())+ylim(c(0,0.4))
 dev.off()
-
-
+pdf('../downstream/output/graphs/Figure5/FigureS10_promoter_enhancer_boxplot_dNME.pdf',width=3.5,height=3.5)
+ggplot(matrix_all_max_change[region_type!="Non-regulatory"&stat=="dNME"],aes(x=region_type      ,y=value,fill=region_type))+geom_boxplot(outlier.shape = NA)+theme_glob+
+  xlab('')+ylab('')+theme(legend.position = "none",legend.title = element_blank())+ylim(c(0,0.4))
+dev.off()
+pdf('../downstream/output/graphs/Figure5/FigureS10_promoter_enhancer_boxplot_dMML.pdf',width=3.5,height=3.5)
+ggplot(matrix_all_max_change[region_type!="Non-regulatory"&stat=="dMML"],aes(x=region_type      ,y=value,fill=region_type))+geom_boxplot(outlier.shape = NA)+theme_glob+
+  xlab('')+ylab('')+theme(legend.position = "none",legend.title = element_blank())+ylim(c(0,0.4))
+dev.off()
+pdf('../downstream/output/graphs/Figure5/FigureS10_promoter_enhancer_boxplot_UC.pdf',width=3.5,height=3.5)
+ggplot(matrix_all_max_change[region_type!="Non-regulatory"&stat=="UC"],aes(x=region_type      ,y=value,fill=region_type))+geom_boxplot(outlier.shape = NA)+theme_glob+
+  xlab('')+ylab('')+theme(legend.position = "none",legend.title = element_blank())+ylim(c(0,0.4))
+dev.off()
 # Check percentage of FeDMR covered ---------------------------------------
 
 FeDMR=readRDS('../downstream/output/FeDMR.rds')
@@ -121,16 +140,23 @@ saveRDS(GO_out_all,'../downstream/output/GO_out_all_all_regions_all_stat.rds')
 
 
 # zerocutoff --------------------------------------------------------------
+# for perm_number in {1..20}; do echo ${perm_number}; echo Rscript GO_annotation.R heart FANTOM5 -1 ${perm_number}; 
+# Rscript GO_annotation.R heart FANTOM5 -1 ${perm_number}; done >perm.log.FANTOM
 dir_in='zero_cutoff_mm10'
+dir_in="zero_cutoff_union_chromHMM"
+dir_in="zero_cutoff_union_chromHMM_protein_coding"
+dir_in="cutoff_test/uc_0_01/full"
 tissue=c('heart','forebrain','limb')
-GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer")
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer_tissuespecific")
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer_union")
+GO_out_all=GO_run_tissue_perm(tissue,dir_in,"FANTOM5")
 GO_out_all=GO_run_tissue_perm(tissue,dir_in,"bin_enhancer")
 GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer",dist_cutoff = 10000)
 dir_in='dmml_dnme_cluster/dMML'
 GO_out_all=GO_run_tissue_perm(tissue,dir_in,"chromHMM_enhancer")
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'chromHMM_dMML')
 dir_in='dmml_dnme_cluster/dNME'
-plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'chromHMM_10k')
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'chromHMM_10k_fixed')
 plot_GO_heatmap(c('forebrain','heart'),"GO_out_cluster_all",GO_out_all,'chromHMM_all')
 #Permuted data
 dir_in='ucrandom_all'
@@ -178,7 +204,42 @@ for(tissue in c('heart','forebrain')){
   GO_out_all[[tissue]]=GO_out_tissue
 }
 
+# Check permuted GO -------------------------------------------------------
+dir_in='../downstream/output/'
+fn= dir(dir_in,pattern='chromHMM_enhancer_-1')
+fn= dir(dir_in,pattern='GO_FANTOM5_-1_permuted')
+permute_heart_test=mclapply(fn,function(x){
+  GO_in=readRDS(paste0(dir_in,x))
+  filter_pass=do.call(rbind,lapply(GO_in,function(x){
+    return(data.table(sig_num=nrow(x$GO_out_cluster_all[FC>=2&FDR<=0.1]),
+               cluster=unique(x$GO_out_cluster_all$cluster)))}))
+  filter_pass$perm_number=gsub('.rds','',gsub('.*_','',x))
+  return(list(filter_pass,GO_in))
+  
+},mc.cores=18)
+#Build ecdf for each cluster
+permute_heart_test_ecdf=fastDoCall('rbind',lapply(permute_heart_test,function(x){
+  
+  return(fastDoCall('rbind',lapply(x[[2]],function(y){
+    return(data.table(FC=y$GO_out_cluster$FC, cluster=y$GO_out_cluster$cluster))
+    
+    
+  })))
+} ))
+permute_heart_test_ecdf_ls=lapply(1:10,function(i) {
+  
+  return(ecdf(permute_heart_test_ecdf[cluster==i]$FC))
+  
+})
+heart_FC_pval=lapply(heart_FC,function(x){
+  x$GO_out_cluster$p_perm=permute_heart_test[[unique(x$GO_out_cluster$cluster)]](x$GO_out_cluster$FC)
+  x$GO_out_cluster$FDR_perm=p.adjust(x$GO_out_cluster$p_perm,method='BH')
+return(x$GO_out_cluster)
+  }
+  )
 
+permute_heart_test=do.call(rbind,lapply(permute_heart_test,function(x) x[[1]]))
+dcast.data.table(permute_heart_test,cluster~perm_number,value.var = 'sig_num')
 # Check overlap between all data and permuted data ------------------------
 heart_original=fread('../downstream/input/mm10_cluster_all/heart.csv')
 limb_original=fread('../downstream/input/mm10_cluster_all/limb.csv')
@@ -250,6 +311,9 @@ plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_To
 
 GO_out_all_Top_1=GO_run_tissue_perm(tissue,'Top_1_cutoff',"chromHMM_enhancer")
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all_Top_1)
+
+
+plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all,'FANTOM5')
 #add bin enhancer if necessary
 #Plotting GO annotations
 plot_GO_heatmap(c('forebrain','heart','limb'),"GO_out_cluster_all",GO_out_all)

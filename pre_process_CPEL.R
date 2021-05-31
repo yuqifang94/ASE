@@ -149,40 +149,7 @@ MML_in=MML_in[MML_in$N>=2]
 saveRDS(MML_in,MML_agnostic_file)
 
 
-# add hypervar to allele-agnostic data ------------------------------------
 
-GR_merge=readRDS(GR_merge_file)
-NME_hypervar_calc=GRanges()
-NME_in=readRDS(NME_agnostic_file)
-MML_hypervar_calc=GRanges()
-MML_in=readRDS(MML_agnostic_file)
-
-GR_calc=data.frame()
-scRNA_result=data.frame()
-#For the mean expression: log2 or not?
-for (sp in unique(NME_in$Sample)){
-  
-  hyper_var_file=unlist(strsplit(unique(NME_in$hyper_var_fn[NME_in$Sample==sp]),';'))
-  cat('Processing',sp,'\n')
-  if(all(file.exists(hyper_var_file))){
-
-    sp_hyper_var=read_hypervar(hyper_var_file)
-    #scRNA_result=rbind(scRNA_result,sp_hyper_var)
-    #Add hypervaribility inforamtion
-    #Add hypervaribility inforamtion
-    NME_hypervar_calc=c(NME_hypervar_calc,dist_plot_calc(NME_in[NME_in$Sample==sp],sp_hyper_var,
-                                                         genomic_features))
-    MML_hypervar_calc=c(MML_hypervar_calc,dist_plot_calc(MML_in[MML_in$Sample==sp],sp_hyper_var,
-                                                         genomic_features))
-
-    
-  }else{cat("file not exist for:",sp,'\n')}
-}
-
-#NME: 53476752 check
-#MML: check: 53478342
-saveRDS(list(NME_hypervar_calc=NME_hypervar_calc,
-             MML_hypervar_calc=MML_hypervar_calc),'../downstream/output/allele_agnostic_var_homogeneous2.rds')
 # # human_FANTOM ------------------------------------------------------------
 # GR_merge=readRDS('GR_merge_final12_ls.rds')
 # in_dir='../allele_agnostic_hg19_cov5_3kb_FANTOM/'
@@ -284,8 +251,8 @@ rm(MML_in_sp)
 #MML in check: 51459969
 saveRDS(NME_in,'../downstream/output/NME_agnostic_ASM.rds')
 saveRDS(MML_in,'../downstream/output/MML_agnostic_ASM.rds')
-NME_in=readRDS('../downstream/output/NME_agnostic_ASM.rds')
-MML_in=readRDS('../downstream/output/MML_agnostic_ASM.rds')
+NME_in=readRDS('../downstream/output/human_analysis/CPEL_outputs/NME_agnostic_ASM.rds')
+MML_in=readRDS('../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_ASM.rds')
 NME_in_tb=as.data.table(mcols(NME_in))
 NME_in_tb$region=paste0(seqnames(NME_in),':',start(NME_in),'-',end(NME_in))
 MML_in_tb=as.data.table(mcols(MML_in))
@@ -310,7 +277,7 @@ rm(GR_merge)
 
 GR_merge_tb=rbind(GR_merge_tb,GR_merge_tb_asm)
 GR_merge_tb=dcast.data.table(GR_merge_tb,Sample+region~statistics,value.var = "score")
-saveRDS(GR_merge_tb,'../downstream/output/GR_merge_ASM_comp.rds')
+saveRDS(GR_merge_tb,'../downstream/output/human_analysis/imprinting/GR_merge_ASM_comp.rds')
 GR_merge_tb=readRDS('../downstream/output/GR_merge_ASM_comp.rds')
 #Read in mouse dMML, dNME, UC
 tissue=c(rep('kidney',4),rep('Lung',4),rep('forebrain',8),rep('liver',7),
@@ -332,31 +299,96 @@ stage=c('day14_5','day15_5','day16_5','day0',
 sample=paste(tissue,stage,sep='-')
 meta_df=data.frame(tissue=tissue,stage=stage,sample=sample,stringsAsFactors = F)
 in_dir='../downstream/data/mouse_analysis/'
+
 #Read in MML and NME
-read_bed_out=mclapply(1:nrow(meta_df),function(i){
-  NME_in=read.agnostic.mouse(in_dir,meta_df$tissue[i],meta_df$stage[i],'nme',replicate='all')
-  
-  MML_in=read.agnostic.mouse(in_dir,meta_df$tissue[i],meta_df$stage[i],'mml',replicate='all')
-  
-  NME_in$NME=NME_in$score
-  MML_in$MML=MML_in$score
-  return(list(MML_in,NME_in))},mc.cores=20)
+MML_in=fastDoCall('c',mclapply(dir('./',pattern=".*mml"),read.agnostic.mouse,in_dir='./',mc.cores=20))
+MML_in$MML=MML_in$score
+MML_in$score=NULL
+NME_in=fastDoCall('c',mclapply(dir('./',pattern=".*nme"),read.agnostic.mouse,in_dir='./',mc.cores=20))
+NME_in$NME=NME_in$score
+NME_in$score=NULL
+saveRDS(NME_in,'NME_agnostic_mouse_all_merged_complement.rds')
+saveRDS(MML_in,'MML_agnostic_mouse_all_merged_complement.rds')
+NME_in_analyzed=readRDS('../final_output_bed_non_MDS/NME_agnostic_mouse_all_merged.rds')
+NME_in_analyzed=NME_in_analyzed[NME_in_analyzed$Sample %in% unique(NME_in$Sample)]
+NME_in_analyzed$score=NULL
+NME_in_analyzed$stat_type='nme'
+NME_in=c(NME_in,NME_in_analyzed)
+saveRDS(NME_in,'NME_agnostic_mouse_all_merged_all_regions.rds')
 
-MML_in=fastDoCall('c',lapply(read_bed_out,function(x) x[[1]]))
-NME_in=fastDoCall('c',lapply(read_bed_out,function(x) x[[2]]))
-
-saveRDS(NME_in,'../downstream/output/NME_agnostic_mouse_all_merged.rds')
-saveRDS(MML_in,'../downstream/output/MML_agnostic_mouse_all_merged.rds')
+MML_in_analyzed=readRDS('../final_output_bed_non_MDS/MML_agnostic_mouse_all_merged.rds')
+MML_in_analyzed=MML_in_analyzed[MML_in_analyzed$Sample %in% unique(MML_in$Sample)]
+MML_in_analyzed$score=NULL
+MML_in_analyzed$stat_type='mml'
+MML_in=c(MML_in,MML_in_analyzed)
+saveRDS(MML_in,'NME_agnostic_mouse_all_merged_all_regions.rds')
+#Read in analyzed MML and NME
 #Convert to matrix
 NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2])# 0.735 region have all data
 MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2],'MML')#0.735 region have all data
-saveRDS(NME_in_matrix,'../downstream/input/NME_matrix_mouse_all_dedup_N2.rds')
-saveRDS(MML_in_matrix,'../downstream/input/MML_matrix_mouse_all_dedup_N2.rds')
+
+saveRDS(NME_in_matrix,'NME_matrix_mouse_all_dedup_N2_all_regions.rds')
+saveRDS(MML_in_matrix,'MML_matrix_mouse_all_dedup_N2_all_regions.rds')
 rm(MML_in)
 rm(NME_in)
 rm(MML_in_matrix)
 rm(NME_in_matrix)
 gc()
+#UC for all complement non MDS
+in_dir='./'
+UC_in=fastDoCall('c',mclapply(dir(in_dir,pattern = '.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
+UC_in$UC=UC_in$score
+return(UC_in)},mc.cores=20))
+UC_in$tissue=sub('-.*','',UC_in$Sample)
+UC_in$Sample=sub('.5-.*-E1','.5-E1',UC_in$Sample)
+#DO not use: final_output_bed_non_MDS/, it's just an arichived version from march
+UC_in_analyzed=fastDoCall('c',mclapply(dir('../UC_run_before_MDS/',pattern = paste0(paste(unique(UC_in$tissue),collapse='|'),'.*uc.bedGraph')),function(x){
+  UC_in=read.agnostic.mouse.uc(paste('../UC_run_before_MDS/',x,sep=''))
+UC_in$UC=UC_in$score
+return(UC_in)},mc.cores=10))
+saveRDS(UC_in_analyzed,'../UC_run_before_MDS/UC_agnostic_mouse_dedup_N2_all_time_fix_UC_sub.rds')
+UC_in_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_analyzed$Sample)
+#UC_in_analyzed=readRDS('../UC_run_before_MDS/UC_agnostic_mouse_dedup_N2_all_time_fix_UC.rds')
+UC_in_analyzed=UC_in_analyzed[UC_in_analyzed$Sample %in% unique(UC_in$Sample)]
+UC_in=c(UC_in_analyzed[UC_in_analyzed$N>=2&UC_in_analyzed$N<=17],UC_in[UC_in$N>=2&UC_in$N<=17])
+UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=7)
+names(UC_in_matrix_ls)=unique(UC_in$tissue)
+saveRDS(UC_in_matrix_ls,'UC_agnostic_mouse_matrix_dedup_N2_all_non_MDS.rds')#74% regiOn have all data
+
+#UC for all possible comparison
+gff_in=import.gff3('mm10_allele_agnostic_analysis.gff')
+gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
+UC_in_MDS_comp=data.table(region=gff_in)
+
+UC_in_comp=fastDoCall('cbind',
+                 mclapply(dir('UC_MDS_compliment/',pattern = '.*uc.bedGraph'),function(x){
+                   read.agnostic.mouse.uc(paste('UC_MDS_compliment/',x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=10))
+#saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
+UC_in_MDS_comp=cbind(UC_in_MDS_comp,UC_in_comp)
+saveRDS(UC_in_MDS_comp,'UC_in_MDS_comp_mt.rds')
+#Filter based on N first to save space
+gff_in=import.gff3('mm10_allele_agnostic_analysis_DNase_control.gff')
+gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
+UC_in_MDS_comp_analyzed_dt=data.table(region=gff_in)
+UC_in_comp_analyzed=fastDoCall('cbind',
+                      mclapply(dir('UC_MDS_compliment/',pattern = '.*uc.bedGraph'),function(x){
+                        read.agnostic.mouse.uc(paste('MDS_fixed/',x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=10))
+UC_in_MDS_comp_analyzed_dt=cbind(UC_in_MDS_comp_analyzed_dt,UC_in_comp_analyzed)
+saveRDS(UC_in_MDS_comp_analyzed_dt,'UC_in_MDS_comp_analyzed_dt.rds')
+
+
+
+
+#cut into pieces to do fastDoCall
+UC_in_MDS_comp_analyzed_dt=fastDoCall('rbind',lapply(UC_in_MDS_comp_analyzed,convert_GR,direction="DT"))
+UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed=UC_in_MDS_analyzed[UC_in_MDS_analyzed$Sample %in% unique(UC_in_MDS_comp$Sample)]
+UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
+saveRDS(UC_in_MDS_analyzed,'UC_in_MDS_analyzed.rds')
+
+
 #UC_run_before_MDS folder
 in_dir='../downstream/data/mouse_analysis/UC_run_before_MDS/'
 UC_in=GRanges()

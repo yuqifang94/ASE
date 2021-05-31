@@ -15,6 +15,17 @@ identical(paste0(seqnames(UC_in),':',start(UC_in),'-',end(UC_in)),paste0(seqname
 cor(UC_in$score,jsd_in$score,method='spearman')# 0.8455,  0.8352@ DNase region
 UC_jsd=data.table(regions=paste0(seqnames(UC_in),':',start(UC_in),'-',end(UC_in)),UC=UC_in$score,JSD=jsd_in$score,N=jsd_in$N)
 
+
+#Find example
+UC_in=import.bedGraph('../downstream/input/UC/mm10_EFP_day10_5_all-vs-mm10_EFP_day12_5_all_uc.bedGraph')
+UC_in$N=UC_in$NA.
+UC_in=UC_in[which(UC_in$N>=2)]
+jsd_in=import.bedGraph('../downstream/input/jsd_output/mm10_EFP_day10_5_all-vs-mm10_EFP_day12_5_all_jsd.bedGraph')
+jsd_in$N=jsd_in$NA.
+jsd_in=jsd_in[which(jsd_in$N>=2)]
+olap=findOverlaps(UC_in,jsd_in)
+UC_in$jsd=NA
+UC_in$jsd[queryHits(olap)]=jsd_in$score[subjectHits(olap)]
 #dNME and dMML
 #dNME
 NME_10_5=read.agnostic.mouse.uc('mm10_EFP_day10_5_all_allele_agnostic_nme.bedGraph')

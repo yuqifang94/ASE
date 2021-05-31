@@ -23,25 +23,69 @@ variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
 motif_gene <- readRDS(motif_gene_file)#See motif_break_array.R, default setting
 #All regions
 #NME
-motif_dir=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
+motif_dir_dNME=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
                                        unique(motif_gene$geneSymbol),pval_cutoff=0.1,stat="NME")
-colnames(motif_dir)[c(1,6,7)]=c('TF','Pvalue','Proportion')
-motif_dir$FDR=p.adjust(motif_dir$Pvalue,method="BH")
-write.csv(motif_dir[FDR<=0.1&Proportion>0.5,list(TF,Proportion,Pvalue,FDR)], row.names =F,
+colnames(motif_dir_dNME)[c(1,6,7)]=c('TF','Pvalue','Proportion')
+motif_dir_dNME$FDR=p.adjust(motif_dir_dNME$Pvalue,method="BH")
+saveRDS(motif_dir_dNME,'../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
+motif_dir_dNME=readRDS('../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
+write.csv(motif_dir_dNME[FDR<=0.1&Proportion>0.5,list(TF,Proportion,Pvalue,FDR)], row.names =F,
           '../downstream/output/graphs/motif_preference_table/All_regions/table1_motif_prefer_high_NME.csv')
-write.csv(motif_dir[FDR<=0.1&Proportion<0.5,list(TF,Proportion=1-Proportion,`Pvalue`,FDR)], row.names =F,
+write.csv(motif_dir_dNME[FDR<=0.1&Proportion<0.5,list(TF,Proportion=1-Proportion,`Pvalue`,FDR)], row.names =F,
           '../downstream/output/graphs/motif_preference_table/All_regions/table2_motif_prefer_low_NME.csv')
 
 #MML
-motif_dir=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
+motif_dir_dMML=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
                                        unique(motif_gene$geneSymbol),pval_cutoff=0.1,stat="MML")
-colnames(motif_dir)[c(1,6,7)]=c('TF','Pvalue','Proportion')
-motif_dir$FDR=p.adjust(motif_dir$Pvalue,method="BH")
-write.csv(motif_dir[FDR<=0.1&Proportion<0.5,list(TF,Proportion=1-Proportion,Pvalue,FDR)], row.names =F,
+colnames(motif_dir_dMML)[c(1,6,7)]=c('TF','Pvalue','Proportion')
+motif_dir_dMML$FDR=p.adjust(motif_dir_dMML$Pvalue,method="BH")
+saveRDS(motif_dir_dMML,'../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
+motif_dir_dMML=readRDS('../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
+write.csv(motif_dir_dMML[FDR<=0.1&Proportion<0.5,list(TF,Proportion=1-Proportion,Pvalue,FDR)], row.names =F,
           '../downstream/output/graphs/motif_preference_table/All_regions/tablS1_motif_prefer_low_MML.csv')
-write.csv(motif_dir[FDR<=0.1&Proportion>0.5,list(TF,Proportion,Pvalue,FDR)], row.names =F,
+write.csv(motif_dir_dMML[FDR<=0.1&Proportion>0.5,list(TF,Proportion,Pvalue,FDR)], row.names =F,
           '../downstream/output/graphs/motif_preference_table/All_regions/tableS2_motif_prefer_high_MML.csv')
 
+
+# Check against Sharp's data ----------------------------------------------
+#Supp data 5 from Sharp paper
+motif_sharp=as.data.table(readxl::read_xlsx('../downstream/input/Sharp_motif_list.xlsx',skip=1))
+motif_sharp_sig=motif_sharp$TFBS[which(as.numeric(motif_sharp$`Bonferroni-corrected P-value`)<=0.05)]
+length(motif_sharp_sig)#46
+sum(motif_sharp_sig%in%motif_dir$TF)#21
+sum(motif_sharp_sig%in%motif_dir[FDR<=0.1]$TF)#4
+sum(motif_sharp$TFBS[which(as.numeric(motif_sharp$`Bonferroni-corrected P-value`)>0.05)]%in%motif_dir[FDR<=0.1]$TF)#9
+sum(motif_sharp$TFBS[which(as.numeric(motif_sharp$`Bonferroni-corrected P-value`)>0.05)]%in%motif_dir[FDR>0.1]$TF)#14
+fisher.test(matrix(c(4,17,9,14),nrow=2))#About random chance, 44 motif they analyze we also analyze
+
+#Find low MML only and high NME only
+
+low_MML=motif_dir_dMML[FDR<=0.1&Proportion<0.5]$TF
+high_NME=motif_dir_dNME[FDR<=0.1&Proportion>0.5]$TF
+
+motif_dir_dMML$Proportion_high_MML=motif_dir_dMML$Proportion
+motif_dir_dMML$Proportion_low_MML=1-motif_dir_dMML$Proportion_high_MML
+motif_dir_dMML$dMML_pvalue=motif_dir_dMML$Pvalue
+motif_dir_dMML$dMML_FDR=motif_dir_dMML$FDR
+
+motif_dir_dNME$proportion_high_NME=motif_dir_dNME$Proportion
+motif_dir_dNME$proportion_low_NME=1-motif_dir_dNME$Proportion
+motif_dir_dNME$dNME_pvalue=motif_dir_dNME$Pvalue
+motif_dir_dNME$dNME_FDR=motif_dir_dNME$FDR
+
+low_MML_only=cbind(data.table(TF=low_MML[!low_MML%in%high_NME]),
+                   motif_dir_dMML[TF%in%low_MML[!low_MML%in%high_NME]],
+                   motif_dir_dNME[TF%in%low_MML[!low_MML%in%high_NME]])
+
+
+high_NME_only=cbind(data.table(high_NME[!high_NME%in%low_MML]),
+                    motif_dir_dNME[TF%in%high_NME[!high_NME%in%low_MML]],
+                    motif_dir_dMML[TF%in%high_NME[!high_NME%in%low_MML]])
+
+write.csv(low_MML_only[order(Proportion_low_MML),list(TF,Proportion_low_MML,dMML_pvalue,dMML_FDR,proportion_high_NME,dNME_pvalue,dNME_FDR)],
+          '../downstream/output/human_analysis/motif_analysis/motif_low_MML_only.csv')
+write.csv(high_NME_only[order(Proportion_low_MML),list(TF,proportion_high_NME,dNME_pvalue,dNME_FDR,Proportion_low_MML,dMML_pvalue,dMML_FDR)],
+          '../downstream/output/human_analysis/motif_analysis/motif_high_NME_only.csv')
 # DNase analysis currently not in use -------------------------------------
 # #DNase
 # #NME
@@ -67,9 +111,9 @@ write.csv(motif_dir[FDR<=0.1&Proportion>0.5,list(TF,Proportion,Pvalue,FDR)], row
 
 
 # get OMIM annotation of those high NME motif only or high MML only -------
-low_MML_motif=fread('../downstream/output/graphs/motif_preference_table/All_regions/tablS1_motif_prefer_low_MML.csv')
-high_NME_motif=fread('../downstream/output/graphs/motif_preference_table/All_regions/table1_motif_prefer_high_NME.csv')
-OMIM=fread('../downstream/input/genemap2.txt',skip=3)
+low_MML_motif=fread('../downstream/output/human_analysis/motif_analysis/motif_low_MML_only.csv')
+high_NME_motif=fread('../downstream/output/human_analysis/motif_analysis/motif_high_NME_only.csv')
+OMIM=fread('../downstream/input/human_analysis/SNP_biology/genemap2.txt',skip=3)
 OMIM$`Gene Symbols`=strsplit(as.character(OMIM$`Gene Symbols`),', ')
 OMIM=OMIM[Phenotypes!=""]
 motif_ent_OMIM=OMIM_annotation(high_NME_motif,OMIM)
@@ -77,11 +121,11 @@ motif_ent_only_OMIM=OMIM_annotation(high_NME_motif[!(TF%in%low_MML_motif$TF)],OM
 motif_low_MML_only_OMIM=OMIM_annotation(low_MML_motif[!(TF%in%high_NME_motif$TF)],OMIM)
 motif_shared_OMIM=OMIM_annotation(low_MML_motif[TF%in%high_NME_motif$TF],OMIM)
 write.csv(motif_low_MML_only_OMIM, row.names =F,
-          "../downstream/output/graphs/motif_preference_table/All_regions/tableX_motif_prefer_low_MML_only.csv")
+          "../downstream/output/human_analysis/motif_analysis/tableX_motif_prefer_low_MML_only.csv")
 write.csv(motif_ent_only_OMIM, row.names =F,
-          "../downstream/output/graphs/motif_preference_table/All_regions/table3_motif_prefer_high_NME_only.csv")
+          "../downstream/output/human_analysis/motif_analysis/table3_motif_prefer_high_NME_only.csv")
 write.csv(motif_shared_OMIM, row.names =F,
-          "../downstream/output/graphs/motif_preference_table/tableXmotif_shared_only.csv")
+          "../downstream/output/human_analysis/motif_analysis/tableXmotif_shared_only.csv")
 # write.csv(unlist(strsplit(gsub('\\(var.3\\)','',gsub('\\(var.2\\)','',motif_low_MML_only_OMIM$TF)),"::")),
 #           "../downstream/output/motif_prefer_low_MML_only.csv")
 # write.csv(unlist(strsplit(gsub('\\(var.3\\)','',gsub('\\(var.2\\)','',motif_ent_only_OMIM$TF)),"::")),

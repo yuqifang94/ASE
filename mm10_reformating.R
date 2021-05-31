@@ -76,4 +76,6 @@ t_obs=melt.data.table(t_obs,id.vars='region')
 t_obs$pvalue=1-t_null(t_obs$value)
 t_obs$FDR=p.adjust(t_obs$pvalue,method='BH')
 
+#calculating dNME, dMML
+
 #https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/1756-8935-8-8

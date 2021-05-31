@@ -38,9 +38,14 @@ cor.test(NME_in$density,NME_in$NME)
 
 
 # MAV vs NME -------------------------------------------------
-NME_in_dt=readRDS('../downstream/output/NME_in_limb_ENOCD3_imputed.rds')
+NME_in_dt=readRDS('../downstream/output/mouse_analysis/NME_MAV/NME_in_limb_ENOCD3_imputed.rds')
 NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]
-
+MML_in=readRDS('../downstream/input/mouse_analysis/MML_agnostic_mouse_all_merged.rds')
+MML_in=convert_GR(MML_in[MML_in$tissue=="limb"&MML_in$N>1],direction="DT")
+MML_in$region_sample=paste0(MML_in$region,'_',MML_in$Sample)
+NME_in_dt$region_sample=paste0(NME_in_dt$region,'_',NME_in_dt$Sample)
+NME_in_dt$MML=MML_in[match(NME_in_dt$region_sample,region_sample)]$MML
+rm(MML_in)
 # matrix and quantile normalization ---------------------------------------
 #No need quantile normalization since we calculate correlation for each sample it for each sample
 # hyper_var_dc=matrix_conv(NME_in_dt,"hyper_var")
@@ -73,6 +78,7 @@ NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="hyper_var",dir='../downstream/output/graphs/FigureS13/')
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="var",dir='../downstream/output/graphs/FigureS13/')
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="mean",dir='../downstream/output/graphs/FigureS13/')
+dist_plot_run(NME_in_dt,theme_glob,ylab="MML",stat_in="mean",dir='../downstream/output/graphs/FigureS13/')
 # motif preprocessing for Ken ----------------------------------------------------------
 #See mouse_motif_processing.R
 # add information to Ken's list -------------------------------------------
@@ -86,7 +92,7 @@ for(fn in file_in){
   Ken_in=fread(paste0(ken_dir,fn))
   tissue=gsub("_OR_residual.csv",'',fn)
   shared_motif[[tissue]]=Ken_in[match(shared_motif$shared_motif,gsub('.*_','',Ken_in$V1))]$residual     
-
+  
 }
 plot_motif_binding<-function(motif,tissue,UC_raw,mml,nme,CpG_mm10){
   motif_tissue=data.table()
@@ -110,10 +116,10 @@ plot_motif_binding<-function(motif,tissue,UC_raw,mml,nme,CpG_mm10){
       target_regions_cluster=do.call(c,unlist(lapply(motif,function(x){
         target_regions_out=unique(target_regions[[x]][target_regions[[x]]$cluster==i])
         if(length(target_regions_out)>0){
-        target_regions_out$motif=x
-        
-        return(target_regions_out)}
-        })))
+          target_regions_out$motif=x
+          
+          return(target_regions_out)}
+      })))
       #target_regions_cluster=target_regions_cluster[target_regions_cluster$gene %in% GO_in_gene]
       olap=findOverlaps(convert_GR(region_in_clu$region),target_regions_cluster)
       region_in_clu=region_in_clu[queryHits(olap)]
@@ -212,88 +218,88 @@ motif_dir_human_low_ent$TF=gsub('.*_','',motif_dir_human_low_ent$V1)
 # motif_dir_human_low_ent=fread('../downstream/output/graphs/table3_motif_not_prefer_ent_OMIM.csv')
 # motif_dir_human_low_ent=motif_dir_human_low_ent[qval_binom<=0.05]
 for (fn in dir(motif_target_dir)){
-motif_target_in=readRDS(paste0(motif_target_dir,fn))
-names(motif_target_in)=sub('.*_','',names(motif_target_in))
-#For each motif_check dNME
-tissue=sub('_.*','',fn)
-cat('processing:',tissue,'\n')
-#for each motif, it's enriched in some cluster, 
-#we want to check in that cluster dNME_maxJSD is higher than regions not overlapping that motif
-#Or if that's higher than motif showing no dNME preference
-# motif_target_in_subset=motif_target_in
-# names(motif_target_in_subset)=NULL
-# motif_target_in_subset=unique(do.call(c,motif_target_in_subset))
-# nme_motif=nme[queryHits(findOverlaps(convert_GR(rownames(nme)),motif_target_in_subset)),]
-nme_tissue=nme[,grepl(tissue,colnames(nme))]
-clu_sig=do.call(rbind,lapply(1:10,function(x){
-  csv_in=fread(paste0('../downstream/input/mouse_motif_cluster/',tissue,'/motif_',tissue,'_cluster_',x,'_enhancer.csv'))
-  csv_in$cluster=x
-  return(csv_in)
-}))
-#clu_sig=clu_sig[FDR<=0.05&odds_ratio>=1.2]
-clu_sig$motif=gsub('.*_','',clu_sig$motif)
-
-#use all regions, not only enhancer maybe
-NME_motif_target=mclapply(names(motif_target_in),function(x){
-  #make a data.table, showing cluster, mean dNME, mean dMML at UC
-  if(x %in% clu_sig$motif){
-    motif_target=motif_target_in[[x]][motif_target_in[[x]]$cluster %in% clu_sig[motif ==x]$cluster]
-    nme_motif=nme_tissue[queryHits(findOverlaps(convert_GR(rownames(nme_tissue)),motif_target)),]
-    motif_out=as.data.table(nme_motif)
-    motif_out$regions=rownames(nme_motif)
-    motif_out$motif=x
-    motif_out=melt.data.table(motif_out,id.vars=c('regions','motif'),variable.name = 'tissue_stage',value.name = "NME")
-   return(motif_out)
-  }
-},mc.cores=20)
-NME_motif_target=fastDoCall('rbind',NME_motif_target)
-
-NME_motif_target$motif_type="Not in human analysis"
-NME_motif_target[motif %in% motif_dir_human_low_ent$TF]$motif_type="Decreased NME in accessible region"
-NME_motif_target[motif %in% motif_dir_human_high_ent$TF]$motif_type="Increased NME in accessible region"
-NME_motif_target_mean=NME_motif_target[,list(mean_nme=median(NME,na.rm=T)),by=list(motif_type,motif)]
-pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/mean_NME_',tissue,'.pdf'),width=3.5,height = 7)
-print(ggplot(NME_motif_target_mean,aes(x=motif_type,y=mean_nme))+geom_boxplot()+geom_text(aes(label=motif),size=1)+xlab('')+ylab("NME")+
-  theme_glob+theme(axis.text.x = element_text(angle = 90)))
-dev.off()
-
-pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/all_NME_',tissue,'.pdf'),width=3.5,height = 7)
-print(ggplot(NME_motif_target,aes(x=motif_type,y=NME))+geom_boxplot()+xlab('')+ylab("NME")+
-  theme_glob+theme(axis.text.x = element_text(angle = 90)))
-dev.off()
-#dNME at UC
-dnme_tissue=fread(paste0('../downstream/input/mm10_cluster/',tissue,'.csv'))
-dNME_motif_target=mclapply(names(motif_target_in),function(x){
-  #make a data.table, showing cluster, mean dNME, mean dMML at UC
-  if(x %in% clu_sig$motif){
-    clusters=clu_sig[motif ==x]$cluster
-    dnme_motif_out=data.table()
-    for (clu in clusters){
-      motif_target=motif_target_in[[x]][motif_target_in[[x]]$cluster ==clu]
-      dnme_tissue_clu=dnme_tissue[dnme_tissue$cluster==clu]
-      dnme_motif_clu=dnme_tissue_clu[queryHits(findOverlaps(convert_GR(dnme_tissue_clu$region ),motif_target))]
-      dnme_motif_out=rbind(dnme_motif_out,data.table(dNME=dnme_motif_clu$dNME_maxJSD,region=dnme_motif_clu$region,cluster=clu))
+  motif_target_in=readRDS(paste0(motif_target_dir,fn))
+  names(motif_target_in)=sub('.*_','',names(motif_target_in))
+  #For each motif_check dNME
+  tissue=sub('_.*','',fn)
+  cat('processing:',tissue,'\n')
+  #for each motif, it's enriched in some cluster, 
+  #we want to check in that cluster dNME_maxJSD is higher than regions not overlapping that motif
+  #Or if that's higher than motif showing no dNME preference
+  # motif_target_in_subset=motif_target_in
+  # names(motif_target_in_subset)=NULL
+  # motif_target_in_subset=unique(do.call(c,motif_target_in_subset))
+  # nme_motif=nme[queryHits(findOverlaps(convert_GR(rownames(nme)),motif_target_in_subset)),]
+  nme_tissue=nme[,grepl(tissue,colnames(nme))]
+  clu_sig=do.call(rbind,lapply(1:10,function(x){
+    csv_in=fread(paste0('../downstream/input/mouse_motif_cluster/',tissue,'/motif_',tissue,'_cluster_',x,'_enhancer.csv'))
+    csv_in$cluster=x
+    return(csv_in)
+  }))
+  #clu_sig=clu_sig[FDR<=0.05&odds_ratio>=1.2]
+  clu_sig$motif=gsub('.*_','',clu_sig$motif)
+  
+  #use all regions, not only enhancer maybe
+  NME_motif_target=mclapply(names(motif_target_in),function(x){
+    #make a data.table, showing cluster, mean dNME, mean dMML at UC
+    if(x %in% clu_sig$motif){
+      motif_target=motif_target_in[[x]][motif_target_in[[x]]$cluster %in% clu_sig[motif ==x]$cluster]
+      nme_motif=nme_tissue[queryHits(findOverlaps(convert_GR(rownames(nme_tissue)),motif_target)),]
+      motif_out=as.data.table(nme_motif)
+      motif_out$regions=rownames(nme_motif)
+      motif_out$motif=x
+      motif_out=melt.data.table(motif_out,id.vars=c('regions','motif'),variable.name = 'tissue_stage',value.name = "NME")
+      return(motif_out)
     }
-
-    dnme_motif_out$motif=x
-    return(dnme_motif_out)
-  }
-},mc.cores=20)
-dNME_motif_target=fastDoCall('rbind',dNME_motif_target)
-dNME_motif_target$motif_type="Not in human analysis"
-dNME_motif_target[motif %in% motif_dir_human_low_ent$TF]$motif_type="Decreased NME in accessible region"
-dNME_motif_target[motif %in% motif_dir_human_high_ent$TF]$motif_type="Increased NME in accessible region"
-dNME_motif_target_mean=dNME_motif_target[,list(mean_dnme=mean(dNME,na.rm=T)),by=list(motif_type,motif)]
-pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/motif_dNME_',tissue,'.pdf'),width=3.5,height = 7)
-print(ggplot(dNME_motif_target_mean,aes(x=motif_type,y=mean_dnme))+geom_boxplot()+xlab('')+ylab("dNME")+
-        geom_text(aes(label=motif),size=1)+theme_glob+theme(axis.text.x = element_text(angle = 90)))
-dev.off()
-
-pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/all_dNME_',tissue,'.pdf'),width=3.5,height = 7)
-print(ggplot(dNME_motif_target,aes(x=motif_type,y=dNME))+geom_boxplot()+xlab('')+ylab("dNME")+
-  theme_glob+theme(axis.text.x = element_text(angle = 90)))
-dev.off()
-
+  },mc.cores=20)
+  NME_motif_target=fastDoCall('rbind',NME_motif_target)
+  
+  NME_motif_target$motif_type="Not in human analysis"
+  NME_motif_target[motif %in% motif_dir_human_low_ent$TF]$motif_type="Decreased NME in accessible region"
+  NME_motif_target[motif %in% motif_dir_human_high_ent$TF]$motif_type="Increased NME in accessible region"
+  NME_motif_target_mean=NME_motif_target[,list(mean_nme=median(NME,na.rm=T)),by=list(motif_type,motif)]
+  pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/mean_NME_',tissue,'.pdf'),width=3.5,height = 7)
+  print(ggplot(NME_motif_target_mean,aes(x=motif_type,y=mean_nme))+geom_boxplot()+geom_text(aes(label=motif),size=1)+xlab('')+ylab("NME")+
+          theme_glob+theme(axis.text.x = element_text(angle = 90)))
+  dev.off()
+  
+  pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/all_NME_',tissue,'.pdf'),width=3.5,height = 7)
+  print(ggplot(NME_motif_target,aes(x=motif_type,y=NME))+geom_boxplot()+xlab('')+ylab("NME")+
+          theme_glob+theme(axis.text.x = element_text(angle = 90)))
+  dev.off()
+  #dNME at UC
+  dnme_tissue=fread(paste0('../downstream/input/mm10_cluster/',tissue,'.csv'))
+  dNME_motif_target=mclapply(names(motif_target_in),function(x){
+    #make a data.table, showing cluster, mean dNME, mean dMML at UC
+    if(x %in% clu_sig$motif){
+      clusters=clu_sig[motif ==x]$cluster
+      dnme_motif_out=data.table()
+      for (clu in clusters){
+        motif_target=motif_target_in[[x]][motif_target_in[[x]]$cluster ==clu]
+        dnme_tissue_clu=dnme_tissue[dnme_tissue$cluster==clu]
+        dnme_motif_clu=dnme_tissue_clu[queryHits(findOverlaps(convert_GR(dnme_tissue_clu$region ),motif_target))]
+        dnme_motif_out=rbind(dnme_motif_out,data.table(dNME=dnme_motif_clu$dNME_maxJSD,region=dnme_motif_clu$region,cluster=clu))
+      }
+      
+      dnme_motif_out$motif=x
+      return(dnme_motif_out)
+    }
+  },mc.cores=20)
+  dNME_motif_target=fastDoCall('rbind',dNME_motif_target)
+  dNME_motif_target$motif_type="Not in human analysis"
+  dNME_motif_target[motif %in% motif_dir_human_low_ent$TF]$motif_type="Decreased NME in accessible region"
+  dNME_motif_target[motif %in% motif_dir_human_high_ent$TF]$motif_type="Increased NME in accessible region"
+  dNME_motif_target_mean=dNME_motif_target[,list(mean_dnme=mean(dNME,na.rm=T)),by=list(motif_type,motif)]
+  pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/motif_dNME_',tissue,'.pdf'),width=3.5,height = 7)
+  print(ggplot(dNME_motif_target_mean,aes(x=motif_type,y=mean_dnme))+geom_boxplot()+xlab('')+ylab("dNME")+
+          geom_text(aes(label=motif),size=1)+theme_glob+theme(axis.text.x = element_text(angle = 90)))
+  dev.off()
+  
+  pdf(paste0('../downstream/output/graphs/Figure6/motif_accessible/all_dNME_',tissue,'.pdf'),width=3.5,height = 7)
+  print(ggplot(dNME_motif_target,aes(x=motif_type,y=dNME))+geom_boxplot()+xlab('')+ylab("dNME")+
+          theme_glob+theme(axis.text.x = element_text(angle = 90)))
+  dev.off()
+  
 }
 
 # prepare regions for Ken -------------------------------------------------
@@ -307,7 +313,7 @@ cor_dt_classify=list()
 lv=0.50
 FDR_cor_cutoff=0.25
 for(cor_in in cor_dt){
-
+  
   #Use selected regions to predict
   model <- lm(dNME_cor~dMML_cor+0, data = cor_in)
   predict_out=predict(model, newdata =cor_in, interval = "prediction",level=lv)
@@ -332,7 +338,7 @@ for(cor_in in cor_dt){
                "dNME correlated",
                "dMML correlated")
   cor_in$significant=factor(cor_in$significant,levels=sig_levels)
-
+  
   col_theme=c("grey","purple","green","red","blue")
   png(paste0('../downstream/output/dmml_dnme_cor/',tissue,'_dNME_dMML_dots_0_inter_',lv,'.png'),width=7,height=7,units = "in",res=96)
   print(ggplot(cor_in,aes(x=dMML_cor,y=dNME_cor))+
@@ -342,8 +348,8 @@ for(cor_in in cor_dt){
           geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=fit),size=1)+
           geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=lwr),size=1,linetype='dashed')+
           geom_line(data=cor_in_fitting,aes(x=dMML_cor,y=upr),size=1,linetype='dashed')+
-         geom_hline(yintercept = dNME_cutoff,size=1,color="black")+geom_vline(xintercept = dMML_cutoff,size=1,color="black"))
- 
+          geom_hline(yintercept = dNME_cutoff,size=1,color="black")+geom_vline(xintercept = dMML_cutoff,size=1,color="black"))
+  
   
   dev.off()
   cor_dt_classify[[tissue]]=cor_in
@@ -427,186 +433,41 @@ for(fn in dir(dir_in,pattern='.csv')){
 }
 saveRDS(region_out,'../downstream/output/region_annotation.rds')
 
-#Correlation setting:
-#Try truncated mltivariate:tmvtnorm: A Package for the Truncated Multivariate Normal Distribution
-#Getting fitted data and correlation outside the fitted data
-dMML_cor=readRDS('../downstream/input/dmmlcor.rds')
-dNME_cor=readRDS('../downstream/input/dNMEcor.rds')
-dmml_perm=readRDS('../downstream/input/permudmmlcor.rds')
-dnme_perm=readRDS('../downstream/input/permudnmecor.rds')
-FDR_cor<-function(real_value,perm){
-  cor_null=ecdf(perm)
-  cor_pval=1-cor_null(real_value)
-  print(length(perm))
-  return(p.adjust(cor_pval,method='BH'))
-}
-convert_matrix<-function(perm_in,tissue,stat){
-  perm_in_dt=as.data.table(perm_in)
-  perm_in_dt$region=rownames(perm_in)
-  perm_in_dt$tissue="tissue"
-  perm_in_dt=melt.data.table(perm_in_dt,id.vars=c('region','tissue'))
-  perm_in_dt$variable=paste0(stat,"_perm")
-  return(perm_in_dt)
-  
-}
-#Merge into data table
-cor_dt=lapply(names(dNME_cor),function(x) {
-  regions=names(dNME_cor[[x]])
-  out_dt=data.table(region=regions,
-                    dMML_cor=dMML_cor[[x]][regions],
-                    dNME_cor=dNME_cor[[x]][regions],
-                    tissue=x)
-  dMML_perm_in=convert_matrix(dmml_perm[[x]],x,'dmml')
-  dNME_perm_in=convert_matrix(dnme_perm[[x]],x,'dnme')
-  out_dt$dMML_FDR=FDR_cor(out_dt$dMML_cor,dMML_perm_in$value)
-  out_dt$dNME_FDR=FDR_cor(out_dt$dNME_cor,dNME_perm_in$value)
-  dNME_cutoff=min(out_dt[dNME_FDR<=0.25]$dNME_cor)
-  dMML_cutoff=min(out_dt[dMML_FDR<=0.25]$dMML_cor)
-  out_dt_mt=melt.data.table(out_dt,id.vars = c('region','tissue'))
-  out_dt_mt=rbind(out_dt_mt,dMML_perm_in,dNME_perm_in)
-  # pdf(paste0('../downstream/output/dmml_dnme_cor/',x,'_dMML_permute_real.pdf'))
-  # print(ggplot(out_dt_mt[variable%in%c("dMML_cor","dmml_perm")],aes(x=value,group=variable,color=variable))+geom_density(size=1)+
-  #         theme(legend.position = "bottom")+geom_vline(xintercept = dMML_cutoff,size=1,color="purple"))
-  # 
-  # dev.off()
-  # 
-  # pdf(paste0('../downstream/output/dmml_dnme_cor/',x,'_dNME_permute_real.pdf'))
-  # print(ggplot(out_dt_mt[variable%in%c("dNME_cor","dnme_perm")],aes(x=value,group=variable,color=variable))+geom_density(size=1)+
-  #         theme(legend.position = "bottom")+geom_vline(xintercept = dNME_cutoff,size=1,color="purple"))
-  # 
-  # dev.off()
-  return(out_dt)
-  
-  
-})
-
-library(tmvtnorm)
-library(metR)
-cor_dt=lapply(cor_dt,function(x) x[!grepl("X",region)&!grepl("Y",region)])
-
 # density estimation ------------------------------------------------------
 
 #Estimate bandwidth using ucv:
 library(MASS)
 tissue_in=cor_dt[[4]]
 tissue_in_mt=as.matrix(tissue_in[,list(dMML_cor,dNME_cor)])
-bw_opt=ucv(tissue_in_mt)
-
-#Using mle on all data below FDR=0.25
-set.seed(12345)
-FDR_cor_cutoff=0.25
-contour_data_out=list()
-estimage_out=list()
-x_seq <- seq(-1, 1, by=0.001)
-y_seq <- seq(-1, 1, by=0.001)
-for(cor_mv_norm in cor_dt){
-  tissue=unique(cor_mv_norm$tissue)
-  cor_mv_norm_trunc=cor_mv_norm[(dMML_FDR>FDR_cor_cutoff)&(dNME_FDR>FDR_cor_cutoff)]
-  #cor_mv_norm_trunc=cor_mv_norm[(dMML_cor<=0)&(dNME_cor<=0)]
-  #Use range instead of max due to decimal problem
-  upper=c(range(cor_mv_norm_trunc$dMML_cor)[2],range(cor_mv_norm_trunc$dNME_cor)[2])
-  #There's some digit problem?
-  cor_mv_norm_trunc[dMML_cor<(-1)]$dMML_cor=-1
-  cor_mv_norm_trunc[dNME_cor<(-1)]$dNME_cor=-1
-  cor_mv_norm_trunc[dMML_cor>(1)]$dMML_cor=1
-  cor_mv_norm_trunc[dNME_cor>(1)]$dNME_cor=1
-  lower=c(-1,-1)
-  trunc_matrix=as.matrix(cor_mv_norm_trunc[,list(dMML_cor,dNME_cor)])
-  mle.fit1 <- mle.tmvnorm(trunc_matrix, lower=lower, upper=upper,method = "L-BFGS-B",lower.bounds=c(-1,-1),upper.bounds = c(1,1))
-  mle.fit1_sum=summary(mle.fit1)
-  
-  mu= mle.fit1_sum@coef[c('mu_1','mu_2'),"Estimate"]
-  sigma= matrix(mle.fit1_sum@coef[c('sigma_1.1','sigma_1.2',"sigma_1.2","sigma_2.2"),"Estimate"],nrow=2,byrow=T)
-
-  contour_data=as.data.table(expand.grid(x_seq,y_seq))
-  colnames(contour_data)=c("x_seq","y_seq")
-  contour_data$MD=mahalanobis(as.matrix(contour_data[,.(x_seq,y_seq)]),center=mu,cov=sigma)
-  contour_data$density=NA
-  # for (i in 1:nrow(contour_data)){
-  # 
-  #     #prepare for contour
-  #   contour_data$density[i] = dmvnorm(contour_data[i,.(x_seq,y_seq)], mean=mu,sigma=sigma)
-  # 
-  # }
-  # jpeg(paste0('../downstream/output/dmml_dnme_cor/truncated_nrom_small_0_',tissue,'.jpg'))
-  # print(ggplot(cor_mv_norm[(dMML_FDR>FDR_cor_cutoff)&(dNME_FDR>FDR_cor_cutoff)],aes(x=dMML_cor,y=dNME_cor))+ geom_point(alpha=0.01)+
-  #   geom_vline(xintercept = upper[1],size=1)+geom_hline(yintercept = upper[2],size=1)+
-  #   geom_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data,breaks=seq(1,5,1),color='red')+ 
-  #   geom_label_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data,breaks=seq(1,5,1))+
-  #   geom_point(mapping=aes(x=mu1,y=mu2),data=data.frame(mu1=mu[1],mu2=mu[2]),size=2,color='blue'))
-  #  dev.off()
-   contour_data_out[[tissue]]=contour_data
-   estimage_out[[tissue]]=list(mu=mu,sigma=sigma)
-   gc()
-  #geom_contour_fill()+ scale_fill_gradient2(high = "blue",low="white")+
-}
-#Use distance cutoff: 4
-MD_cutoff=4
-FDR_cutoff=0.25
-cor_mv_norm_MD_out=list()
-col_theme=c("red","blue","green","purple")
-sig_levels=c("dMML_only","Both","dNME_only","None")
-for(cor_mv_norm_MD in cor_dt){
-  tissue=unique(cor_mv_norm_MD$tissue)
-  estimage_tissue=estimage_out[[tissue]]
-  cor_mv_norm_MD$MD=mahalanobis(as.matrix(cor_mv_norm_MD[,.(dMML_cor,dNME_cor)]),center=estimage_tissue$mu,cov=estimage_tissue$sigma)
-  cor_mv_norm_MD$cor_type="NA"
-  cor_mv_norm_MD[MD<=MD_cutoff&(dMML_FDR<=FDR_cutoff|dNME_FDR<=FDR_cutoff)]$cor_type="Both"
-  cor_mv_norm_MD[(dMML_FDR>FDR_cutoff&dNME_FDR>FDR_cutoff)]$cor_type="None"
-  cor_mv_norm_MD[MD>MD_cutoff&dNME_FDR<=FDR_cutoff]$cor_type="dNME_only"
-  cor_mv_norm_MD[MD>MD_cutoff&dMML_FDR<=FDR_cutoff]$cor_type="dMML_only"
-  dNME_cutoff=min(cor_mv_norm_MD[dNME_FDR<=FDR_cutoff]$dNME_cor)
-  dMML_cutoff=min(cor_mv_norm_MD[dMML_FDR<=FDR_cutoff]$dMML_cor)
-
-  cor_mv_norm_MD$cor_type=factor(cor_mv_norm_MD$cor_type,levels=sig_levels)
-  
-
-  png(paste0('../downstream/output/dmml_dnme_cor/cor_type_',tissue,'_025_4_md.png'),width=7,height=7,units = "in",res=96)
-  print(
-    ggplot(cor_mv_norm_MD,aes(x=dMML_cor,y=dNME_cor))+
-          geom_point(aes(color=cor_type),alpha=0.1)+
-          theme(legend.position = "bottom")+ 
-          scale_color_manual(breaks= sig_levels, values = col_theme)+
-          geom_hline(yintercept = dNME_cutoff,size=1,color="black")+geom_vline(xintercept = dMML_cutoff,size=1,color="black")+
-          geom_contour(mapping=aes(x=x_seq,y=y_seq,z=MD),data=contour_data_out[[tissue]],breaks=MD_cutoff,color='black')
-    )
-  
-dev.off()
-cor_mv_norm_MD_out[[tissue]]=cor_mv_norm_MD
-}
- 
-cor_mv_norm_MD_out=fastDoCall('rbind',cor_mv_norm_MD_out)
-cor_mv_norm_MD_out_plot=cor_mv_norm_MD_out[,.N,by=c("tissue","cor_type")][,list(prop=N/sum(N),cor_type=cor_type),by=tissue]
-pdf('../downstream/output/dmml_dnme_cor/bar_plot_025_4_trunc.pdf')
-ggplot(cor_mv_norm_MD_out_plot,aes(x=tissue,y=prop))+geom_bar(stat="identity",aes(group=cor_type,fill=cor_type))+theme(legend.position = 'bottom')+
-  scale_fill_manual(breaks= sig_levels, values = col_theme)
-dev.off()
-library(fpc)
-for(i in 1:length(cor_dt)){
-  df=cor_dt[[i]][,.(dMML_cor,dNME_cor)]
-  tissue=unique(cor_dt[[i]]$tissue)
-  for(eps in seq(0.001,0.01,0.001)){
-    png(paste0('../downstream/output/dmml_dnme_cor/DBscan_',eps,'_',tissue,'.png'),width=7,height=7,units = "in",res=96)
-    print(plot(fpc::dbscan(df, eps = eps, MinPts = 10),df, main = "DBSCAN", frame = FALSE))
-    dev.off()
+bw_opt_dmml=ucv(tissue_in_mt[,'dMML_cor'])
+bw_opt_dnme=ucv(tissue_in_mt[,'dNME_cor'])
+saveRDS(bw_opt_dmml,'../downstream/output/bw_opt_dmml.rds')
+saveRDS(bw_opt_dnme,'../downstream/output/bw_opt_dnme.rds')
+bw_opt_dmml=readRDS('../downstream/output/bw_opt_dmml.rds')
+bw_opt_dnme=readRDS('../downstream/output/bw_opt_dnme.rds')
+fhat.exp=kde2d(tissue_in_mt[,'dMML_cor'], tissue_in_mt[,'dNME_cor'],h=c(bw_opt_dmml,bw_opt_dnme),
+               lims=c(c(-1,1),c(-1,1)),n=100)
+library(oce)
+fhat.exp$z_trans=log(fhat.exp$z+0.01)
+filled.contour(x = fhat.exp$x, y = fhat.exp$y, z = fhat.exp$z_trans,xlab='dMML cor',ylab='dNME cor') 
+#Convert to data.frame
+fhat.exp_dt=data.table()
+for(i in 1:length(fhat.exp$x)){
+  for(j in 1:length(fhat.exp$y)){
+    fhat.exp_dt=rbind(fhat.exp_dt,
+                      data.table(x=fhat.exp$x[i],
+                                 y=fhat.exp$y[j],
+                                 z=fhat.exp$z_trans[i,j]))
+    
     
   }
+  
+  
 }
-library(mclust)
-cor_dt_mc_out_all=list()
-set.seed(123)
-for(i in 1:length(cor_dt)){
-  cor_dt_ts=cor_dt[[i]]
-  cor_dt_mt=as.matrix(cor_dt_ts[,.(dMML_cor,dNME_cor)])
-  tissue=unique(cor_dt_ts$tissue)
-  cor_dt_mc_out=list()
-  for(g in 3:12){
-    cor_dt_mc_out[[as.character(g)]]=Mclust(cor_dt_mt,G=g)
-    png(paste0('../downstream/output/dmml_dnme_cor/mcluster_',tissue,'_',g,'.png'),width=7,height=7,units = "in",res=96)
-    plot( cor_dt_mc_out[[as.character(g)]], what = 'classification')
-    dev.off()
-    
-  }
-  cor_dt_mc_out_all[[tissue]]=cor_dt_mc_out
-}
+
+
+fig <- plot_ly(data=fhat.exp_dt,x = ~x, y = ~y, z = ~z, intensity=~z,type = 'mesh3d')
+fig
+
+#MA plot
 

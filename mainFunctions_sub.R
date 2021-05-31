@@ -3,6 +3,7 @@
 #clean run: remove: rm -r /home-net/home-4/yfang27@jhu.edu/R/x86_64-pc-linux-gnu-library/3.6/gcc/5.5/*
 #rm -r /scratch/users/yfang27@jhu.edu/yfang/temp_all/*
 #plot 
+suppressPackageStartupMessages({
 if (!requireNamespace("ggfortify", quietly = TRUE))
 {
   install.packages("glue")
@@ -146,6 +147,11 @@ library(TFBSTools)
 if (!requireNamespace("MotifDb", quietly = TRUE))
 {BiocManager::install("MotifDb")}
 library(MotifDb)
+#correlation
+
+library(MASS)
+  
+})
 # Not in use --------------------------------------------------------------
 # 
 # if (!requireNamespace("Repitools", quietly = TRUE))
@@ -179,16 +185,24 @@ library(MotifDb)
 #global pval cutoff file names
 pval_cutoff=0.1 #Onuchic use 0.1
 gff_in_file='../downstream/input/gff_in.rds'
-variant_HetCpG_file='../downstream/input/variant_HetCpG_new.rds'
+variant_HetCpG_file='../downstream/input/human_analysis/variant_HetCpG_new.rds'
 GR_file='../downstream/output/GRs_final1.rds'
 GR_allele_file='../downstream/output/GRs_allele_final1.rds'
 hetCpG_gff_file='../downstream/input/hetCpG_gff_final1.rds'
-GR_merge_file="../downstream/output/GR_merge_final12_ls.rds"
-variant_HetCpG_meta_file='../downstream/output/variant_HetCpG_meta_final1_ls.rds'
-genomic_features_file="../downstream/input/genomic_features2020.rds"
-NME_agnostic_file="../downstream/input/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
-MML_agnostic_file="../downstream/input/MML_allele_agnostic_merge_20k_homogeneous2.rds"
-motif_gene_file='../downstream/output/motif_all_JASPAR_default.rds' #For all SNP
+GR_merge_file="../downstream/output/human_analysis/CPEL_outputs/GR_merge_final12_ls.rds"
+variant_HetCpG_meta_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_final1_ls.rds'
+genomic_features_file="../downstream/input/human_analysis/genomic_features2020.rds"
+NME_agnostic_file="../downstream/input/human_analysis/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
+MML_agnostic_file="../downstream/input/human_analysis/MML_allele_agnostic_merge_20k_homogeneous2.rds"
+motif_gene_file='../downstream/output/human_analysis/motif_analysis/motif_all_JASPAR_default.rds' #For all SNP
+#Color theme for mouse
+mouse_color<-function(){
+  tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+  cv <- brewer.pal(length(tissue_all),'Set1')
+  cv[6] <- 'goldenrod1'
+  names(cv) <-tissue_all
+  return(cv)
+}
 #generating gff file
 gff_gen<-function(TSS_break,cpgr,blacklist_region,rds_save_file,out_name){
   olap=findOverlaps(TSS_break,cpgr)
@@ -983,14 +997,15 @@ CMH_test<-function(df_in,CMH_eqn=count~ASM+feature+subject){
   }
 }
 #SNP OR
-OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA){
-  
-  larger_NME_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in$refNME<tb_in$altNME))
-  larger_NME_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in$refNME<tb_in$altNME))
-  lower_NME_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in$refNME>tb_in$altNME))
-  lower_NME_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in$refNME>tb_in$altNME))
-  cont_table=matrix(c(larger_NME_SNP,larger_NME_nonSNP,lower_NME_SNP,lower_NME_nonSNP),nrow=2)
-  OR=fisher.test(cont_table)
+OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA,stat_in="NME"){
+ print(SNP)
+  larger_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  larger_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  lower_SNP=sum(tb_in[[SNP_name]]==SNP&!(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  lower_nonSNP=sum(tb_in[[SNP_name]]!=SNP&!(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  cont_table=matrix(c(larger_SNP,larger_nonSNP,lower_SNP,lower_nonSNP),nrow=2)
+  print(cont_table)
+  OR=fisher.test(cont_table,alternative ='two.sided')
   #print(cont_table)
   return(data.table(OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2],SNP=SNP))
 }
@@ -1003,14 +1018,14 @@ dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cut
   informME_in_dist=informME_in_dist[!is.na(exp_stat)]
   plot_informME_dat=informME_in_dist[,list(score=score,stat_in=stat_in,dist=dist,exp_stat=exp_stat,gene=gene,
                                            quant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=c(0,0.25,0.5,0.75),na.rm=T)),
-                                           hypervarquant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100),
+                                           hypervarquant=ecdf(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100),
                                      #scorequant001=findInterval(exp_stat,quantile(score,prob=c(0.01,1,0.01),na.rm=T))/100
                                      by=list(Sample)]
   rm(informME_in_dist)
   quant=c("0-25%","25%-50%","50%-75%","75%-100%")
   plot_informME_dat$quant=quant[plot_informME_dat$quant]
   plot_informME_dat$quant=as.factor(plot_informME_dat$quant)
-  dist_plot=list()
+  #dist_plot=list()t
   #print(unique(plot_informME_dat[,c(3,4)]))
   pdf(paste0(dir,'Figure3A_',ylab,'_',stat_in,'_dist.pdf'),width=3.5,height=3.5)
   for(sp in unique(plot_informME_dat$Sample)){
@@ -1082,7 +1097,7 @@ direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,
                             sum(sample(variant_gene_df$alleleDiff,len_x,replace = F)==sample(variant_gene_df$stat_diff,len_x,replace = F)))
     same_dir_perm_prob=same_dir_perm/total_data
   }else{same_dir_perm_prob=-1}
-  if(same_dir >0 &opposite_dir>0){
+  if(same_dir >0 |opposite_dir>0){
     
     binom=binom.test(same_dir,(same_dir+opposite_dir),0.5)
     #print(binom)
@@ -1121,29 +1136,44 @@ OMIM_annotation<-function(motif_in,OMIM){
 NME_dNME_ken<-function(motif_in,GR_in,stat_in){
   tt1=proc.time()[[3]]
   olap=findOverlaps(motif_in,GR_in,select='all')
-  if(length(GR_in$NME1)>0){GR_in$NME=(GR_in$NME1+GR_in$NME2)/2}
+  if(length(GR_in$NME1)>0&length(GR_in$MML1)){
+    GR_in$NME=(GR_in$NME1+GR_in$NME2)/2
+    GR_in$MML=(GR_in$MML1+GR_in$MML2)/2
+    }
   subj_olap=subjectHits(olap)
   stat_in_df=data.table(qt=queryHits(olap),stat_in=elementMetadata(GR_in)[[stat_in]][subj_olap],
                         sample=GR_in$Sample[subj_olap],stringsAsFactors = T)
   sample_all=unique(GR_in$Sample)
   gc()
-  stat_in_df_stat=dcast.data.table(stat_in_df,qt~sample,value.var = "stat_in",fun.aggregate = mean)
+  stat_in_df_stat=dcast.data.table(stat_in_df,qt~sample,value.var = "stat_in",
+                                   fun.aggregate = function(x) mean(x,na.rm=T))
   
   for(sp in sample_all){
-    elementMetadata(motif_in)[[sp]]=NA
+    elementMetadata(motif_in)[[sp]]=as.numeric(NA)
     if(!is.null(stat_in_df_stat[[sp]])){
+     
       elementMetadata(motif_in)[[sp]][stat_in_df_stat$qt]=stat_in_df_stat[[sp]]
+ 
+  #add column of NA if motif don't have all samples
+
     }
     
   }
-  #add column of NA if motif don't have all samples
   print(proc.time()[[3]]-tt1)
   gc()
   return(motif_in)
 }
 
-read.agnostic.mouse<-function(in_dir,tissue,stage,stat_type,replicate){
-  file_in=paste(in_dir,'mm10_',tissue,'_',stage,'_',replicate,'_allele_agnostic_',stat_type,'.bedGraph',sep='')
+read.agnostic.mouse<-function(fn,in_dir,replicate="all"){
+  fn_sub=gsub('mm10_|.bedGraph|_all_allele_agnostic','',fn)
+
+  #tissue,stage,stat_type,replicate
+  tissue=sub('_.*','',fn_sub)
+  stat_type=sub('.*_','',fn_sub)
+  stage=gsub(paste0(tissue,"_|_",stat_type),'',fn_sub)
+  
+  file_in=paste0(in_dir,fn)
+
   cat('processing:',file_in,'\n')
   informME_in=import.bedGraph(file_in)
   if(length(informME_in)>0){
@@ -1158,7 +1188,7 @@ read.agnostic.mouse<-function(in_dir,tissue,stage,stat_type,replicate){
     informME_in$stage=stage
     informME_in$bioreplicate=replicate
     informME_in$Sample=paste(tissue,stage,replicate,sep='-')
-    
+    informME_in$stat_type=stat_type
     return(informME_in)
   }
 }
@@ -1196,7 +1226,7 @@ read.agnostic.mouse.uc<-function(file_in,matrix=FALSE,fileter_N=1,gff_in=NA){
     replicate=gsub('merged','',replicate)
     informME_in$Sample=paste0(tissue1,'-',comp_stage[1],'-',tissue2,'-',comp_stage[2],'-',replicate)
     informME_in=informME_in[informME_in$N>=fileter_N]
-    informME_in$tissue=tissue
+    informME_in$tissue=tissue1
     informME_in$stage=paste0(comp_stage[1],'-',comp_stage[2])
     informME_in$replicate=replicate
     cat('Minimum N:',min(informME_in$N),'\n')
@@ -1274,25 +1304,45 @@ convert_GR<-function(x,direction="GR"){
       x_dt=as.data.table(mcols(x))
       x_dt$region=paste0(seqnames(x),':',start(x),'-',end(x))
       return(x_dt)
-    }
+    }else
+      if(direction=="matrix"){
+        x_mt=as.matrix(mcols(x))
+        rownames(x_mt)=paste0(seqnames(x),':',start(x),'-',end(x))
+        return(x_mt)
+      }
+  
+}
+#Get tss
+get_mm10_tss<-function(){
+  gtf=fread('../downstream/input/mouse_analysis/grcm38.gtf',data.table=F)
+  promoter_in=gtf <- gtf[gtf[,3]=='gene',]
+  type <- sub('\".*','',sub('.*gene_type \"','',gtf[,9]))
+  gtf <- gtf[type=='protein_coding',]
+  gn <- sub('".*','',sub('.*gene_name "','',gtf[,9]))
+  gr <- GRanges(seqnames=gtf[,1],IRanges(start=gtf[,4],end=gtf[,5]),strand = gtf[,7])
+  names(gr) <- gn
+  tss <- promoters(gr,upstream=0,downstream=1)
+  return(tss)
   
 }
 #GO annotation
 GO_run<-function(gl,back,cluster,ptcount=0){
+  
   geneList <- factor(as.integer(back %in% gl))
   names(geneList) <- back
   suppressMessages({GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,geneSel=function(a) {a},
                                   annot = annFUN.org, mapping = "org.Mm.eg.db", ID = "Symbol")
   resultFisher <- runTest(GOdata, algorithm = "classic", statistic = "fisher")})
-  pval <- score(resultFisher)
-  pval_adj <- p.adjust(pval, method="BH")
+  # pval <- score(resultFisher)
+  # pval_adj <- p.adjust(pval, method="BH")
   sigres <- GenTable(GOdata, classicFisher = resultFisher, topNodes = length(resultFisher@score),orderBy="classicFisher",numChar=1000)
-  sigres$FDR <- pval_adj[sigres$GO.ID]
+  sigres<-sigres[sigres$Annotated>=10,]
+  #sigres$FDR <- pval_adj[sigres$GO.ID]
   sigres$classicFisher[sigres$classicFisher=="< 1e-30"] <- 0
-  sigres <- sigres[sigres$Annotated >= 10,]
-  fc <- ((sigres[,"Significant"]+ptcount)/(sum(GOdata@allScores[GOdata@feasible]==1)+ptcount))/((sigres[,"Annotated"]+ptcount)/(sum(GOdata@feasible)+ptcount))
+  sigres$FDR <-p.adjust(sigres$classicFisher,method='BH')
+  fc <- ((sigres[,"Significant"])/(sum(GOdata@allScores[GOdata@feasible]==1)))/((sigres[,"Annotated"])/(sum(GOdata@feasible)))
   sigres <- data.frame(sigres,FC=fc)
-  sigres <- sigres[order(sigres$FDR,-sigres$FC),]
+  sigres <- sigres[order(as.numeric(sigres$FDR),-sigres$FC),]
   sigres=as.data.table(sigres)
   siggene_forID=lapply(sigres$GO.ID,function(x,GOdata){
     gene=sigGenes(GOdata)[sigGenes(GOdata)%in%unlist(genesInTerm(GOdata, x))]
@@ -1312,153 +1362,113 @@ GO_run<-function(gl,back,cluster,ptcount=0){
     
   }
   sigres$cluster=cluster
+  sigres$feasible_allscore=sum(GOdata@allScores[GOdata@feasible]==1)
+  sigres$feasible=sum(GOdata@feasible)
+  #Find probability of P(sig annotaetd =0)
+  
+  #sigres$sig_all=length(gl)
+  #sigres$bg_all=length(bg)
+  #GO data store significant genes
+  sigres$sig_all=sum(GOdata@allScores[GOdata@feasible]==1)
+  #GO data store total annotated genes
+  sigres$bg_all=sum(GOdata@feasible)
+  sigres$non_anno_non_sig=sigres$bg_all-sigres$Annotated-sigres$sig_all
+  #Annotated non-sig = Annotated
+  #non_annotated_sig=total sig
+  #Annotated_sig=0
+  #choose(a+b,a)=1 given a=0
+  sigres$p0_choose=choose(sigres$bg_all-sigres$Annotated,sigres$sig_all)/choose(sigres$bg_all,sigres$sig_all)
+  sigres$p0=phyper(0,sigres$sig_all,sigres$bg_all-sigres$sig_all,sigres$Annotated)
+  sigres=sigres[Significant!=0]
+  sigres$p_fs=sigres[,list(p_fisher=fisher_GO(Significant,Annotated,bg_all,sig_all)),by = seq_len(nrow(sigres))]$p_fisher
+  sigres$p_cond=as.numeric(sigres$p_fs)/(1-sigres$p0)
+  
+  sigres$FDR=p.adjust(sigres$p_cond,method="BH")
   return(sigres)
 }
-GO_run_tissue<-function(tissue,dir_in,nme_cor,mml_cor,enc_type){
-  GO_out_all=list()
-  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
-  for (ts in tissue){
-    cat("Processing:",ts,'\n')
-    fn=paste0(ts,'.csv')
-    #read in csv file for given tissue
-    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
-    csv_in_ts=csv_in_ts[order(dNME_maxJSD_rank,decreasing = F)]
-    # Getting enhancer
-    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
-      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
-        if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}
-    #GO annotation
-    if(nrow(csv_in_ts)>1){
-      #GO annotation for each cluster
-      csv_out=lapply(1:10,function(clu){
-        sp=paste0(ts,'-',clu)
-        csv_in_ts_clu=csv_in_ts[cluster==clu]
-        csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxJSD_rank,decreasing=F)]
-        #Add NME and mml cor
-        csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
-        csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
-        
-        if(nrow(csv_in_ts_clu)>1){
-          
-          #GO annotation for chromHMM 
-          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
-          csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
-          #GO annotation for other types of regions
-          GO_out_cluster_NME=GO_run(csv_in_ts_clu[nme_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_NME_only=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_MML=GO_run(csv_in_ts_clu[mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_MML_only=GO_run(csv_in_ts_clu[mml_cor>=0.7&nme_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_non_MML=GO_run(csv_in_ts_clu[mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_NME_MML=GO_run(csv_in_ts_clu[nme_cor>=0.7&mml_cor>=0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          GO_out_cluster_non_NME_non_MML=GO_run(csv_in_ts_clu[nme_cor<0.7&mml_cor<0.7]$gene,unique(csv_in_ts$gene),cluster=clu)
-          
-          write.csv(GO_out_cluster,row.names = F,quote = T,
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/all_regions/',sp,'_cluster_GO.csv'))
-          write.csv(GO_out_cluster_NME_only,row.names = F,quote = T,
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_only/',sp,'_cluster_GO.csv'))
-          write.csv(GO_out_cluster_MML_only,row.names = F,quote = T,
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/MML_only/',sp,'_cluster_GO.csv'))
-          write.csv(GO_out_cluster_NME_MML,row.names = F,quote = T,
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/NME_MML/',sp,'_cluster_GO.csv'))
-          write.csv(GO_out_cluster_non_NME_non_MML,row.names = F,quote = T,
-                    file=paste0('../downstream/output/mm10_result/',enc_type,'/cluster_GO/',dir_in,'/None_NME_MML/',sp,'_cluster_GO.csv'))
-          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
-          return(list(GO_out_cluster_all=GO_out_cluster,GO_out_cluster_NME=GO_out_cluster_NME,GO_out_cluster_non_MML=GO_out_cluster_non_MML,csv_in_ts_clu=csv_in_ts_clu,
-                      GO_out_cluster_NME_only=GO_out_cluster_NME_only,GO_out_cluster_MML=GO_out_cluster_MML,GO_out_cluster_MML_only=GO_out_cluster_MML_only,
-                      GO_out_cluster_non_NME_non_MML=GO_out_cluster_non_NME_non_MML,GO_out_cluster_NME_MML=GO_out_cluster_NME_MML))
-        }
-        
-      })
-      GO_out_all[[ts]]=csv_out
-      write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxJSD,decreasing=T)],
-                file=paste0('../downstream/output/mm10_result/',enc_type,'/enhancer_gene_list/',dir_in,'/',ts,'_all.csv'))
-    }
-    
-  }
-  return(GO_out_all)
-}
-
-GO_run_tissue_perm<-function(tissue,dir_in,enc_type,dist_cutoff=NA,permute=F){
-  if(permute){enc_type=paste0('permute',enc_type)}
-  GO_out_all=list()
-  dir_out=paste0('../downstream/output/mm10_result/',dir_in)
-  ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
-  dir_out=paste0(dir_out,'/',enc_type,'_',dist_cutoff)
-  ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
-  GO_out=paste0(dir_out,'/cluster_GO/')
-  ifelse(!dir.exists(file.path(GO_out)), dir.create(file.path(GO_out)), FALSE)
-  gene_out=paste0(dir_out,'/all_gene_list/')
-  ifelse(!dir.exists(file.path(gene_out)), dir.create(file.path(gene_out)), FALSE)
+fisher_GO<-function(Significant,Annotated,bg_all,sig_all){
+  cont_table=matrix(c(Significant ,sig_all-Significant,Annotated-Significant,bg_all-Annotated-sig_all+Significant),nrow=2)
+  return(fisher.test(cont_table)$p.value)
   
-  csv_files=dir(paste0('../downstream/input/',dir_in),pattern="csv")
-  print(csv_files)
-  for (ts in tissue){
-    cat("Processing:",ts,'\n')
-    fn=paste0(ts,'.csv')
-    #read in csv file for given tissue
-    csv_in_ts=fread(paste0('../downstream/input/',dir_in,'/',fn))
-   
-    #Note some times Jason use dNME_maxJSD_rank
-    csv_in_ts=csv_in_ts[order(dNME_maxUC_rank,decreasing = F)]
-    # Getting enhancer
-    if(enc_type=="chromHMM_enhancer"){csv_in_ts=csv_in_ts[csv_in_ts$chromHMM_enhancer]}else
-      if(enc_type=="non_chromHMM_enhancer"){csv_in_ts=csv_in_ts[!csv_in_ts$chromHMM_enhancer]}else 
-        if(enc_type=="promoter"){csv_in_ts=csv_in_ts}else 
-        if(enc_type=="all_regions"){csv_in_ts=csv_in_ts}else{
-          if(enc_type=="bin_enhancer"){
-            enhancer=readRDS("../downstream/output/bin_enhancer.rds")
-            csv_in_gr=convert_GR(csv_in_ts$region)
-            mcols(csv_in_gr)=csv_in_ts
-            olap=findOverlaps(csv_in_gr,enhancer)
-            csv_in_gr=csv_in_gr[queryHits(olap)]
-            csv_in_gr$gene=enhancer$`Target Gene`[subjectHits(olap)]
-            csv_in_gr$distance=NA
-            csv_in_ts=as.data.table(mcols(csv_in_gr))
-          }
-          
-        }
-    if(!is.na(dist_cutoff)){csv_in_ts=csv_in_ts[abs(distance)<=dist_cutoff]}
-    if(permute){csv_in_ts$cluster=sample(csv_in_ts$cluster,length(csv_in_ts$cluster))}
-    #GO annotation
-    if(nrow(csv_in_ts)>1){
-      #GO annotation for each cluster
-      csv_out=lapply(1:10,function(clu){
-        sp=paste0(ts,'-',clu)
-        csv_in_ts_clu=csv_in_ts[cluster==clu]
-        csv_in_ts_clu=csv_in_ts_clu[order(dNME_maxUC_rank,decreasing=F)]
-        #Add NME and mml cor
-        # csv_in_ts_clu$nme_cor=nme_cor[[ts]][match(csv_in_ts_clu$region,names(nme_cor[[ts]]))]
-        # csv_in_ts_clu$mml_cor=mml_cor[[ts]][match(csv_in_ts_clu$region,names(mml_cor[[ts]]))]
-        
-        if(nrow(csv_in_ts_clu)>1){
-          
-          #GO annotation for chromHMM 
-          GO_out_cluster=GO_run(csv_in_ts_clu$gene,unique(csv_in_ts$gene),cluster=clu)
-          csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
-        
-          
-          write.csv(GO_out_cluster,row.names = F,quote = T,
-                    file=paste0(GO_out,sp,'_cluster_GO.csv'))
-          #return(list(csv_in_ts_clu=csv_in_ts_clu,GO_out_cluster=GO_out_cluster))
-          return(list(GO_out_cluster_all=GO_out_cluster,csv_in_ts_clu=csv_in_ts_clu))
-        }
-        
-      })
-      GO_out_all[[ts]]=csv_out
-      write.csv(fastDoCall('rbind',lapply(csv_out,function(x) x$csv_in_ts_clu))[order(dNME_maxUC,decreasing=T)],
-                file=paste0(gene_out,ts,'_all.csv'))
+  
+}
+GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,DNase=TRUE){
+  #ranking_stat = "dNME_maxUC" or "dMML_maxUC"
+  GO_out_all=list()
+  csv_files=dir(dir_in,pattern="csv")
+  cat("Processing:",ts,'\n')
+  fn=paste0(ts,'.csv')
+  #read in csv file for given tissue
+  csv_in_ts=fread(paste0(dir_in,fn))
+  #Note some times Jason use dNME_maxJSD_rank
+  csv_in_ts=csv_in_ts[order(dNME_max_UC_pair_adj,decreasing = T)]
+  if(DNase){
+    csv_in_ts=csv_in_ts[which(csv_in_ts$DNAase)]
+    print(csv_in_ts)
     }
-    
+  # Getting enhancer
+  print(enc_type)
+  if(enc_type=="enhancer"){
+    enhancer=readRDS("../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds")
+    csv_in_gr=convert_GR(csv_in_ts$regions)
+   
+    mcols(csv_in_gr)=csv_in_ts
+    olap=findOverlaps(csv_in_gr,enhancer)
+    csv_in_gr=csv_in_gr[queryHits(olap)]
+    csv_in_gr$gene=enhancer$`Target Gene`[subjectHits(olap)]
+    csv_in_gr$distance=NA
+    csv_in_ts=as.data.table(mcols(csv_in_gr))
+
+  }else 
+    if(enc_type=="promoter"){
+      csv_in_ts=csv_in_ts[abs(distance)<=2000]
+      
+      
+    }
+
+  if(region_type_sel!="all"){
+    csv_in_ts=csv_in_ts[region_type==region_type_sel]
+    print(csv_in_ts)
   }
-  return(GO_out_all)
+  #GO annotation
+  if(nrow(csv_in_ts)>1){
+    #GO annotation for each cluster
+    print(nrow(csv_in_ts))
+  
+    csv_out=lapply(1:max(csv_in_ts$cluster),function(clu){
+      sp=paste0(ts,'-',clu)
+      csv_in_ts_clu=csv_in_ts[cluster==clu]
+      if(nrow(csv_in_ts_clu)>1){
+        cat('start processing cluster:',clu,'\n')
+        tt1=proc.time()[[3]]
+        cat('length of background gene:',length(bg),'\n')
+        GO_out_cluster=GO_run(unique(csv_in_ts_clu$gene),bg,cluster=clu)
+        csv_in_ts_clu$GO_result=unlist(lapply(csv_in_ts_clu$gene,function(x) paste(GO_out_cluster$Term[grepl(x,GO_out_cluster$genes)],collapse = ';')))
+        
+        cat('Finish processing cluster:',clu,'in:',proc.time()[[3]]-tt1,'\n')
+        return(list(GO_out_cluster_all=GO_out_cluster,csv_in_ts_clu=csv_in_ts_clu))
+        
+        
+        
+      }
+    })
+  }
+  print(csv_out[[1]]$GO_out_cluster_all)
+  return(csv_out)
 }
 
-dcast_matrix<-function(dt_in,value_in,colnames_order=colnames_order){
-  dt_in=dcast.data.table(dt_in,Term~cluster,value.var  = value_in)
+
+dcast_matrix<-function(dt_in,value_in,order=T){
+  dt_in=dcast.data.table(dt_in,Term~tissue_clu,value.var  = value_in,fill=1)
+
   dt_in_mt=as.matrix(dt_in[,-1])
   rownames(dt_in_mt)=dt_in$Term
-  dt_in_mt=dt_in_mt[order(max.col(dt_in_mt,)),]
-  dt_in_mt=dt_in_mt[,colnames_order]
+  if(nrow(dt_in_mt)>1&order==T){
+  dt_in_mt=dt_in_mt[order(max.col(dt_in_mt)),]
+  #dt_in_mt=dt_in_mt[,order(as.numeric(colnames(dt_in_mt)))]
+  }
+  
+  
   return(dt_in_mt)
 }
 makeColorRampPalette <- function(colors, cutoff.fraction, num.colors.in.palette)
@@ -1468,101 +1478,1206 @@ makeColorRampPalette <- function(colors, cutoff.fraction, num.colors.in.palette)
   ramp2 <- colorRampPalette(colors[3:4])(num.colors.in.palette * (1 - cutoff.fraction))
   return(c(ramp1, ramp2))
 }
-library(pheatmap)
-plot_GO_heatmap<-function(selected_tissue,GO_anno,GO_out,enc_type){
-  GO_tissue=list()
-  for(tissue in selected_tissue){
-    GO_in=GO_out[[tissue]]
-    GO_in=fastDoCall('rbind',lapply(GO_in,function(x) {
-      x=x[[GO_anno]]
-      x$sig_num=sum(x$FDR<=0.1)
-      return(x)
-    }))
+select_top_GO<-function(GO_in,tissue_all,ptcount=0,FDR_cutoff=0.1,FC_cutoff=1.5){
+  tissue_all_merged=do.call(rbind,lapply(tissue_all,function (x) {
     
+    GO_in_ts=GO_in[[x]]
     
-    GO_in=GO_in[,.(GO.ID,Term,classicFisher,FDR,FC,cluster,sig_num)]
-    GO_in_top=do.call(c,lapply(1:10,function(x) {
+    #Merge all tissue together and recalculate FC with pt count if necessary
+    GO_in_ts=do.call(rbind,lapply(GO_in_ts,function(clu_ts){
       
-      return(GO_in[cluster==x][FC>=1.5&FDR<=0.1][order(FDR,-FC,decreasing=F)][1:5]$GO.ID)
+      if(!is.null(clu_ts$GO_out_cluster_all)){
+        clu_ts=clu_ts$GO_out_cluster_all
+        clu_ts$FC_raw=clu_ts$FC
+        clu_ts$FC=((clu_ts$Significant+ptcount)/(clu_ts$feasible_allscore+ptcount))/((clu_ts$Annotated+ptcount)/(clu_ts$feasible+ptcount))
+        
+        return(clu_ts)
+      }
     }))
-    GO_in=GO_in[GO.ID%in%GO_in_top]
-    GO_in$log10FDR=-log10(GO_in$FDR)
-    GO_in_main= dcast_matrix(GO_in,"FC")
-    GO_in_main=GO_in_main[order(max.col(GO_in_main),decreasing = F),]
-    GO_in_FDR= dcast_matrix(GO_in,"FDR")
-    #GO_in_FDR_log10= dcast_matrix(GO_in,"log10FDR")
-    GO_in_FDR[GO_in_FDR<=0.1]="*"
-    GO_in_FDR[GO_in_FDR>0.1]=""
-    GO_in_FDR=GO_in_FDR[rownames(GO_in_main),]
-    col_label=unique(GO_in[,.(cluster,sig_num)])
-    col=colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))
-    c2 <- brewer.pal(10,'Set3')
-    names(c2) <- 1:10
-    breaksList = seq(-1, 1, by = 0.01)
-    colann= data.frame(cluster=as.character(1:10))
-    #pdf(paste0('../downstream/output/graphs/Figure6/GO_', tissue,'_',GO_anno,'_FC.pdf'),width=25,height=14)
-    pheatmap(scalematrix(GO_in_main),cluster_rows =F,cluster_cols = F,
-             show_colnames = T,show_rownames = T,display_numbers=GO_in_FDR,border_color = NA,
-             color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),
-             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_',enc_type,'.pdf'),
-             cellwidth=60,cellheight=25,annotation_colors = list(cluster=c2),annotation_col = colann, annotation_legend = F,
-             fontsize=30,legend = F,labels_col=col_label$sig_num)
-    #dev.off()
-    GO_tissue[[tissue]]=GO_in_main
-    #,breaks=breaksList,color=col(length(breaksList))
-  }
+    GO_in_ts$tissue=x
+    return(GO_in_ts)
+  }))
+  print(head(tissue_all_merged))
+  tissue_all_merged$tissue_clu=paste0(tissue_all_merged$tissue,'-',tissue_all_merged$cluster)
+  
+  #selected top 5 GO terms for each cluster & tissue
+  tissue_all_merged_top=do.call(rbind,lapply(unique(tissue_all_merged$tissue_clu),function (x) {
+    
+    clu_ts=tissue_all_merged[tissue_clu==x]
+    #Selection criteria, passing FDR rank by FC, use FDR and p to break ties
+    clu_ts_sel=clu_ts[FC>=FC_cutoff&FDR<=FDR_cutoff][order(-FC,FDR,p_cond,decreasing=F)]
+    #For cluster with less than 5 significant terms, rank by FC to fill the rest
+    if(nrow(clu_ts_sel)<5){
+      
+      clu_ts_sel=rbind(clu_ts_sel,
+                       clu_ts[FC>=FC_cutoff][order(-FC,FDR,p_cond,decreasing=F)][1:(5-nrow(clu_ts_sel))])
+    }
+    else{clu_ts_sel=clu_ts_sel[1:5]}
+    return(clu_ts_sel)
+  }))
+  return(list(tissue_all_merged=tissue_all_merged,tissue_all_merged_top=tissue_all_merged_top))
   
 }
-plot_GO_heatmap_perm<-function(selected_tissue,GO_anno,GO_out){
-  GO_tissue=list()
-  for(tissue in selected_tissue){
-    GO_in=GO_out[[tissue]]
-    GO_in=fastDoCall('rbind',lapply(GO_in,function(x) {
-      x=x[[GO_anno]]
-      x$sig_num=sum(x$FDR<=0.1)
-      return(x)
-    }))
-    
-    
-    GO_in=GO_in[,.(GO.ID,Term,classicFisher,FDR,FC,cluster,sig_num)]
-    GO_in_top=do.call(c,lapply(1:10,function(x) {
-      
-      return(GO_in[cluster==x][FC>=1.5&FDR<=0.1][order(FDR,-FC,decreasing=F)][1:5]$GO.ID)
-    }))
-    GO_in=GO_in[GO.ID%in%GO_in_top]
-    GO_in$log10FDR=-log10(GO_in$FDR)
-    GO_in_main= dcast_matrix(GO_in,"FC")
-    GO_in_main=GO_in_main[order(max.col(GO_in_main),decreasing = F),]
-    GO_in_FDR= dcast_matrix(GO_in,"FDR")
-    #GO_in_FDR_log10= dcast_matrix(GO_in,"log10FDR")
-    GO_in_FDR[GO_in_FDR<=0.1]="*"
-    GO_in_FDR[GO_in_FDR>0.1]=""
-    GO_in_FDR=GO_in_FDR[rownames(GO_in_main),]
-    col_label=unique(GO_in[,.(cluster,sig_num)])
-    col=colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))
-    c2 <- brewer.pal(10,'Set3')
-    names(c2) <- 1:10
-    breaksList = seq(-1, 1, by = 0.01)
-    colann= data.frame(cluster=as.character(1:10))
-    #pdf(paste0('../downstream/output/graphs/Figure6/GO_', tissue,'_',GO_anno,'_FC.pdf'),width=25,height=14)
-    pheatmap(scalematrix(GO_in_main),cluster_rows =F,cluster_cols = F,
-             show_colnames = T,show_rownames = T,display_numbers=GO_in_FDR,border_color = NA,
-             color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),
-             filename=paste0('../downstream/output/graphs/Figure6/all_regions_chromHMM_perm/',GO_anno,'/GO_', tissue,'_',GO_anno,'_FC_chromHMM.pdf'),
-             cellwidth=60,cellheight=25,annotation_colors = list(cluster=c2),annotation_col = colann, annotation_legend = F,
-             fontsize=30,legend = F,labels_col=col_label$sig_num)
-    #dev.off()
-    GO_tissue[[tissue]]=GO_in_main
-    #,breaks=breaksList,color=col(length(breaksList))
-  }
+plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=0.1,FC_cutoff=1.5,enc_type="enhancer",
+                              dir_plot='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run/'){
   
+  select_top_GO_out=select_top_GO(GO_in,tissue_all,ptcount=ptcount,FDR_cutoff=FDR_cutoff,FC_cutoff=FC_cutoff)
+  tissue_all_merged=select_top_GO_out$tissue_all_merged
+  tissue_all_merged_top=select_top_GO_out$tissue_all_merged_top
+  #Plot for all samples
+  
+  sel_term=plot_GO_heatmap(
+    tissue_all_merged=tissue_all_merged,
+    tissue_all_merged_top=tissue_all_merged_top,
+    FDR_cutoff=FDR_cutoff,
+    fn=paste0(dir_plot,'all_sample/GO_all_samples_',region_type,'_',enc_type,'.pdf')
+  )
+  #Plot for single sample
+  for(ts in unique(tissue_all_merged$tissue)){
+    cat("Plotting",ts,'\n')
+    tissue_all_merged_top_ts=tissue_all_merged_top[tissue==ts]
+    
+    tissue_all_merged_top_ts=tissue_all_merged_top_ts[Term %in% sel_term]
+    
+    
+    sel_term_ts=plot_GO_heatmap(
+      tissue_all_merged=tissue_all_merged[tissue==ts],
+      tissue_all_merged_top=tissue_all_merged_top_ts,
+      FDR_cutoff=FDR_cutoff,
+      fn=paste0(dir_plot,'single_sample/GO_single_sample_',ts,'_',region_type,'_',enc_type,'.pdf'),
+      term_ft=F
+    )
+    
+    
+  }  
 }
+
+
+plot_GO_heatmap<-function(tissue_all_merged,tissue_all_merged_top,fn,FDR_cutoff,term_ft=T){
+  tissue_all_merged_sel=tissue_all_merged[Term %in% tissue_all_merged_top$Term]
+  if(nrow(tissue_all_merged_sel)>0){
+    #reshape main matrix and FDR matrix
+    # clu_ts_names=unique(tissue_all_merged_sel$tissue_clu)
+    clu_ts_names= paste0(expand.grid(1:10,unique(tissue_all_merged$tissue))$Var2,'-',expand.grid(1:10,unique(tissue_all_merged$tissue))$Var1)
+    tissue_all_merged_sel_mt=dcast_matrix(tissue_all_merged_sel,"FC",order=T)
+    tissue_to_fill=clu_ts_names[!(clu_ts_names %in% colnames(tissue_all_merged_sel_mt))]
+    tissue_to_fill_mt=matrix(1,nrow=nrow(tissue_all_merged_sel_mt),ncol=length(tissue_to_fill))
+    colnames(tissue_to_fill_mt)=tissue_to_fill
+    tissue_all_merged_sel_mt=cbind(tissue_all_merged_sel_mt,tissue_to_fill_mt)
+    #There are cases that some cluster have no annotation of any terms due to too few genes in dMML and dNME, we'll fill columns with 1 FC and 1 FDR
+    tissue_all_merged_sel_FDR_num=dcast_matrix(tissue_all_merged_sel,"FDR",order=F)
+    tissue_all_merged_sel_FDR_num=cbind(tissue_all_merged_sel_FDR_num,tissue_to_fill_mt)
+    if(term_ft){
+      #Select terms with at least one significant
+      sel_term=rownames(tissue_all_merged_sel_mt)
+      sel_term=tissue_all_merged_top[
+        Term%in%rownames(tissue_all_merged_sel_FDR_num)[which(apply(tissue_all_merged_sel_FDR_num,1,function(x) !all(x>FDR_cutoff)))]]$Term
+    }else{
+      sel_term=tissue_all_merged_top$Term
+    }
+    tissue_all_merged_sel_FDR=matrix("",nrow=nrow(tissue_all_merged_sel_FDR_num),ncol=ncol(tissue_all_merged_sel_FDR_num))
+    tissue_all_merged_sel_FDR[tissue_all_merged_sel_FDR_num<=FDR_cutoff]="*"
+    dimnames(tissue_all_merged_sel_FDR)=dimnames(tissue_all_merged_sel_FDR_num)
+    #Add clolumn annotation
+    colann= data.frame(cluster=gsub('.*-','',colnames(tissue_all_merged_sel_mt)),tissue=gsub('-.*','',colnames(tissue_all_merged_sel_mt)))
+    rownames(colann)=colnames(tissue_all_merged_sel_mt)
+    tissue_col=mouse_color()
+    cluster_col <- brewer.pal(10,'Set3')
+    names(cluster_col)=1:10
+    if(ncol(tissue_all_merged_sel_mt)>10){
+      gaps_col=seq(10,60,by=10)
+    }else(
+      gaps_col=NULL
+    )
+    
+    
+    if(nrow(tissue_all_merged_sel_FDR)>1){
+      tissue_all_merged_sel_mt=scalematrix(tissue_all_merged_sel_mt[sel_term,clu_ts_names])
+      tissue_all_merged_sel_FDR=tissue_all_merged_sel_FDR[sel_term,clu_ts_names]
+    }
+    #It's not useful to plot heatmap with only one column
+    if(ncol(tissue_all_merged_sel_mt)>1){
+      pheatmap(tissue_all_merged_sel_mt,cluster_rows =F,cluster_cols = F,
+               show_colnames = F,show_rownames = T,display_numbers=tissue_all_merged_sel_FDR,border_color = NA,
+               color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),number_color = "white",
+               filename=fn,
+               cellwidth=60,cellheight=25,annotation_legend = F,angle_col = "90",
+               fontsize=30,legend = F,annotation_col = colann,gaps_col = gaps_col,
+               annotation_colors = list(tissue=tissue_col,cluster=cluster_col))
+    }
+    return(sel_term)
+  }
+}
+
 matrix_conv<-function(dt_in,value.var){
   out_dc=dcast.data.table(dt_in,region~stage,value.var=value.var)
   rn=out_dc$region
   out_dc=as.matrix(out_dc[,-1])
   rownames(out_dc)=rn
   return(out_dc)
+}
+#Clustering assignment
+cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
+  ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  total_run=10
+  cutoff_fn=gsub('\\.','_',cutoffs)
+  #Convert into df with major
+  
+  cluster_out=list()
+  for(fn in c(paste0('uc_',cutoffs,'_',1:10,'.rds'))){
+    cluster_in=readRDS(paste0(dir_in,fn))
+    for(ts in names(cluster_in)){
+      if(fn==paste0('uc_',cutoffs,'_',1,'.rds')){
+        cluster_out[[ts]]=data.table(regions=names(cluster_in[[ts]]),cluster_1=cluster_in[[ts]])
+      }else{
+        cluster_out[[ts]][[paste0("cluster_",gsub(paste0('uc_|.rds|',cutoffs,'_'),'',fn))]]=cluster_in[[ts]][ cluster_out[[ts]]$region]
+        
+        
+      }
+    }
+    
+    
+  }
+  #Find major cluster use cluster_1 as reference
+  cluster_out=lapply(cluster_out,function(x){
+    for(i in 1:10){
+      
+      x[[paste0("major_cluster_",i)]]=as.numeric(NA)
+      x[[paste0("major_cluster_in_",i)]]=as.numeric(NA)
+      #For each cluster, find major cluster
+      for(j in 1:10){
+        x[cluster_1==j][[paste0("major_cluster_",i)]]= as.numeric(names(which.max(table(x[cluster_1==j][[paste0("cluster_",i)]]))))  
+        x[cluster_1==j][[paste0("major_cluster_in_",i)]]=x[cluster_1==j][[paste0("major_cluster_",i)]]==x[cluster_1==j][[paste0("cluster_",i)]]#If in major cluster
+      }
+    }
+    x$percent_cluster_in=rowSums(x[,grepl("major_cluster_in",colnames(x)),with=FALSE])/(total_run)
+    return(x)
+    
+  })
+  pdf(paste0(dir_out,'proportion_run_kmeans_10_all_regions_',cutoff_fn,'.pdf'),width=3,height=3)
+  for(ts in names(cluster_out)){
+    hist(cluster_out[[ts]]$percent_cluster_in,xlab="Proportion of runs in major cluster",main=ts)
+    
+    
+  }
+  dev.off()
+  
+  
+  
+
+  UC_max_loc_sub_fn=paste0(dir_out,'UC_merge_max_loc_cluster',cutoff_fn,'.rds')
+ 
+  if(!file.exists(UC_max_loc_sub_fn)){
+    cluster=readRDS(paste0(dir_in,'uc_',cutoffs,'_1.rds'))
+    UC_merge_max_loc=readRDS('../downstream/input/mouse_analysis/clustering/UC_merge_max_loc_all_regions.rds')
+    UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
+      print(x)
+      return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
+      
+    }) 
+    names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
+    cat('Saving:',UC_max_loc_sub_fn,'\n')
+    saveRDS(UC_merge_max_loc_sub,UC_max_loc_sub_fn)
+    rm(UC_merge_max_loc_sub)
+    
+  }
+  UC_merge=readRDS(UC_max_loc_sub_fn)
+  # Find core clusters and assign rest of the regions ----------------------
+  
+  cluster_region_out=list()
+  dir_out_assigned=paste0(dir_out,'cluster_assigned/')
+  ifelse(!dir.exists(file.path(dir_out_assigned)), dir.create(file.path(dir_out_assigned)), FALSE)
+  for(ts in names(cluster_out)){
+    cluster_out_ts=cluster_out[[ts]]
+    UC_ts=UC_merge[[ts]][,grepl('UC-',colnames(UC_merge[[ts]]))]
+    
+    #Define core clusters
+    core_cluster=cluster_out_ts[percent_cluster_in==1]
+    core_cluster=core_cluster[,list(regions,cluster_1,percent_cluster_in)]
+    core_cluster=cbind(core_cluster,UC_ts[core_cluster$regions,])
+    cols=colnames(core_cluster)[grepl(".5-E",colnames(core_cluster))]
+    #find patterns of core clusters
+    core_cluster_pattern=core_cluster[,lapply(.SD,mean),.SDcols=cols,by=cluster_1]
+    core_cluster_pattern=core_cluster_pattern[order(cluster_1)]
+    #Find cluster to assign
+    cluster_to_assign=cluster_out_ts[percent_cluster_in>=0.5&percent_cluster_in<1]
+    
+    cluster_to_assign_UC=UC_ts[cluster_to_assign$regions,]
+    #Each row is a region, each column is a cluster
+    core_cluster_pattern_mt=as.matrix(core_cluster_pattern[,-1])
+    rownames(core_cluster_pattern_mt)=core_cluster_pattern$cluster_1
+    cor_cluster_out=cor(t(cluster_to_assign_UC),t(core_cluster_pattern_mt))
+    #prepare to assign,make sure rows are consistent
+    cor_cluster_out=cor_cluster_out[cluster_to_assign$regions,]
+    cluster_to_assign$correlation=rowMax(cor_cluster_out)
+    cluster_to_assign$cluster=colnames(cor_cluster_out)[apply(cor_cluster_out,1,which.max)]
+    #Summary
+    cluster_to_assign=cluster_to_assign[,list(regions,cluster,correlation)]
+    cluster_to_assign$region_type="noncore_cluster"
+    core_cluster$cluster=core_cluster$cluster_1
+    core_cluster$correlation=1
+    core_cluster$region_type="core_cluster"
+    region_out=rbind(core_cluster[,list(regions,cluster,correlation,region_type)],cluster_to_assign[,list(regions,cluster,correlation,region_type)])
+    region_out$tissue=ts
+    region_out=region_out
+    UC_max_ts=UC_merge[[ts]][,grepl('max',colnames(UC_merge[[ts]]))]
+    
+    UC_max_ts$UC_max_time_adj =gsub(paste0(ts,'-|-all'),'',UC_max_ts$UC_max_time_adj )
+    UC_max_ts$UC_max_time  =gsub(paste0(ts,'-|-all'),'',UC_max_ts$UC_max_time  )
+    region_out=cbind(region_out,UC_max_ts[region_out$regions,])
+    cluster_region_out[[ts]]=region_out
+    
+    cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
+    write.csv(region_out,paste0(dir_out_assigned,ts,'.csv'))
+  }
+  cluster_region_out_fn=paste0(dir_out,'cluster_all_region_assignment_filtered_',cutoff_fn,'.rds')
+  saveRDS(cluster_region_out,cluster_region_out_fn)
+  
+  # Plot heatmap ------------------------------------------------------------
+  
+  library(RColorBrewer)
+  library(pheatmap)
+  library(gplots)
+  UC_merge=readRDS('../downstream/input/mouse_analysis/UC_only_all_regions.rds')
+  UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
+  d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
+  names(d)=names(UC_merge)
+  
+  tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+  clu=readRDS(cluster_region_out_fn)
+  clu=lapply(clu,function(x){
+    out=as.numeric(x$cluster)
+    names(out)=x$regions
+    return(out)
+    
+  })
+  d=d[tissue_all]
+  d=lapply(d,function(x) {
+    
+    colnames(x)=gsub(paste0('UC-|-all|',paste(tissue_all,'-',sep='',collapse = '|')),'',colnames(x))
+    return(x)
+  })
+  d <- sapply(d,function(i) {
+    
+    #i <- i[rowSums(i) > 0,]
+    i <- i[,colnames(i) %in% timeorder]
+    i <- i[,order(match(colnames(i),timeorder))]
+    
+    #i <- scalematrix(i)
+    i <- i[complete.cases(i),]
+  })
+  
+  mat_out=matrix(ncol=39,nrow=0)
+  rowann_out=data.frame()
+  row_gap=c(0)
+  for (n in names(d)) {
+    cl <- clu[[n]]
+    cl <- sort(cl)
+    mat <- do.call(cbind,sapply(tissue_all,function(i) {
+      tmp <- matrix(NA,nrow=length(cl),ncol=ncol(d[[i]]),dimnames = list(names(cl),colnames(d[[i]])))
+      
+      rn <- intersect(names(cl),rownames(d[[i]]))
+      tmp[rn,] <- as.matrix(d[[i]][rn,])
+      
+      colnames(tmp) <- paste0(i,':',colnames(tmp))
+      
+      tmp
+    }))
+    mat_out=rbind(mat_out,mat)
+   
+    print(head(mat_out))
+    rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                         
+                         stringsAsFactors = F)
+    rownames(rowann) <- rownames(mat)
+    rowann <- rowann[,ncol(rowann):1]
+    rowann_out=rbind(rowann_out,rowann)
+    row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
+  }
+  #Refine plotting parameters
+  colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
+  rownames(colann) <- colnames(mat_out)
+  cat("Number of regions contain NA:",sum(rowSums(is.na(mat_out))!=0),'\n')
+  
+  c1 <- mouse_color()
+  c2 <- brewer.pal(10,'Set3')
+  names(c2) <- 1:10
+  c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
+  names(c4) <- sort(unique(colann[,1]))
+  
+  tiff(paste0(dir_out,'all_sc_N17_ft_kmeans_10run_filtered_all_',cutoff_fn,'.tiff'),width=5000,height=5000,res=300)
+  
+  pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
+           annotation_col = colann,show_colnames = F,show_rownames = F,
+           gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
+           annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4
+                                    
+           ))
+  dev.off()
+  
+}
+
+# correlation analysis ----------------------------------------------------
+pval_cor<-function(real_value,perm){
+  cor_null=ecdf(perm)
+  cor_pval=1-cor_null(real_value)
+
+  return(cor_pval)
+}
+convert_matrix<-function(perm_in,tissue,stat){
+  perm_in_dt=as.data.table(perm_in)
+  perm_in_dt$region=rownames(perm_in)
+  perm_in_dt$tissue=tissue
+  perm_in_dt=melt.data.table(perm_in_dt,id.vars=c('region','tissue'))
+  perm_in_dt$variable=paste0(stat,"_perm")
+  return(perm_in_dt)
+  
+}
+cor_dt_preprocessing<-function(x,dMML_cor,dNME_cor,dmml_perm,dnme_perm,filtered=FALSE,folder_input=NA) {
+  regions=names(dNME_cor[[x]])
+  regions=regions[!grepl("X",regions)&!grepl("Y",regions)]
+  out_dt=data.table(region=regions,
+                    dMML_cor=dMML_cor[[x]][regions],
+                    dNME_cor=dNME_cor[[x]][regions],
+                    tissue=x)
+  
+  
+  dMML_perm_in=convert_matrix(dmml_perm[[x]],x,'dmml')
+  dNME_perm_in=convert_matrix(dnme_perm[[x]],x,'dnme')
+
+  if(filtered==TRUE){  
+    csv_in=fread(paste0(folder_input,x,'.csv'))
+    out_dt=out_dt[region%in%csv_in$regions]
+    out_dt$cluster=csv_in[match(out_dt$region,csv_in$regions)]$cluster
+    # out_dt$gene=csv_in[match(out_dt$region,csv_in$regions)]$gene
+    # out_dt$distance=csv_in[match(out_dt$region,csv_in$regions)]$distance
+    # out_dt$FeDMR=csv_in[match(out_dt$region,csv_in$regions)]$FeDMR
+   #Difference between out_dt and csv_in dt from x and y chromosom
+    dMML_perm_in=dMML_perm_in[region%in%out_dt$region]
+    dNME_perm_in=dNME_perm_in[region%in%out_dt$region]
+    enhancer=readRDS("../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds")
+    out_dt_gr=convert_GR(out_dt$region)#20210509, was csv_in$region, bug
+    olap=findOverlaps(out_dt_gr,enhancer)
+    out_dt$enhancer=FALSE
+    out_dt[queryHits(olap)]$enhancer=TRUE
+  }
+  out_dt$dMML_pval=pval_cor(out_dt$dMML_cor,dMML_perm_in$value)
+  out_dt$dNME_pval=pval_cor(out_dt$dNME_cor,dNME_perm_in$value)
+  out_dt$dMML_FDR=p.adjust(out_dt$dMML_pval,method='BH')
+  out_dt$dNME_FDR=p.adjust(out_dt$dNME_pval,method='BH')
+  dNME_cutoff=min(out_dt[dNME_FDR<=0.25]$dNME_cor)
+  dMML_cutoff=min(out_dt[dMML_FDR<=0.25]$dMML_cor)
+
+  return(out_dt)
+  
+}
+der_calc<-function(x,y){
+  der_out=data.table()
+  for (i in 1:(length(x)-1)){
+    #Drivitative estimation
+    der_out=rbind(der_out,
+                  data.table(x=x[i],y=y[i],
+                             der=(y[i+1]-y[i])/(x[i+1]-x[i])))
+    
+    
+  }
+  
+  return(der_out)
+}
+der_flat_finder<-function(der_in,diff_in,density_in,direction=-1,quant=0.05){
+  #direction=-1, move to negative, direction=1, move to positive
+  der=100
+  der_before=100
+  #der_max=max(der_in)
+  der_quant=quantile(abs(der_in),prob=quant)
+  #search from the peak from minimum value, some times a little off from 0
+  #(abs(der)!=0)
+  #aviod stuck near maximum
+  idx=which(density_in==max(density_in[diff_in<=0.05&diff_in>=-0.05]))+20*direction
+  while((abs(der)>der_quant |(der_before>der))&(idx %in% 2:(length(der_in)-1))){
+    der_before=der_in[idx]
+    idx=idx+direction
+    #der_p=mean(abs(diff_in[idx:(idx+smooth_window*direction)]/der_max))
+    der=der_in[idx]
+  }
+  return(data.table(der=der,der_before=der_before,der=der_in[idx],idx=idx,x_out=diff_in[idx]))
+}
+create_folder<-function(folder_out){ifelse(!dir.exists(file.path(folder_out)), dir.create(file.path(folder_out)), FALSE)}
+correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=0.2,quant=0.25,subsmple_plot=1,
+                                 dir_figure="../downstream/output/mouse_analysis/correlation/kmeans_10_run_unfiltered/"){
+  theme_density=theme_classic()+theme(legend.position = "bottom",
+                                      axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
+                                      axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
+                                      axis.text.x=element_text(size=16),
+                                      axis.text.y=element_text(size=16),
+                                      legend.text = element_text(size=16),
+                                     )
+ 
+  cat('Processing:',ts,'\n')
+  create_folder(dir_figure)
+  tissue_in=cor_dt[[ts]]
+  #generate MA plot
+  tissue_in$cor_diff=tissue_in$dNME_cor -tissue_in$dMML_cor
+  tissue_in$cor_mean=(tissue_in$dNME_cor +tissue_in$dMML_cor)/2
+  
+  #There might be some floating point issue showing mean ==1 but stored as >1
+  tissue_in[cor_mean>1]$cor_mean=1
+  
+  if(density_plot==TRUE){
+    cat("Generating density plot\n")
+    #pdf(paste0('../downstream/output/correlation/',ts,'_ggplot_raw_density_log_',filtered,'.pdf'),width=4,height=4.5)
+     raw_density_log=ggplot(tissue_in,aes(x=dMML_cor,y=dNME_cor))+
+      stat_density_2d( geom = "raster",  aes(fill = log(after_stat(density)+0.1)), contour = FALSE,n=200)+
+      #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+       #scale_fill_distiller(palette = "rainbow",direction = 1)+
+       #scale_fill_gradientn(colors=rainbow(20))+
+      scale_fill_viridis_c()+theme_density+
+     # guides(fill=guide_legend(title="log(density)"))+
+      xlab("UC-dMML correlation")+ylab("UC-dNME correlation")
+    
+    #dev.off()
+ 
+    
+   # pdf(paste0('../downstream/output/correlation/',ts,'_raw_log_MA_',filtered,'.pdf'),width=4,height=4.5)
+   raw_MA_log=ggplot(tissue_in,aes(x=cor_mean,y=cor_diff))+
+      stat_density_2d( geom = "raster",  aes(fill = log(after_stat(density)+0.1)), contour = FALSE,n=200)+
+      #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+      #scale_fill_distiller(palette = "YlOrRd")+
+      scale_fill_viridis_c()+theme_density+
+      #guides(fill=guide_legend(title="log(density"))+
+      xlab("average correlation")+ylab("correlation difference")
+   
+    #dev.off()
+    #pdf(paste0('../downstream/output/correlation/',ts,'_ggplot_raw_density_',filtered,'.pdf'),width=4,height=4.5)
+    raw_density=ggplot(tissue_in,aes(x=dMML_cor,y=dNME_cor))+
+            stat_density_2d( geom = "raster",  aes(fill = after_stat(density)), contour = FALSE,n=200)+
+            scale_fill_distiller(palette = "YlOrRd",direction = 1)+
+            #scale_fill_viridis_c()+theme_density+
+            # guides(fill=guide_legend(title="log(density)"))+
+            xlab("UC-dMML correlation")+ylab("UC-dNME correlation")
+    
+    #dev.off()
+    
+    
+    #pdf(paste0('../downstream/output/correlation/',ts,'_raw_MA_',filtered,'.pdf'),width=4,height=4.5)
+    raw_MA=ggplot(tissue_in,aes(x=cor_mean,y=cor_diff))+
+            stat_density_2d( geom = "raster",  aes(fill = after_stat(density)), contour = FALSE,n=200)+
+            #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+            scale_fill_viridis_c()+theme_density+
+            #guides(fill=guide_legend(title="log(density"))+
+            xlab("average correlation")+ylab("correlation difference")
+    #dev.off()
+ 
+  }
+  
+  cat("Finding cutoffs\n")
+  tissue_in$cor_mean_round=round(tissue_in$cor_mean*2,digits=1)/2
+  cor_cutoffs=data.table()
+  pdf(paste0(dir_figure,'cor_cutoff_all_05_',ts,'_all_',filtered,'.pdf'),width=4,height=4.5)
+  for(cutoff in sort(unique(tissue_in$cor_mean_round))){
+    if(sum(tissue_in$cor_mean_round==cutoff)>=10){
+    #Find saddle point for density difference
+    tt1=proc.time()[[3]]
+    cor_diff_den=density(tissue_in[cor_mean_round==cutoff]$cor_diff,bw="SJ")
+    cat('Finish finding density in:',proc.time()[[3]]-tt1,'\n')
+    tt1=proc.time()[[3]]
+    den_der=der_calc(cor_diff_den$x,cor_diff_den$y)
+    cat('Finish derivation calculation:',proc.time()[[3]]-tt1,'\n')
+    den_der$diff=den_der$x
+    den_der$density=den_der$y
+    
+    
+    #Function to calculate derivatives
+    tt1=proc.time()[[3]]
+    neg_cutoff=der_flat_finder(den_der$der,den_der$diff,den_der$density,direction=-1,quant=quant)
+    pos_cutoff=der_flat_finder(den_der$der,den_der$diff,den_der$density,direction=1,quant=quant)
+    cat('Finish finding flat point:',proc.time()[[3]]-tt1,'\n')
+    tt1=proc.time()[[3]]
+    plot(den_der$diff,den_der$der,xlab="dNME-dMML cor",ylab="1st derivitative",main=cutoff)
+    abline(v=pos_cutoff$x_out)
+    abline(v=neg_cutoff$x_out)
+    plot(cor_diff_den$x,cor_diff_den$y,xlab="dNME-dMML cor",ylab="density",main=cutoff)
+    abline(v=pos_cutoff$x_out)
+    abline(v=neg_cutoff$x_out)
+    cat('Finish ploting derivative:',proc.time()[[3]]-tt1,'\n')
+    tt1=proc.time()[[3]]
+    #Assigning the catogries based on cutoff
+    diff_cutoff_dMML_only=neg_cutoff$x_out
+    diff_cutoff_dNME_only=pos_cutoff$x_out
+    cutoffs=data.table(x=c(min(tissue_in[cor_mean_round==cutoff]$cor_mean),max(tissue_in[cor_mean_round==cutoff]$cor_mean)),
+                       y=c(diff_cutoff_dMML_only,diff_cutoff_dNME_only))
+    cat('Finish assigning cutoffs:',proc.time()[[3]]-tt1,'\n')
+    tt1=proc.time()[[3]]
+    #Plot in density plot
+    #Subsample
+    subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+   print(ggplot(tissue_in[subsample_tissue_in],aes(x=cor_mean,y=cor_diff))+
+      stat_density_2d( geom = "raster",  aes(fill = after_stat(density)), contour = FALSE,n=200)+
+      #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+      scale_fill_viridis_c()+theme_density+
+      #guides(fill=guide_legend(title="log(density"))+
+      xlab("average correlation")+ylab("dNME correlation - dMML correlation")+
+      geom_vline(xintercept = cutoffs$x[1],color='red')+
+      geom_vline(xintercept = cutoffs$x[2],color='red')+
+      geom_line(data=data.table(x=cutoffs$x,y=cutoffs$y[1]),aes(x=x,y=y),color='red')+
+      geom_line(data=data.table(x=cutoffs$x,y=cutoffs$y[2]),aes(x=x,y=y),color='red')
+   )
+    print(ggplot(tissue_in[subsample_tissue_in],aes(x=cor_mean,y=cor_diff))+
+      stat_density_2d( geom = "raster",  aes(fill = log(after_stat(density)+0.1)), contour = FALSE,n=200)+
+      #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+      scale_fill_viridis_c()+theme_density+
+      #guides(fill=guide_legend(title="log(density"))+
+      xlab("average correlation")+ylab("dNME correlation - dMML correlation")+
+      geom_vline(xintercept = cutoffs$x[1],color='red')+
+      geom_vline(xintercept = cutoffs$x[2],color='red')+
+      geom_line(data=data.table(x=cutoffs$x,y=cutoffs$y[1]),aes(x=x,y=y),color='red')+
+      geom_line(data=data.table(x=cutoffs$x,y=cutoffs$y[2]),aes(x=x,y=y),color='red')
+    )
+    cat('Finish plotting cutoffs:',proc.time()[[3]]-tt1,'\n')
+    tt1=proc.time()[[3]]
+    cor_cutoffs=rbind(cor_cutoffs,data.table(cor_mean_round=cutoff,
+                                             diff_cutoff_dMML_only=diff_cutoff_dMML_only,
+                                             diff_cutoff_dNME_only=diff_cutoff_dNME_only))
+    
+    }
+    
+  }
+  dev.off()
+  #Smoothing cutoffs using weighted loess
+  cor_cutoffs=cor_cutoffs[order(cor_mean_round)]
+
+  weight_loess= ecdf(tissue_in$cor_mean)(cor_cutoffs$cor_mean_round)
+  dMML_fit=loess(diff_cutoff_dMML_only  ~ cor_mean_round,data=cor_cutoffs,span=0.75,
+                 weights=weight_loess)
+  dNME_fit=loess(diff_cutoff_dNME_only ~ cor_mean_round,data=cor_cutoffs,span=0.75,
+                 weights=weight_loess)
+  tissue_in$diff_cutoff_dMML_only=predict(dMML_fit,data.table(cor_mean_round=tissue_in$cor_mean))
+  tissue_in$diff_cutoff_dNME_only=predict(dNME_fit, data.table(cor_mean_round=tissue_in$cor_mean))
+  cat('Finish smooting cutoffs:',proc.time()[[3]]-tt1,'\n')
+  tt1=proc.time()[[3]]
+  #smoothing plot
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dMML_sm_quant_weighted_',filtered,'.png'))
+  plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dMML_only,xlab="mean correlation",ylab="correlation differnce cutoff",xlim=c(-1,1))
+  lines(cor_cutoffs$cor_mean_round,predict(dMML_fit,data=cor_cutoffs))
+  dev.off()
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dNME_sm_quant_weighted_',filtered,'.png'))
+  plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dNME_only,xlab="mean correlation",ylab="correlation differnce cutoff")
+  lines(cor_cutoffs$cor_mean_round,predict(dNME_fit,data=cor_cutoffs))
+  dev.off()
+  cat('Finish plotting smoothed cutoffs:',proc.time()[[3]]-tt1,'\n')
+  tt1=proc.time()[[3]]
+  #Plot MA and density purly with cutoffs
+
+  raw_MA_log_cutoff_only=raw_MA_log+
+    geom_line(data=tissue_in[diff_cutoff_dMML_only<0],aes(x=cor_mean,y=diff_cutoff_dMML_only),color='red',size=0.25)+
+    geom_line(data=tissue_in[diff_cutoff_dNME_only>0],aes(x=cor_mean,y=diff_cutoff_dNME_only),color='red',size=0.25)
+
+  #Plot density
+ 
+ 
+  tissue_in$dMML_cutoff_dMML_only=(tissue_in$cor_mean*2-tissue_in$diff_cutoff_dMML_only)/2
+  tissue_in$dNME_cutoff_dMML_only=(tissue_in$cor_mean*2+tissue_in$diff_cutoff_dMML_only)/2
+  tissue_in$dMML_cutoff_dNME_only=(tissue_in$cor_mean*2-tissue_in$diff_cutoff_dNME_only)/2
+  tissue_in$dNME_cutoff_dNME_only=(tissue_in$cor_mean*2+tissue_in$diff_cutoff_dNME_only)/2
+ #Make sure the cutoffs is in range
+  raw_density_log_cutoff_only=raw_density_log+
+    geom_point(data=tissue_in[diff_cutoff_dMML_only<0&
+                                dMML_cutoff_dMML_only >-1&
+                                dMML_cutoff_dMML_only <=1],aes(x=dMML_cutoff_dMML_only,y=dNME_cutoff_dMML_only),color='red',size=0.25)+
+    geom_point(data=tissue_in[diff_cutoff_dNME_only>0&
+                              dMML_cutoff_dNME_only >-1&
+                                dMML_cutoff_dNME_only <=1],aes(x=dMML_cutoff_dNME_only,y=dNME_cutoff_dNME_only),color='red',size=0.25)
+  #Plot density and FDR with cutoffs
+  cutoff_dMML=min(tissue_in[dMML_FDR<=FDR_cutoff]$dMML_cor)
+  cutoff_dNME=min(tissue_in[dNME_FDR<=FDR_cutoff]$dNME_cor)
+  dMML_seq=c(seq(-1,cutoff_dMML,0.001),cutoff_dMML)
+  dNME_seq=c(seq(-1,cutoff_dNME,0.001),cutoff_dNME)
+  FDR_cutoff_dt=rbind(
+    data.table(
+      region_type="dMML FDR cutoff",
+      dMML=rep(cutoff_dMML,length(dNME_seq)),
+      dNME=dNME_seq
+    ),
+    data.table(
+      region_type="dNME FDR cutoff",
+      dMML=dMML_seq,
+      dNME=rep(cutoff_dNME,length(dMML_seq))
+    ))
+  raw_density_log_cutoff_FDR=raw_density_log+
+    geom_point(data=tissue_in[(dNME_cutoff_dMML_only>cutoff_dNME|dMML_cutoff_dMML_only>cutoff_dMML)&(!(dNME_cutoff_dMML_only>0&dMML_cutoff_dMML_only<0))],
+               aes(x=dMML_cutoff_dMML_only,y=dNME_cutoff_dMML_only),color='red',size=0.25)+
+    geom_point(data=tissue_in[(dNME_cutoff_dNME_only>cutoff_dNME|dMML_cutoff_dNME_only>cutoff_dMML)&(!(dNME_cutoff_dNME_only>0&dMML_cutoff_dNME_only<0))],
+               aes(x=dMML_cutoff_dNME_only,y=dNME_cutoff_dNME_only),color='red',size=0.25)+
+    geom_line(data=FDR_cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=dMML,y=dNME),color='red',size=0.5)+
+    geom_line(data=FDR_cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=dMML,y=dNME),color='red',size=0.5)
+  cat('Finish plotting smoothed cutoffs:',proc.time()[[3]]-tt1,'\n')
+  #Assigning regions
+  rm(diff_cutoff_dNME_only)
+  rm(diff_cutoff_dMML_only)
+
+  tissue_in$region_type="NA"
+  #Both
+  tissue_in[cor_diff<diff_cutoff_dNME_only&
+              cor_diff>diff_cutoff_dMML_only&
+              (dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)]$region_type="Both"
+  #One significant the other one <0 are also quantified as only
+  #dMML_only
+  tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
+              (cor_diff<=diff_cutoff_dMML_only|
+                 (dMML_cor>0&dNME_cor<0))]$region_type="MML only"
+  #dNME_only
+  tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
+              (cor_diff>=diff_cutoff_dNME_only|
+                 (dNME_cor>0&dMML_cor<0))]$region_type="NME only"
+  
+  #Neither
+  tissue_in[dNME_FDR>FDR_cutoff&dMML_FDR>FDR_cutoff]$region_type="Neither"
+  cat('Finish assign regions types cutoffs:',proc.time()[[3]]-tt1,'\n')
+  tt1=proc.time()[[3]]
+  #dev.off()
+  #Smooth cutoffs
+  subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+  #png(paste0('../downstream/output/correlation/cor_',ts,'_cluster_all_cor_smoothed_quant_weighted_',filtered,'.png'),width=4,height=4.5,units = 'in',res=144)
+   catotry_dot_cor=ggplot(tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,color=region_type,fill=region_type))+
+          geom_point(alpha=0.1)+xlab("UC-dMML correlation")+ylab("UC-dNME correlation")+
+          guides(colour = guide_legend(override.aes = list(alpha = 1),nrow=2,byrow=TRUE))+
+    theme_density+theme(legend.title=element_blank())
+  #dev.off()
+  #MA plot
+  #png(paste0('../downstream/output/correlation/cor_',ts,'_cluster_all_cor_MA_smoothed_quant_',filtered,'.png'),width=4,height=4.5,units = 'in',res=144)
+catotry_dot_MA=ggplot(tissue_in[subsample_tissue_in],aes(x=cor_mean ,y=cor_diff ,color=region_type,fill=region_type))+
+          geom_point(alpha=0.1)+xlab("average correlation")+ylab("correlation difference")+
+    guides(colour = guide_legend(override.aes = list(alpha = 1),nrow=2,byrow=TRUE))+
+    theme_density+
+  #dev.off()
+cat('Finish plot dot plot:',proc.time()[[3]]-tt1,'\n')
+tt1=proc.time()[[3]]
+  
+  if(density_plot==TRUE){
+      cat("Generating density plot after finish\n")
+     #cutoff_dt=dMML_dNME_cutoff_dt(tissue_in,FDR_cutoff)
+     #print(head(cutoff_dt))
+     mycolors <- colorRampPalette(brewer.pal(8, "Set2"))(8)
+     #if(diff(range(cutoff_dt[region_type=='NME only']$dMML))>=0.05&diff(range(cutoff_dt[region_type=='MML only']$dMML))>=0.05){
+    #   subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+    #   cutoff_dt_dNME_only_sm=loess(dNME~dMML,data=cutoff_dt[region_type=='dNME only'])
+    #   cutoff_dt_dMML_only_sm=loess(dNME~dMML,data=cutoff_dt[region_type=='dMML only'])
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_raw_density_',filtered,'.pdf'),width=4,height=4.5)
+    # 
+    #   cat_density=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,fill = after_stat(density)), geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #      geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    # 
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("dMML-UC correlation")+ylab("dNME-UC correlation")
+    #   
+    #   #dev.off()
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_log_density_',filtered,'.pdf'),width=4,height=4.5)
+    #   cat_density_log=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,fill = log(after_stat(density)+0.1)), geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    #     
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("UC-dMML correlation")+ylab("UC-dMML correlation")
+    #   
+    #   #dev.off()
+    #   cutoff_dt$mean=(cutoff_dt$dMML+cutoff_dt$dNME)/2
+    #   cutoff_dt$diff=(cutoff_dt$dNME-cutoff_dt$dMML)
+    #   cutoff_dt=cutoff_dt[order(mean)]
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_raw_MA_',filtered,'.pdf'),width=4,height=4.5)
+    #   cat_density_MA_log=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=cor_mean,y=cor_diff,fill = log(after_stat(density)+0.1)), 
+    #                     geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=mean,y=diff),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    #     
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("average correlation")+ylab("correlation difference")
+     
+      #dev.off()
+      png(paste0(dir_figure,ts,'_density_',filtered,'.png'),width=9,height=12.5,units = 'in',res=1080)
+      print(ggarrange(raw_density_log,raw_MA_log,raw_density_log_cutoff_only,raw_MA_log_cutoff_only,
+                      raw_density_log_cutoff_FDR,
+                      #cat_density_log,cat_density_MA_log, 
+                      ncol = 2, nrow = 3,common.legend = TRUE))
+      dev.off()
+      png(paste0(dir_figure,ts,'_dot_',filtered,'.png'),width=4.5,height=9,units = 'in',res=1080)
+      print(ggarrange(catotry_dot_cor,catotry_dot_MA, 
+                      ncol = 1, nrow = 2,common.legend = TRUE))
+      dev.off()
+      #cat("Finish generating density plot in:",proc.time()[[3]]-tt1,'\n')
+      cat('Finish plot dot plot:',proc.time()[[3]]-tt1,'\n')
+      tt1=proc.time()[[3]]
+    #}else{cat("high FDR threshold for density plot\n")}
+  }
+  return(tissue_in)
+  
+}
+dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff){
+  #Find dMML and dNME cutoff for dMML only and dNME only region: diff=dNME-dMML, dNME=(diff+mean)/2, dMML=(mean-diff)/2
+  dt_in$dMML_cutoff_dMML_only=(dt_in$cor_mean*2-dt_in$diff_cutoff_dMML_only)/2
+  dt_in$dNME_cutoff_dMML_only=(dt_in$cor_mean*2+dt_in$diff_cutoff_dMML_only)/2
+  dt_in$dMML_cutoff_dNME_only=(dt_in$cor_mean*2-dt_in$diff_cutoff_dNME_only)/2
+  dt_in$dNME_cutoff_dNME_only=(dt_in$cor_mean*2+dt_in$diff_cutoff_dNME_only)/2
+  #reformat into a data.table
+  cutoff_dMML=min(dt_in[dMML_FDR<=FDR_cutoff]$dMML_cor)
+  dMML_seq=c(seq(-1,cutoff_dMML,0.001),cutoff_dMML)
+  cutoff_dNME=min(dt_in[dNME_FDR<=FDR_cutoff]$dNME_cor)
+  dNME_seq=c(seq(-1,cutoff_dNME,0.001),cutoff_dNME)
+  #FDR cutoffs
+  cutoff_dt=rbind(
+    data.table(
+      region_type="dMML FDR cutoff",
+      dMML=rep(cutoff_dMML,length(dNME_seq)),
+      dNME=dNME_seq
+    ),
+    data.table(
+      region_type="dNME FDR cutoff",
+      dMML=dMML_seq,
+      dNME=rep(cutoff_dNME,length(dMML_seq))
+    ),
+    data.table(
+      region_type="dMML only",
+      dMML=unique(round(dt_in[region_type=='dMML_only']$dMML_cor,digits=2)),
+      dNME=dt_in[region_type=='dMML_only',list(dNME_max=max(dNME_cor)),by=round(dMML_cor,digits=2)]$dNME_max
+      
+    ),
+    data.table(
+      region_type="dNME only",
+      dMML=dt_in[region_type=='dNME_only',list(dMML_max=max(dMML_cor)),by=round(dNME_cor,digits=2)]$dMML_max,
+      dNME=unique(round(dt_in[region_type=='dNME_only']$dNME_cor,digits=2))
+      
+    )
+  )
+  cutoff_dt=cutoff_dt[order(dMML)]
+  return(cutoff_dt)
+}
+
+plot_correlation<-function(tissue_out_filtered,pdf_fn){
+  tissue_out_filtered=do.call(rbind,tissue_out_filtered)
+  tissue_out_filtered$region_type=factor(tissue_out_filtered$region_type,
+                                         levels=c("MML only","NME only","Both","Neither"))
+  #All regions
+  tissue_out_filtered_frequency=tissue_out_filtered[tissue!="NT",list(count=length(region)),by=list(tissue,region_type)]
+  tissue_out_filtered_frequency_p=tissue_out_filtered_frequency[,list(percentage=round(count/sum(count)*100,digits=0),region_type=region_type),by=list(tissue)]
+  tissue_out_filtered_frequency_p[,list(minp=min(percentage),maxp=max(percentage)),by=list(region_type)]
+  print(t.test(tissue_out_filtered_frequency_p[region_type=="MML only"]$percentage,
+         tissue_out_filtered_frequency_p[region_type=="NME only"]$percentage,alternative = "less"))
+  
+  
+  pdf(pdf_fn,width=7,height=16)
+  print(ggplot(tissue_out_filtered_frequency, aes(y=count, x=tissue,fill=region_type)) + 
+          geom_bar( stat="identity",position="fill")+ylab("")+xlab("")+
+          
+          theme_classic()+theme(axis.text.x=element_text(size=32,angle=90),
+                                axis.text.y=element_text(size=32))+
+          scale_fill_manual(values=brewer.pal(4,'Set1'))+guides(fill=guide_legend(nrow=2,byrow=TRUE))+
+          theme(legend.position = "bottom",legend.title = element_blank(),legend.text =element_text(size=28)))
+  dev.off()
+  
+}
+assign_regions<-function(tissue_out_filtered,folder_in,DNAase){
+  #assign regions 
+  folder_out=paste0(folder_in,'region_assigned/')
+  folder_in_clu=paste0(folder_in,'cluster_assigned/')
+  create_folder(folder_out)
+  DNAase=convert_GR(DNAase,direction="DT")
+  lapply(tissue_out_filtered,function(cor_dt_in){
+    tissue_in=unique(cor_dt_in$tissue)
+    csv_in=fread(paste0(folder_in_clu,tissue_in,'.csv'))[,-1]
+    print(head(csv_in))
+    csv_in$region_type=cor_dt_in[match(csv_in$regions,cor_dt_in$region)]$region_type
+    csv_in$DNAase=FALSE
+    DNAase_region=which(csv_in$regions%in% DNAase$region)
+    csv_in[DNAase_region]$DNAase=TRUE
+    tss=get_mm10_tss()
+    dt_nearest=GenomicRanges::distanceToNearest(convert_GR(csv_in$regions),tss)
+    csv_in$distance=mcols(dt_nearest)$distance
+    csv_in$gene=names(tss)[subjectHits(dt_nearest)]
+    write.csv(csv_in,paste0(folder_out,tissue_in,'.csv'),row.names = F)
+    return(NULL)
+  })
+  
+}
+GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR_dir='../downstream/input/FeDMR_Ecker/',
+                    motif_Ken_dir='../downstream/input/Ken_motif_binding_site/',FDR_cutoff=0.1,mm10_CpG=cgs){
+  #Annotate cluster
+  
+  #est_time_table=fread('../downstream/input/mouse_analysis/clustering/tissue_specific/heatmap_uc_01/uc_01_tissue_clu_anno.csv')
+  
+  GO_out=list()
+  for(GO_type in names(GO_result)){
+    GO_out_result=data.table()
+    for(ts in names(GO_result[[GO_type]])){
+      cat("Processing:",ts,' ',GO_type,'\n')
+      #For each cluster
+      gene_sig_ts=do.call(rbind,lapply(GO_result[[GO_type]][[ts]],function(x){
+        #Find significant terms
+ 
+        if(!is.null(x$GO_out_cluster_all)){
+        GO_sig=x$GO_out_cluster_all[FDR<=FDR_cutoff]
+        # if(nrow(GO_sig)>0){
+        #   
+        #   gene_sig=x$csv_in_ts_clu[gene%in% unique(unlist(strsplit(GO_sig$genes,';'))),
+        #                            list(gene,cluster,region,distance,dMML_maxUC,dNME_maxUC,dMML_maxpair,dNME_maxpair)]
+        #   # gene_sig$dMML_max_time=UC_merge[[ts]][gene_sig$region,"dMML_max_time"]
+        #   # gene_sig$dNME_max_time=UC_merge[[ts]][gene_sig$region,"dNME_max_time"]
+        #   # gene_sig$UC_max_time=UC_merge[[ts]][gene_sig$region,"UC_max_time"]
+        #   
+        #   gene_sig$GO_result=unlist(lapply(gene_sig$gene,function(g) paste(GO_sig[grepl(g,GO_sig$gene)]$Term,collapse=';')))
+        #   gene_sig$cluster=unique(x$GO_out_cluster_all$cluster)
+        #   return(gene_sig)
+        # }
+        return(GO_sig[,list(GO.ID,Term,Annotated,Significant,Expected,FC,p_cond,FDR,genes)])
+        }
+      }))
+      write.csv(gene_sig_ts,paste0('../downstream/output/mouse_analysis/GO_analysis/GO_sheets/',ts,'_',GO_type,'.csv'),row.names=F)
+      
+    }
+    #   if(!is.null(gene_sig_ts)&length(gene_sig_ts)>0){
+    #   gene_sig_ts$tissue=ts
+    #   gene_sig_ts$est_stage=est_time_table[Tissue==ts][match(gene_sig_ts$cluster,Cluster)]$Stage
+    #   #Get Ecker's result put in sheets
+    #   cat("Assigning FeDMR\n")
+    #   feDMR_in_gr_all=GRanges()
+    # 
+    #     # feDMR_in_all=data.table()
+    #     # 
+    #     # hg19tomm10=import.chain('../downstream/input/hg19ToMm10.over.chain')
+    #     # for(fn in dir(FeDMR_dir,pattern=ts)){
+    #     #   feDMR_in=fread(paste0(FeDMR_dir,fn))
+    #     #   feDMR_in=feDMR_in[chrom!="chrX"]
+    #     #   #double check if this is mm10
+    #     #   feDMR_in$region=paste0(feDMR_in$chrom,":",feDMR_in$start,"-",feDMR_in$end)
+    #     # 
+    #     #   #feDMR_in_gr=unlist(liftOver(feDMR_in_gr,hg19tomm10))
+    #     #   stage=gsub('feDMR_','',gsub(paste0('_',ts,'.tsv'),'',fn))
+    #     # 
+    #     #   feDMR_in$stage=stage
+    #     #   feDMR_in_all=rbind(feDMR_in_all,feDMR_in)
+    #     # 
+    #     # }
+    #     # if(!is.null(feDMR_in_all)&nrow(feDMR_in_all)>0){
+    #     #   feDMR_in_all=feDMR_in_all[,list(stage=paste(stage,collapse = ';')),by=region]
+    #     #   olap=findOverlaps(convert_GR(gene_sig_ts$region),convert_GR(feDMR_in_all$region))
+    #     #   gene_sig_ts$FeDMR="NA"
+    #     #   gene_sig_ts$FeDMR[queryHits(olap)]=feDMR_in_all[subjectHits(olap)]$stage
+    #     # }
+    #     cat("Assigning Motif\n")
+    #     gene_sig_ts$Ken_dNME=""
+    #     gene_sig_ts$Ken_dMML=""
+    #     gene_sig_ts$Ken_dNME_CpG=FALSE
+    #     motif_Ken_dir='../downstream/input/mouse_analysis/motif_analysis/Ken_motif_locus/'
+    #     motif_in_dNME=readRDS(paste0(motif_Ken_dir,ts,"_motif_site_dNME.rds"))
+    #     if(length(motif_in_dNME)>0){
+    #     motif_in_dNME=Ken_motif_merge(motif_in_dNME)
+    #     #This step will only get one motif for each region, however, it's possible there're multiple motifs
+    #     gene_sig_ts$Ken_dNME=convert_GR(motif_in_dNME,direction="DT")[match(gene_sig_ts$region,region)]$motif
+    #     motif_locus_in=readRDS(paste0(Ken_motif_locus,ts,'_motif_site_dNME_locus.rds'))
+    #     motif_locus_in=Ken_motif_merge(motif_locus_in)
+    #     print(motif_locus_in)
+    #     olap_CG=findOverlaps(motif_locus_in,mm10_CpG,maxgap = 2)
+    #     motif_locus_in$CpG_mm10=FALSE
+    #     motif_locus_in$CpG_mm10[unique(queryHits(olap_CG))]=TRUE
+    #     gene_sig_ts$Ken_dNME_CpG=as.data.table(mcols(motif_locus_in))[match(gene_sig_ts$region,region)]$CpG_mm10
+    #     }
+    #     motif_in_dMML=readRDS(paste0(motif_Ken_dir,ts,"_motif_site_dMML.rds"))
+    #     if(length(motif_in_dMML)>0){
+    #     motif_in_dMML=Ken_motif_merge(motif_in_dMML)
+    #     gene_sig_ts$Ken_dMML=convert_GR(motif_in_dMML,direction="DT")[match(gene_sig_ts$region,region)]$motif
+    #     }
+    #     
+    #     gene_sig_ts=gene_sig_ts[,list(gene,tissue,region,cluster,est_stage,dMML_maxUC,dNME_maxUC,Ken_dNME,Ken_dMML,Ken_dNME_CpG)]
+    #     gene_sig_ts$dNME_cor=dNME_cor[[ts]][gene_sig_ts$region]
+    #     gene_sig_ts$dMML_cor=dMML_cor[[ts]][gene_sig_ts$region]
+    #     gene_sig_ts=gene_sig_ts[order(dNME_maxUC,round(dNME_cor,digits=1),decreasing = T )]
+    #     write.csv(gene_sig_ts,paste0('../downstream/output/GO_sheets/',ts,'_',GO_type,"_",enc_type,'.csv'),row.names=F)
+    #     gene_sig_ts=gene_sig_ts[,list(gene,tissue,cluster,est_stage,dMML_maxUC,dNME_maxUC,dNME_cor,dMML_cor,Ken_dNME,Ken_dMML,Ken_dNME_CpG)]
+    #     GO_out_result=rbind(GO_out_result,gene_sig_ts)
+    #   }
+    #  
+    # }
+    
+    # write.csv(GO_out_result,paste0('../downstream/output/mouse_analysis/GO_analysis/GO_sheets/summary sheet/',GO_type,"_",enc_type,'.csv'),row.names=F)
+  }
+  
+}
+Ken_motif_merge<-function( motif_Ken_raw){
+  
+  return(do.call(c,lapply(names(motif_Ken_raw),function(x){
+    motif_Ken_raw_in=motif_Ken_raw[[x]]
+    motif_Ken_raw_in$motif_full=x
+    motif_Ken_raw_in$motif=gsub('.*_','',motif_Ken_raw_in$motif_full)
+    return(motif_Ken_raw_in)
+    
+  })))
+  
+}
+motif_sig_Ken<-function(ts,stat,motif_locus_ken,enhancer_regions_ts,dir_in_Ken='../downstream/input/mouse_analysis/motif_analysis/Ken_motif_result_all_regions/'){
+  motif_sig=fread(paste0(dir_in_Ken,ts,'_OR_residual_',stat,'.csv'))
+  if(nrow(motif_sig)>0){
+    motif_locus=do.call(c,lapply(motif_sig$motif,function(x) {
+      motif_out=motif_locus_ken[[ts]][[x]]
+      
+      motif_out$motif=gsub('.*_','',x)
+      return(motif_out)
+      
+    }))
+    
+    motif_locus_dt=unique(as.data.table(mcols(motif_locus)))
+    
+    idx=match(motif_locus_dt$region,enhancer_regions_ts$region)
+    
+    motif_locus_dt=cbind(motif_locus_dt,enhancer_regions_ts[idx,-1,with=T])[!is.na(gene)]
+  
+    write.csv(motif_locus_dt,
+              paste0('../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/motif_gene_',ts,'_',stat,'.csv'),
+             row.names = F)
+    motif_locus_dt_collapse=motif_locus_dt[,list(motif=paste(motif,collapse=";")),by=region]
+    for(mt in unique(motif_locus$motif)){
+      bed_fn=paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/',stat,'/',ts,'_',mt,'.bed')
+      bed_fn=gsub('::','-',bed_fn)
+
+    write.table(as.data.table( motif_locus)[motif==mt,list(seqnames,start,end,motif)],
+                bed_fn,
+                row.names = F,col.names = F,quote =F)
+    }
+    motif_locus_dt_collapse$tissue=ts
+    
+  }else{
+    motif_locus_dt_collapse=data.table(region=NA,motif=NA)
+    
+    motif_locus=NA
+  }
+  return(list(motif_locus_dt=motif_locus_dt_collapse,motif_locus=motif_locus))
+}
+pubmed_rec<-function(genes,keys){
+  library(rentrez)
+  library(easyPubMed)
+  my_query=paste0('(',genes,'[Title/Abstract]) AND ',keys,' AND (Human OR Mouse)')
+  print(my_query)
+   tt1=proc.time()[[3]]
+  my_entrez_id = get_pubmed_ids(my_query)
+  
+  if(as.numeric(my_entrez_id $Count)>0){
+    
+    my_abstracts_xml <-do.call(rbind,lapply(articles_to_list(fetch_pubmed_data(pubmed_id_list = my_entrez_id)),function(x) {
+     
+      PMID= unlist(custom_grep(x,tag="PMID"))
+      if(is.null(PMID)){PMID=""}
+      title=unlist(custom_grep(x,tag="ArticleTitle"))
+      if(is.null(title)){title=""}
+      return(data.table(PMID= PMID,
+                        #journal_abb=custom_grep(x,tag="ISOAbbreviation"),
+                        title=title
+                        #year=paste(unique(custom_grep(x,tag="Year")),collapse=";")
+                        
+      ))
+      
+      
+    }))
+    if(!is.null(my_abstracts_xml)){
+    
+    my_abstracts_xml$gene=genes
+    cat("Finish processing", genes, "in ",proc.time()[[3]]-tt1,'\n')
+   
+    return(my_abstracts_xml)
+    }
+  }
+  
+}
+OR_repeats<-function(repeat_type_in,re_web_class_type,ts_region,non_ts_region,tissue){
+  repeat_class=re_web_class_type[repeat_type==repeat_type_in]$repeat_class
+  #Do not use grepl, some name contain other names, like L1MdFanc_I and L1MdFanc_II
+  ts_region_repeat=sum(do.call(c,lapply(strsplit(ts_region$repeat_type,';'),function(x) repeat_type_in %in% x)))
+  ts_region_non_repeat=length(ts_region)-ts_region_repeat
+  non_ts_region_repeat=sum(do.call(c,lapply(strsplit(non_ts_region$repeat_type,';'),function(x) repeat_type_in %in% x)))
+  non_ts_region_non_repeat=length(non_ts_region)-non_ts_region_repeat
+  OR=fisher.test(matrix(c(ts_region_repeat,ts_region_non_repeat,non_ts_region_repeat,non_ts_region_non_repeat),nrow=2))
+  return(data.table(
+    OR=OR$estimate,
+    pvalue=OR$p.value,
+    tissue=tissue,
+    repeat_type=repeat_type_in,
+    repeat_class=repeat_class,
+    observed=ts_region_repeat,
+    ts_region_non_repeat=ts_region_non_repeat,
+    non_ts_region_repeat,
+    non_ts_region_non_repeat,
+    expected=non_ts_region_repeat/length(non_ts_region)*length(ts_region)))
+}
+repeat_olap_all<-function(ts_region,non_ts_region,re_web){
+  ts_region=add_repeats(ts_region,re_web)
+  non_ts_region=add_repeats(non_ts_region,re_web)
+  ts_repeat=sum(ts_region$repeat_type!="NA")
+  ts_non_repeat=sum(ts_region$repeat_type=="NA")
+  non_ts_repeat=sum(non_ts_region$repeat_type!="NA")
+  non_ts_non_repeat=sum(non_ts_region$repeat_type=="NA")
+  return(data.table(
+    ts_repeat=ts_repeat,
+    ts_non_repeat=ts_non_repeat,
+    non_ts_repeat=non_ts_repeat,
+    non_ts_non_repeat=non_ts_non_repeat,
+    total_ts_reion=length(ts_region)
+  ))
+  
+}
+repeat_olap_individual<-function(ts_region,non_ts_region,re_web,re_web_class_type,tissue,ncores=12){
+  tt1=proc.time()[[3]]
+  ts_region=add_repeats(ts_region,re_web)
+  non_ts_region=add_repeats(non_ts_region,re_web)
+  cat("Selected UC region overlap with repeats:",sum(ts_region$repeat_type!="NA"),"\n")
+  cat("Percent selected UC region overlap with repeats:",sum(ts_region$repeat_type!="NA")/length(ts_region)*100,"%\n")
+  repeat_all_ts=unique(unlist(strsplit(ts_region$repeat_type,';')))
+  repeat_all_ts=repeat_all_ts[repeat_all_ts!="NA"]
+  cat("start processing each motif\n")
+  repeats_output_ts=mclapply(repeat_all_ts,OR_repeats,
+                             re_web_class_type=re_web_class_type,
+                             ts_region=ts_region,
+                             non_ts_region=non_ts_region,tissue=tissue,
+                             mc.cores=ncores)
+  repeats_output_ts=do.call(rbind,repeats_output_ts)
+  repeats_output_ts$FDR=p.adjust(repeats_output_ts$pvalue,method="BH")
+
+  gc()
+  cat("Finish processing in ",proc.time()[[3]]-tt1,'\n')
+  return(repeats_output_ts)
+}
+add_repeats<-function(region_in,repeats_in){
+  #add minOverlap here
+  min_olap=0.5*mean(width(region_in))
+  cat('Min olap setting:',min_olap,'\n')
+  region_in_olap=as.data.table(findOverlaps(region_in,repeats_in,minoverlap = min_olap))
+  region_in_olap$repeat_type=repeats_in$repeat_type[region_in_olap$subjectHits]
+  region_in_olap$repeat_class=repeats_in$repeat_class[region_in_olap$subjectHits]
+  region_in_olap=region_in_olap[,list(repeat_type=paste(repeat_type,collapse = ";"),
+                                      repeat_class=paste(repeat_class,collapse = ";")),
+                                by=queryHits]
+  
+  region_in$repeat_type="NA"
+  region_in$repeat_class="NA"
+  region_in$repeat_type[region_in_olap$queryHits]=region_in_olap$repeat_type
+  region_in$repeat_class[region_in_olap$queryHits]=region_in_olap$repeat_class
+  return(region_in)
+}
+getCpgSitesmm10 <- function(chrsOfInterest=paste("chr",1:19,sep="")){
+  # Obtain all CpG sites
+  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),with=2)))
+  # Set genome and seqlengths
+  cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="mm10")
+  # Return CpG site GR
+  return(cgs)
+}
+getCpgSiteshg19 <- function(chrsOfInterest=paste("chr",1:21,sep="")){
+  # Obtain all CpG sites
+  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),with=2)))
+  # Set genome and seqlengths
+  cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="hg19")
+  # Return CpG site GR
+  return(cgs)
+}
+
+#Function for ChIP overlap looking for examples
+ChIP_assignment<-function(region_in,factor_in,stat_in="dNME"){
+  region_in=region_in[,list(region,tissue,cluster,gene,region_type,UC_max_time,dNME_max_pair,dMML_max_pair,UC_max_pair,dNME_motif,dMML_motif,gene,PMID)]
+  factor_in=makeGRangesFromDataFrame(factor_in,keep.extra.columns = T)
+  olap=findOverlaps(convert_GR(region_in$region),factor_in)
+  region_in_factor=region_in[queryHits(olap)]
+  region_in_factor$motif_ChIP=factor_in$metadata[subjectHits(olap)]
+  if(nrow(region_in_factor)>0){
+  region_in_factor$predict_in_ChIP=
+    unlist(lapply(1:nrow(region_in_factor),function(x){
+      paste(unlist(strsplit(region_in_factor[x][[paste0(stat_in,'_motif')]],';')[[1]][which(unlist(lapply(strsplit(region_in_factor[x][[paste0(stat_in,'_motif')]],';')[[1]],function(mt){
+        
+        return(grepl(mt,region_in_factor[x]$motif_ChIP,ignore.case = T))
+        
+      })))]),collapse=';')
+      
+      
+      
+    }))
+  
+  }else(region_in_factor="No ChIP overlap")
+  return(region_in_factor)
+}
+factor_olap<-function(tissue,factor_in,Ken_motif_folder,stage="embyro"){
+  Ken_dNME=fread(paste0(Ken_motif_folder,tissue,'_OR_residual_dNME.csv'))
+  Ken_dMML=fread(paste0(Ken_motif_folder,tissue,'_OR_residual_dMML.csv'))
+  factor_in_dNME=factor_in[grepl(paste(gsub('.*_','',Ken_dNME$motif),collapse = "|"),factor_in$metadata,ignore.case=T)]
+  factor_in_dMML=factor_in[grepl(paste(gsub('.*_','',Ken_dMML$motif),collapse = "|"),factor_in$metadata,ignore.case=T)]
+  #Write the bedfile to output
+  for(motif in gsub('.*_','',Ken_dNME$motif)){
+    motif_ChIP=factor_in_dNME[grepl(motif,metadata,ignore.case = T)]
+    if(nrow(motif_ChIP)>0){
+      write.table(motif_ChIP,
+                  paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/',tissue,'/mm10_',tissue,'_',stage,'_dNME_ChiPatlas_',gsub('::','_',motif),'.bed'),
+                  col.names = F,row.names = F,quote=F)
+    }
+    
+  }
+  for(motif in gsub('.*_','',Ken_dMML$motif)){
+    motif_ChIP=factor_in_dMML[grepl(motif,metadata,ignore.case = T)]
+    if(nrow(motif_ChIP)>0){
+      write.table(motif_ChIP,
+                  paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dMML/',tissue,'/mm10_',tissue,'_',stage,'_dMML_ChiPatlas_',gsub('::','_',motif),'.bed'),
+                  col.names = F,row.names = F,quote=F)
+    }
+    
+  }
+  saveRDS(factor_in_dNME,paste0(ChiP_motif_dir,'factor_in_',stage,'_',tissue,'_all_dNME.rds'))
+  saveRDS(factor_in_dMML,paste0(ChiP_motif_dir,'factor_in_',stage,'_',tissue,'_all_dMML.rds'))
+  return(list(factor_in_dNME=factor_in_dNME,
+              factor_in_dMML=factor_in_dMML))
+  
+}
+ChIP_olap<-function(factor_in_dNME,factor_in_dMML,region_dNME,region_dMML){
+  
+  if(nrow(factor_in_dNME)>0){
+    region_dNME_tissue_factor=ChIP_assignment(region_dNME,factor_in_dNME,stat_in="dNME")
+  }else(region_dNME_tissue_factor="No significant factors")
+  if(nrow(factor_in_dMML)>0){
+    region_dMML_tissue_factor=ChIP_assignment(region_dMML,factor_in_dMML,stat_in="dMML")
+  }else(region_dMML_tissue_factor="No significant factors")
+  return(list(dNME_region=region_dNME_tissue_factor,
+              dMML_region=region_dMML_tissue_factor))
+  
+  
+}
+trait_overlap<-function(trait,NME_in_gr_mean_ts,variant_trait,high_NME){
+  
+  NME_trait=subsetByOverlaps(NME_in_gr_mean_ts,variant_trait[variant_trait$`DISEASE/TRAIT`==trait])
+  DNase_high=sum(NME_trait$NME_mean>=high_NME&NME_trait$DNase=="DNase")
+  DNase_total=sum(NME_trait$DNase=="DNase")
+  # control_high=sum(NME_trait$NME_mean>=high_NME&NME_trait$DNase=="control")
+  # control_total=sum(NME_trait$DNase=="control")
+  DNase_mean=mean(NME_trait[NME_trait$DNase=="DNase"]$NME_mean)
+  #control_mean_quantile=mean(NME_ecdf(NME_trait[NME_trait$DNase=="control"]$NME_mean))
+  return(data.table(trait=trait,high_NME=DNase_high,total=DNase_total,
+                    #control_high=control_high,control_total=control_total,
+                    #DNase_mean_quantile=DNase_mean_quantile,
+                    DNase_mean=DNase_mean
+  ))
+  #control_mean_quantile=control_mean_quantile))
+  
+  
 }
 # Currently Not in use ----------------------------------------------------
 # 
@@ -1624,29 +2739,29 @@ matrix_conv<-function(dt_in,value.var){
 # }
 # 
 # #Tissue to germlayer
-# tissue_to_germlayer<-function(GR_input){
-#   GR_input$germlayer=NA
-#   tissue_ectoderm=c("foreskin_keratinocyte_paired",
-#                     "foreskin_melanocyte_paired",
-#                     "ectoderm_paired",
-#                     "brain_cerebellum_tissue_paired",
-#                     "brain_germinal_matrix_tissue_paired",
-#                     "Brain_substantia_nigra_paired",
-#                     "Brain_Hippocampus_middle_paired" )
-#   tissue_mesoderm=c("mesoderm_23_paired","Adipose_single",
-#                     "Left_Ventricle_single","Psoas_Muscle_single" ,
-#                     "Right_Ventricle_single","Right_Atrium_single","Spleen_single",
-#                     "Adrenal_Gland_single","Aorta_single","Ovary_single")
-#   tissue_endoderm=c("Small_Intestine_single","Lung_single","endoerm_27_paired",
-#                     "Bladder_single" ,"Gastric_single", "Sigmoid_Colon_single",
-#                     "Thymus_single","Esophagus_single", "Pancreas_single" ,"Liver_single")
-#   tissue_ESC=c("rep1","rep2","merged","42_embryonic_stem_cell_single" , "stem_27_undifferentiated_paired")
-#   GR_input$germlayer[GR_input$tissue %in% tissue_ectoderm]='ectoderm'
-#   GR_input$germlayer[GR_input$tissue %in% tissue_mesoderm]='mesoderm'
-#   GR_input$germlayer[GR_input$tissue %in% tissue_endoderm]='endoderm'
-#   GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
-#   return(GR_input)
-# }
+tissue_to_germlayer<-function(GR_input){
+  GR_input$germlayer=NA
+  tissue_ectoderm=c("foreskin_keratinocyte_paired",
+                    "foreskin_melanocyte_paired",
+                    "ectoderm_paired",
+                    "brain_cerebellum_tissue_paired",
+                    "brain_germinal_matrix_tissue_paired",
+                    "Brain_substantia_nigra_paired",
+                    "Brain_Hippocampus_middle_paired" )
+  tissue_mesoderm=c("mesoderm_23_paired","Adipose_single",
+                    "Left_Ventricle_single","Psoas_Muscle_single" ,
+                    "Right_Ventricle_single","Right_Atrium_single","Spleen_single",
+                    "Adrenal_Gland_single","Aorta_single","Ovary_single")
+  tissue_endoderm=c("Small_Intestine_single","Lung_single","endoerm_27_paired",
+                    "Bladder_single" ,"Gastric_single", "Sigmoid_Colon_single",
+                    "Thymus_single","Esophagus_single", "Pancreas_single" ,"Liver_single")
+  tissue_ESC=c("rep1","rep2","merged","42_embryonic_stem_cell_single" , "stem_27_undifferentiated_paired",'ESC')
+  GR_input$germlayer[GR_input$tissue %in% tissue_ectoderm]='ectoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_mesoderm]='mesoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_endoderm]='endoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
+  return(GR_input)
+}
 # 
 # 
 
@@ -2779,11 +3894,4 @@ matrix_conv<-function(dt_in,value.var){
 # }
 # 
 # #Get CpG sites from hg19
-# getCpgSitesmm10 <- function(chrsOfInterest=paste("chr",1:19,sep="")){
-#   # Obtain all CpG sites
-#   cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),with=2)))
-#   # Set genome and seqlengths
-#   cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="mm10")
-#   # Return CpG site GR
-#   return(cgs)
-# }
+

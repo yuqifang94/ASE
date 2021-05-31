@@ -1060,7 +1060,7 @@ gene_out=lapply(gene_out,function(x) x[x%in%genes_sig])
 
 # GWAS analysis -----------------------------------------------------------
 #Check GWAS traits have hg19 coordinates
-variant_trait=readRDS('../downstream/output/variant_traits.rds')
+variant_trait=readRDS('../downstream/input/human_analysis/variant_traits.rds')
 # variant_trait_gr=do.call(c,variant_trait)
 # variant_trait_gr=unique(variant_trait_gr)
 # genome_freq=readRDS('../downstream/input/genome_1k_variant.rds')
@@ -1068,12 +1068,17 @@ variant_trait=readRDS('../downstream/output/variant_traits.rds')
 # olap=findOverlaps(variant_trait,genome_freq,type='equal')
 #Check proportion of dNME SNP from GWAS
 #get traits location
-variant_trait=readRDS('../downstream/output/variant_traits.rds')
+
 variant_trait_gr=do.call(c,variant_trait)
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
 #variant_HetCpG_meta=readRDS(GR_merge_file)
-elementMetadata(variant_HetCpG_meta)=elementMetadata(variant_HetCpG_meta)[,c('dNME_pval','dMML_pval')]
-length(subsetByOverlaps(variant_HetCpG_meta[variant_HetCpG_meta$dNME_pval<=pval_cutoff],variant_trait_gr,maxgap = 1000))
+elementMetadata(variant_HetCpG_meta)=elementMetadata(variant_HetCpG_meta)[,c('dNME','dMML','dNME_pval','dMML_pval')]
+length(subsetByOverlaps(variant_HetCpG_meta[variant_HetCpG_meta$dNME_pval<=pval_cutoff],variant_trait_gr,maxgap = 0))
+olap=findOverlaps(variant_HetCpG_meta[variant_HetCpG_meta$dNME_pval<=pval_cutoff],variant_trait_gr)
+variant_HetCpG_meta$GWAS=NA
+variant_HetCpG_meta[variant_HetCpG_meta$dNME_pval<=pval_cutoff][queryHits(olap)]$GWAS=variant_trait_gr[subjectHits(olap)]$`DISEASE/TRAIT`
+
+
 #  23827/380526= 0.06261596
 #dMML:1236/14006=0.088
 length(subsetByOverlaps(variant_HetCpG_meta,variant_trait_gr,maxgap = 1000))# 601586/7967588=0.076
