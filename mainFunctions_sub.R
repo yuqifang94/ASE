@@ -195,6 +195,16 @@ genomic_features_file="../downstream/input/human_analysis/genomic_features2020.r
 NME_agnostic_file="../downstream/input/human_analysis/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
 MML_agnostic_file="../downstream/input/human_analysis/MML_allele_agnostic_merge_20k_homogeneous2.rds"
 motif_gene_file='../downstream/output/human_analysis/motif_analysis/motif_all_JASPAR_default.rds' #For all SNP
+#Get CpG sites from hg19
+getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
+  # Obtain all CpG sites
+  cgs <- lapply(chrsOfInterest, function(x) GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),width=2)))
+  
+  # Set genome and seqlengths
+  cgs <- setGenomeLengths(do.call('c',cgs))
+  # Return CpG site GR
+  return(cgs)
+}
 #Color theme for mouse
 mouse_color<-function(){
   tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
@@ -3068,16 +3078,7 @@ tissue_to_germlayer<-function(GR_input){
 #   return(outGR)
 #   
 # }
-# #Get CpG sites from hg19
-# getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
-#   # Obtain all CpG sites
-#   cgs <- lapply(chrsOfInterest, function(x) GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),width=2)))
-#   
-#   # Set genome and seqlengths
-#   cgs <- setGenomeLengths(do.call('c',cgs))
-#   # Return CpG site GR
-#   return(cgs)
-# }
+
 # 
 # #Get CpG density for each chromosome
 # getCpgdensH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
