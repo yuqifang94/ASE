@@ -58,7 +58,7 @@ for(sp in unique(GR$Sample)){
 #Per-sample data, highest is 0.56%:   Brain_substantia_nigra_paired - 112
 as.data.table(mcols(GR_merge))[,sum(is.na(g1CG))/length(g1CG),by=list(Sample)]
 GR_merge$g1CG[is.na(GR_merge$g1CG)]<-GR_merge$g2CG[is.na(GR_merge$g2CG)]<-GR_merge$refCG[is.na(GR_merge$refCG)]<-GR_merge$altCG[is.na(GR_merge$altCG)]<-0
-GR_merge=GR_merge[GR_merge$N>=2]
+GR_merge=GR_merge[GR_merge$N>=2&!(GR_merge$Sample%in%(c('rep1 - H1','rep2 - H1')))]
 
 # Adding gene information to object ---------------------------------------
 GR_merge=add_gene_GR(GR_merge,genomic_features$promoter,'genes_promoter')
@@ -110,7 +110,6 @@ GR_merge$hyper_var_fn[GR_merge$tissue=='Liver_single']=
 saveRDS(GR_merge,GR_merge_file)
 
 # add CpG information how many CG in each allele etc ----------------------
-
 
 GR_merge_CpG=GRanges()
 for (subj in subjects){GR_merge_CpG=c(GR_merge_CpG,hetCGallele_merged(subj,GR_merge,CpG_hg19,variant_HetCpG,gene_size=500))}

@@ -1,16 +1,18 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
+# get all variant to prepare motifbreakR analysis---------------------------------------------------------
+variant_HetCpG=readRDS(variant_HetCpG_file)
+names(variant_HetCpG)=NULL
+saveRDS(unique(granges(do.call('c',variant_HetCpG))),
+        '../downstream/output/human_analysis/motif_analysis/variant_in_all.rds')
+
+# Read in result ----------------------------------------------------------
 
 theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
                  axis.text.x=element_text(size=16),
                  axis.text.y=element_text(size=16))+theme_classic()
-
-# get all variant ---------------------------------------------------------
-
-variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
-
 motif_gene <- readRDS(motif_gene_file)#See motif_break_array.R, default setting
 #All regions
 #NME
