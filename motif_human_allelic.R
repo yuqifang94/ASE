@@ -6,18 +6,11 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
                  axis.text.x=element_text(size=16),
                  axis.text.y=element_text(size=16))+theme_classic()
-#Density analysis
-GR_merge=readRDS(GR_merge_file)
-#####Subsetting by DNase region will not give us enough power to do it
 
-###Reading in data
+# get all variant ---------------------------------------------------------
+
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
-# motif_gene=fastDoCall('c',lapply(dir('../downstream/input/JASPAR_out/'),function(x){
-#   cat(x,'\n')
-#   readRDS(paste0('../downstream/input/JASPAR_out/',x))
-#   
-# }))
-# saveRDS(motif_gene,motif_gene_file)
+
 motif_gene <- readRDS(motif_gene_file)#See motif_break_array.R, default setting
 #All regions
 #NME

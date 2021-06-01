@@ -4,8 +4,8 @@
 #SBATCH --time=12:00:00
 #SBATCH --cpus-per-task=24
 #SBATCH --array=1-50
-#SBATCH -o logfiles/motif_all-default-%x-%A-%a.out
-#SBATCH -e logfiles/motif_all-default-%x-%A-%a.err
+#SBATCH -o ../downstream/logfiles/motif_all-default-%x-%A-%a.out
+#SBATCH -e ../downstream/logfiles/motif_all-default-%x-%A-%a.err
 
 # Args
 # Dependencies
