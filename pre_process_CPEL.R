@@ -4,8 +4,6 @@ source("mainFunctions_sub.R")
 # get all hg19 CpG site ---------------------------------------------------
 CpG_hg19=getCpgSitesH19()
 saveRDS(CpG_hg19,'../downstream/input/human_analysis/CpG_hg19.rds')
-
-
 subjects=c("H9","HUES64","skin03","STL001","STL002","STL003",
            "STL011","H1","HuFGM02","112","149","150")
 # reading in vcf files ----------------------------------------------------
@@ -16,6 +14,7 @@ names(variant_HetCpG)=subjects
 saveRDS(variant_HetCpG,variant_HetCpG_file)
 
 # reading in statisticsc for each sample -------------------------------
+#Note here we're using coverage cutoff=5 and boundary check == true
 GR=import.subject('../downstream/data/bedGraph_diff/')
 saveRDS(GR,GR_file)
 GR_allele=import.subject('../downstream/data/bedGraph_allele/',calc='allele')
@@ -24,17 +23,23 @@ saveRDS(GR_allele,GR_allele_file)
 # reading in analyzed regions for each sample -----------------------------
 gff_in=readAllGff('../downstream/data/gff_file/',subjects)
 saveRDS(gff_in,gff_in_file)
- for(subj in subjects){
+
+# Sanity check output regions not in original gff file --------------------
+for(subj in subjects){
   cat(paste(subj,':\n'))
   cat(length(subsetByOverlaps(GR_allele[GR_allele$Subject==subj],gff_in[gff_in$Subject==subj],type='equal'))-
         length(GR_allele[GR_allele$Subject==subj]),'\n')
   cat(length(subsetByOverlaps(GR[GR$Subject==subj],gff_in[gff_in$Subject==subj],type='equal'))-length(GR[GR$Subject==subj]),'\n')
 }
-#Extracting genomic features
-genomic_features=getGeneralFeats_CpG("../downstream/input/")
+#Result all 0
+
+# Extracting genomic features ---------------------------------------------
+
+genomic_features=getGeneralFeats_CpG("../downstream/input/human_analysis/")
 saveRDS(genomic_features,genomic_features_file)
 
-#create merged object
+
+# creating merged object --------------------------------------------------
 GR_merge=GRanges()
 for(sp in unique(GR$Sample)){
   cat("Processing",sp,'\n')
@@ -43,6 +48,8 @@ for(sp in unique(GR$Sample)){
                                  GR_allele[GR_allele$Sample==sp],
                                  variant_HetCpG[[ts]],CpG_hg19))
 }
+
+# Counting splitting events -----------------------------------------------
 #Note Jordi splitted regions with large CpG numbers into 2 regions. 
 #There's possibility that one region have SNP the other region does not have SNP but we can still separate allele 
 #Because allele-separation happened before splitting regions
@@ -50,17 +57,17 @@ for(sp in unique(GR$Sample)){
 #They're treated as allele without CG difference in CpG analysis and without binding site difference in motif analysis 
 #Per-sample data, highest is 0.56%:   Brain_substantia_nigra_paired - 112
 as.data.table(mcols(GR_merge))[,sum(is.na(g1CG))/length(g1CG),by=list(Sample)]
-GR_merge$g1CG[is.na(GR_merge$g1CG)]<-GR_merge$g2CG[is.na(GR_merge$g2CG)]<-GR_merge$ref1CG[is.na(GR_merge$refCG)]<-GR_merge$altCG[is.na(GR_merge$altCG)]<-0
+GR_merge$g1CG[is.na(GR_merge$g1CG)]<-GR_merge$g2CG[is.na(GR_merge$g2CG)]<-GR_merge$refCG[is.na(GR_merge$refCG)]<-GR_merge$altCG[is.na(GR_merge$altCG)]<-0
 GR_merge=GR_merge[GR_merge$N>=2]
-GR_merge=GR_merge[!GR_merge$Sample%in%c("rep1 - H1","rep2 - H1")]
-#get rid of not unique direction, 10%, 2059 genes, closest to middle point, hypervaribility use mean.
+
+# Adding gene information to object ---------------------------------------
 GR_merge=add_gene_GR(GR_merge,genomic_features$promoter,'genes_promoter')
 GR_merge=add_gene_GR(GR_merge,genomic_features$`gene body`,'genes_body')
 GR_merge=add_gene_GR(GR_merge,genomic_features$TSS,'TSS')
 GR_merge$Sample[GR_merge$Sample=="merged - H1"] = "ESC - H1"
-# loading the varibility data for each sample -----------------------------
-# regions with high NME at one allele is more likely to have hyper vari or with preferential motif binding
-agnostic_dir="../downstream/input/scRNA/"
+# loading the varibility file for each sample -----------------------------
+
+agnostic_dir="../downstream/input/human_analysis/NME_expression_var/scRNA/"
 GR_merge$hyper_var_fn=NA
 GR_merge$tissue[GR_merge$tissue=='Adipose_Tissue_single']='Adipose_single'
 GR_merge$hyper_var_fn[GR_merge$Sample %in% c('42_embryonic_stem_cell_single - H9','stem_27_undifferentiated_paired - HUES64',"ESC - H1")]=
@@ -101,21 +108,27 @@ GR_merge$hyper_var_fn[GR_merge$tissue=='Liver_single']=
                                   agnostic_dir,'AdultLiver_4.rds')
 
 saveRDS(GR_merge,GR_merge_file)
-##Merged object with CpG information############
-#GR_merge=readRDS(GR_merge_file)
+
+# add CpG information how many CG in each allele etc ----------------------
+
+
 GR_merge_CpG=GRanges()
 for (subj in subjects){GR_merge_CpG=c(GR_merge_CpG,hetCGallele_merged(subj,GR_merge,CpG_hg19,variant_HetCpG,gene_size=500))}
 GR_merge_CpG$density=GR_merge_CpG$CG_hg19_extend/GR_merge_CpG$gff_size_extend
 GR_merge_CpG$density_diff=(GR_merge_CpG$CG_allele_extend_g1-GR_merge_CpG$CG_allele_extend_g2)/
   GR_merge_CpG$gff_size_extend
 saveRDS(GR_merge_CpG,GR_merge_file)
-#processing variant analysis
+
+# Processing variant based result -----------------------------------------
+
 variant_HetCpG_meta=fastDoCall('c',lapply(names(variant_HetCpG),variant_meta,variant_in=variant_HetCpG,GR_in=GR_merge))
 #Trinucleotide analysis
 #variant_HetCpG_meta$mask_tri=unlist(lapply(variant_HetCpG_meta$REF_tri,mask_tri))
 saveRDS(variant_HetCpG_meta,variant_HetCpG_meta_file)
 
-#human allele-agnostic analysis is from +/- 20k of TSS
+
+# reading in allele-agnostic analysis -------------------------------------
+
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/allele_agnostic_20kb/'
 #all_regions=import.gff3('../downstream/output/human_20kb_allele_agnostic_250bp.gff')

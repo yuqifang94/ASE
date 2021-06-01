@@ -242,6 +242,8 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
 # font_import('C:/Users/vince/Downloads/dejavu-fonts-ttf-2.37')
 # loadfonts(device='pdf')
 #cairo_pdf('../downstream/output/graphs/Figure2/Figure-4B-variant_OR_tri3_two_cat_greater_CG_bg.pdf',width=10,height=7,family = "DejaVu Sans")
+library(extrafont)
+loadfonts()
 png('../downstream/output/graphs/Figure2/Figure-4B-variant_OR_tri3_two_cat_greater_CG_bg_rev.png',width=7,height=7,units='in',res=1080, family = 'Consolas')
 #SNP_het=SNP_het[c("C>G", names(SNP_het)[names(SNP_het)!="C>G"])]
 ggarrange(plotlist=SNP_het, nrow=2,ncol=2,common.legend = T,legend="bottom",label.x = 'Odds ratio')

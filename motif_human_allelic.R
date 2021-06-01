@@ -1,8 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
 
-#Define ggplot theme
-
 theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
