@@ -195,6 +195,8 @@ genomic_features_file="../downstream/input/human_analysis/genomic_features2020.r
 NME_agnostic_file="../downstream/input/human_analysis/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
 MML_agnostic_file="../downstream/input/human_analysis/MML_allele_agnostic_merge_20k_homogeneous2.rds"
 motif_gene_file='../downstream/output/human_analysis/motif_analysis/motif_all_JASPAR_default.rds' #For all SNP
+NME_agnostic_DNase_file="../downstream/output/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML2.rds"
+MML_agnostic_DNase_file="../downstream/output/allele_agnostic_hg19_DNase_MML_homogeneous2.rds"
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites
@@ -231,6 +233,7 @@ gff_gen<-function(TSS_break,cpgr,blacklist_region,rds_save_file,out_name){
   TSS_break_out=TSS_break_out[-queryHits(olap)]
   TSS_break_out_gff=granges(TSS_break_out)
   mcols(TSS_break_out_gff)=mcols(TSS_break_out)[,c('N','CpGs')]
+  TSS_break_out_gff=TSS_break_out_gff[!seqnames(TSS_break_out_gff)%in%c('chrY','chrX')]
   export.gff3(sort(unique(TSS_break_out_gff)),out_name)
   saveRDS(TSS_break_out,rds_save_file)
 }
@@ -819,6 +822,35 @@ read.bedGraph.informME<-function(file_in){
     start(informME_in)=start(informME_in)-1
     return(informME_in)
   }
+}
+read_chromHMM_bed_PRC<-function(bed_dir,rep,blacklist_region,cpgr){
+  bed_out=GRanges()
+  for(fn in dir(bed_dir,pattern='.bed.gz')){
+    #get sample name etc
+    fn_split=strsplit(fn,'_')[[1]]
+    stage=gsub('e','day',fn_split[1])
+    stage=gsub('P','day',stage)
+    stage=gsub('\\.','\\_',stage)
+    tissue=gsub('facial-prominence','EFP',fn_split[2])
+    tissue=gsub('neural-tube','NT',tissue)
+    bed_in=read.table(paste(bed_dir,fn,sep=''))
+    colnames(bed_in)=c('chr','start','end','chrom_num','chrom_state')
+    bed_in=makeGRangesFromDataFrame(bed_in,keep.extra.columns = T)
+    bed_in=reduce(bed_in[bed_in$chrom_state%in%c('Hc-P','Pr-B')])
+    bed_in$stage=stage
+    bed_in$tissue=tissue
+    bed_in$rep=rep
+    bed_in$Sample=paste(stage,tissue,sep='-')
+    bed_out=c(bed_out,bed_in)
+    
+  }
+  bed_out=subdivideGRanges(bed_out,250)
+  olap=findOverlaps(bed_out,cpgr)
+  bed_out=unique(bed_out[queryHits(olap)])
+  
+  olap=findOverlaps(bed_out,blacklist_region)
+  bed_out=bed_out[-queryHits(olap)]
+  return(bed_out)
 }
 #read in mouse enhancer
 read_chromHMM_bed<-function(bed_dir,rep){

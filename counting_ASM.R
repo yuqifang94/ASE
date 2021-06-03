@@ -20,9 +20,10 @@ cat('Number of regions:',length(GR_merge),'\n')
 cat('Number of dMML:',dMML,'\n')
 cat('Number of dNME:',dNME,'\n')
 cat('Number of dNME and dMML:',dMML_dNME,'\n')
-#Run it tonight
+
+# Find overlap by random change -------------------------------------------
 olap_merge=c()
 for(i in 1:50000){olap_merge=c(olap_merge,length(subsetByOverlaps(GR_merge[sample(1:length(GR_merge),dMML,replace=F)],
                                                                   GR_merge[sample(1:length(GR_merge),dNME,replace=F)],type='equal')))}
 sum(olap_merge<=dMML_dNME)/length(olap_merge)#=0
-saveRDS(olap_merge,'../downstream/output/olap_merge.rds')
+saveRDS(olap_merge,'../downstream/output/human_analysis/CPEL_outputs/olap_merge.rds')

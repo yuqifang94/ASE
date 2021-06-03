@@ -13,7 +13,7 @@ variant_HetCpG=lapply(subjects,function(x) extractHetCpG('../downstream/data/vcf
 names(variant_HetCpG)=subjects
 saveRDS(variant_HetCpG,variant_HetCpG_file)
 
-# reading in statisticsc for each sample -------------------------------
+# reading in stat for each sample -------------------------------
 #Note here we're using coverage cutoff=5 and boundary check == true
 GR=import.subject('../downstream/data/bedGraph_diff/')
 saveRDS(GR,GR_file)
@@ -127,7 +127,6 @@ saveRDS(variant_HetCpG_meta,variant_HetCpG_meta_file)
 
 
 # reading in allele-agnostic analysis -------------------------------------
-
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/allele_agnostic_20kb/'
 #all_regions=import.gff3('../downstream/output/human_20kb_allele_agnostic_250bp.gff')
@@ -166,40 +165,6 @@ MML_in=MML_in[MML_in$N>=2]
 #number check: 77460740
 saveRDS(MML_in,MML_agnostic_file)
 
-
-
-# # human_FANTOM ------------------------------------------------------------
-# GR_merge=readRDS('GR_merge_final12_ls.rds')
-# in_dir='../allele_agnostic_hg19_cov5_3kb_FANTOM/'
-# NME_in=GRanges()
-# MML_in=GRanges()
-# for(fn in  dir(in_dir)){
-#   cat('Reading in',fn,'\n')
-#   stat_in=toupper(sub('.*_','',sub('.bedGraph','',fn)))
-#   sample_in=sub('_phased.*','',sub('.bedGraph','',fn))
-#   subject_in=sub('_.*','',sample_in)
-#   tissue_in=sub(paste0(subject_in,'_'),'',sample_in)
-#   sample_in=paste0(tissue_in,' - ',subject_in)
-#   
-#   if(sample_in=="ESC_paired - H1"){sample_in="ESC - H1"}
-#   if(stat_in=="NME"){
-#     NME_in=c(NME_in,read.agnostic(paste0(in_dir,fn),GR_merge[GR_merge$Sample==sample_in]))}
-#   else if(stat_in=="MML"){
-#     MML_in=c(MML_in,read.agnostic(paste0(in_dir,fn),GR_merge[GR_merge$Sample==sample_in]))}else
-#     {cat("Error stat_in:", stat_in,'\n')}
-# }
-# 
-# NME_in$NME=NME_in$score
-# MML_in$MML=MML_in$score
-# NME_in=NME_in[!(NME_in$Sample%in%c("rep1 - H1","rep2 - H1"))]
-# MML_in=MML_in[!(MML_in$Sample%in%c("rep1 - H1","rep2 - H1"))]
-# NME_in=NME_in[NME_in$N>=2]
-# MML_in=MML_in[MML_in$N>=2]
-# saveRDS(NME_in,"allele_agnostic_hg19_cov10_3kb_FANTOM_NME.rds")
-# saveRDS(MML_in,"allele_agnostic_hg19_cov10_3kb_FANTOM_MML.rds")
-# NME_in$hyper_var_fn[NME_in$Sample %in% c('42_embryonic_stem_cell_single - H9','stem_27_undifferentiated_paired - HUES64',"ESC - H1")]=
-#   paste('../downstream/input/scRNA/HESC_1.rds',sep = ';')
-
 # DNase and control ------------------------------------------------------------
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/agnostic_DNase/'
@@ -233,8 +198,8 @@ NME_in=NME_in[NME_in$N>=2]
 MML_in=MML_in[MML_in$N>=2]
 #check: NME 57678420
 #check: MML 57681712
-saveRDS(NME_in,"../downstream/output/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML2.rds")
-saveRDS(MML_in,"../downstream/output/allele_agnostic_hg19_DNase_MML_homogeneous2.rds")
+saveRDS(NME_in,NME_agnostic_DNase_file)
+saveRDS(MML_in,MML_agnostic_DNase_file)
 
 # allele-specific regions with agnostic --------------------------------------------------------
 in_dir='../downstream/data/allele_specific_region_agnostic/'

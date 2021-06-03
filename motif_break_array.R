@@ -83,20 +83,4 @@ tt4=proc.time()[[3]]
 cat('saving data finish in',tt4-tt3,'\n')
 
 
-# # Merging DNase I information from 2nd run --------------------------------
-# 
-# motif_gene <- readRDS("../downstream/output/motif_break_all_unique_SNP.rds")
-# enchancer_DNase_gr=readRDS("../downstream/input/enchancer_DNase.rds")
-# prom_DNase_gr=readRDS("../downstream/input/prom_DNase.rds")
-# DNase_all=c(prom_DNase_gr,enchancer_DNase_gr)
-# motif_gene=subsetByOverlaps(motif_gene,DNase_all)
-# motif_gene2=readRDS('../downstream/output/motif_out_new_v2_diff.rds')
-# olap_genes=findOverlaps(motif_gene,motif_gene2)
-# motif_gene=c(motif_gene[-queryHits(olap_genes)],motif_gene2)
-# saveRDS(motif_gene,'../downstream/output/motif_out_new_v2.rds')
-# 
-# 
-# # Merging Dnase I information from 3rd run --------------------------------
-#3rd run should contain most information of motif
-
 

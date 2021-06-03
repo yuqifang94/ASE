@@ -10,7 +10,7 @@
 # Args
 # Dependencies
 ml R/3.6.1
-ml gcc/5.5.0
 ml atlas
+ml intel/18.0
 # Command
 Rscript --vanilla motif_break_array.R "$SLURM_ARRAY_TASK_ID" variant_in_all.rds 50 motif_all_JASPAR default 
