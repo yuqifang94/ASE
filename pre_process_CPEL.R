@@ -168,7 +168,6 @@ saveRDS(MML_in,MML_agnostic_file)
 # DNase and control ------------------------------------------------------------
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/agnostic_DNase/'
-all_regions=granges(import.gff3('../downstream/output/human_DNase_allele_agnostic_250bp.gff'))
 NME_in=GRanges()
 MML_in=GRanges()
 for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){

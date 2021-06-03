@@ -1,11 +1,13 @@
 # Ken motif processing ----------------------------------------------------
+rm(list=ls())
 source('mainFunctions_sub.R')
 
 #hg19
 GR_merge=readRDS(GR_merge_file)
-DNase=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp.rds')
-control=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_control.rds')
-JASPAR_motif=readRDS('../downstream/output/motif_JASPAR_hg19.rds')
+DNase=readRDS(DNase_hg19_file)
+control=readRDS(control_hg19_file)
+#This is from Ken
+JASPAR_motif=readRDS('../downstream/output/human_analysis/motif_analysis/motif_JASPAR_hg19.rds')
 
 #DNase
 GR_merge_DNase=subsetByOverlaps(GR_merge,DNase)
@@ -13,7 +15,6 @@ GR_merge_control=subsetByOverlaps(GR_merge,control)
 
 
 # Use allele-specific analysis -------------------------------
-#/scratch/users/yfang27@jhu.edu/yfang/allele/Running_Code
 #mean NME
 split_data=cut(1:length(JASPAR_motif),breaks=3,label=FALSE)
 for(i in 1:3){

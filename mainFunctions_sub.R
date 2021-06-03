@@ -199,6 +199,9 @@ NME_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele
 MML_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_MML_homogeneous.rds"
 NME_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/NME_agnostic_ASM.rds"
 MML_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_ASM.rds"
+#This is from Ken
+DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
+control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites
