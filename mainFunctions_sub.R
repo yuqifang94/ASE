@@ -202,6 +202,7 @@ MML_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/MML_agno
 #This is from Ken
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
+JASPAR_motif_hg19_file='../downstream/output/human_analysis/motif_analysis/motif_JASPAR_hg19.rds'
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites

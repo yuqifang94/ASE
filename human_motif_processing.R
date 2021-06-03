@@ -1,13 +1,12 @@
 # Ken motif processing ----------------------------------------------------
 rm(list=ls())
 source('mainFunctions_sub.R')
-
 #hg19
 GR_merge=readRDS(GR_merge_file)
 DNase=readRDS(DNase_hg19_file)
 control=readRDS(control_hg19_file)
 #This is from Ken
-JASPAR_motif=readRDS('../downstream/output/human_analysis/motif_analysis/motif_JASPAR_hg19.rds')
+JASPAR_motif=readRDS(JASPAR_motif_hg19_file)
 
 #DNase
 GR_merge_DNase=subsetByOverlaps(GR_merge,DNase)
