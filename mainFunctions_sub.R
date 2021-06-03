@@ -195,8 +195,8 @@ genomic_features_file="../downstream/input/human_analysis/genomic_features2020.r
 NME_agnostic_file="../downstream/input/human_analysis/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
 MML_agnostic_file="../downstream/input/human_analysis/MML_allele_agnostic_merge_20k_homogeneous2.rds"
 motif_gene_file='../downstream/output/human_analysis/motif_analysis/motif_all_JASPAR_default.rds' #For all SNP
-NME_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML2.rds"
-MML_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_MML_homogeneous2.rds"
+NME_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML.rds"
+MML_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_MML_homogeneous.rds"
 NME_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/NME_agnostic_ASM.rds"
 MML_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_ASM.rds"
 #Get CpG sites from hg19
