@@ -2,7 +2,7 @@
 #SBATCH -J coverage_calc
 #SBATCH --partition=shared,parallel,skylake
 #SBATCH --time=24:00:00
-#SBATCH --cpus-per-task=24
+#SBATCH --cpus-per-task=4
 #SBATCH -o coverage_logfile/coverage-%A.out
 #SBATCH -e coverage_logfile/coverage-%A.err
 bed_in=$1

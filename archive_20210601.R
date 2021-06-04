@@ -284,3 +284,66 @@ rm(GR_merge)
 GR_merge_tb=rbind(GR_merge_tb,GR_merge_tb_asm)
 GR_merge_tb=dcast.data.table(GR_merge_tb,Sample+region~statistics,value.var = "score")
 saveRDS(GR_merge_tb,'../downstream/output/human_analysis/imprinting/GR_merge_ASM_comp.rds')
+
+
+# Ken_motif_prep ----------------------------------------------------------
+
+
+
+#Prepare for GWAS analysis
+NME_in=readRDS('../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML.rds')
+mcols(NME_in)=mcols(NME_in)[,c('Sample','NME')]
+DNase=readRDS('../downstream/input/DNase_hg19_250bp.rds')
+control=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_control.rds')
+NME_in$DNAase="NA"
+olap_DNase=findOverlaps(NME_in,DNase,type='equal')
+olap_control=findOverlaps(NME_in,control,type='equal')
+NME_in$DNAase[queryHits(olap_DNase)]="DNAase"
+NME_in$DNAase[queryHits(olap_control)]="control"
+saveRDS(NME_in,'../downstream/output/human_analysis/CPEL_outputs/NME_DNAase_control_hg19.rds')
+
+# DNase region using allelic region -----------------------------------------
+GR_merge=readRDS(GR_merge_file)
+DNase=readRDS('../downstream/input/DNase_hg19_250bp.rds')
+GR_merge_DNase=NME_dNME_ken(DNase,GR_merge,"NME")
+GR_merge_DNase_mt=as.matrix(mcols(GR_merge_DNase))
+rownames(GR_merge_DNase_mt)=paste0(seqnames(GR_merge_DNase),':',start(GR_merge_DNase),'-',end(GR_merge_DNase))
+saveRDS(GR_merge_DNase_mt,'../downstream/output/DNase_mt_SNP_allelic.rds')
+#Dnase region using allele-agnostic model at SNP
+
+NME_in=readRDS('../downstream/output/NME_agnostic_ASM.rds')
+DNase=readRDS('../downstream/input/DNase_hg19_250bp.rds')
+GR_merge_DNase=NME_dNME_ken(DNase,NME_in,"NME")
+GR_merge_DNase_mt=as.matrix(mcols(GR_merge_DNase))
+rownames(GR_merge_DNase_mt)=paste0(seqnames(GR_merge_DNase),':',start(GR_merge_DNase),'-',end(GR_merge_DNase))
+saveRDS(GR_merge_DNase_mt,'../downstream/output/DNase_mt_SNP_agnostic.rds')
+#DNase region at DNase regions all
+NME_in=readRDS('../downstream/output/allele_agnostic_hg19_DNase_NME.rds')
+DNase=readRDS('../downstream/input/DNase_hg19_250bp.rds')
+NME_in=subsetByOverlaps(NME_in,DNase,type='equal')
+GR_merge_DNase=NME_dNME_ken(DNase,NME_in,"NME")
+GR_merge_DNase_mt=as.matrix(mcols(GR_merge_DNase))
+rownames(GR_merge_DNase_mt)=paste0(seqnames(GR_merge_DNase),':',start(GR_merge_DNase),'-',end(GR_merge_DNase))
+saveRDS(GR_merge_DNase_mt,'../downstream/output/DNase_mt_all_agnostic.rds')
+
+#Add NA column to non_NA thing
+samples_in=readRDS('../downstream/output/huamn_samples.rds')
+folder_in='../downstream/output/human_analysis/Ken_motif/allelic_motif_hg19/'
+folder_in='../downstream/output/human_analysis/Ken_motif/homo'
+for(fn in dir(folder_in,pattern="MML")){
+  MML_in=readRDS(paste0(folder_in,fn))
+  for(idx in which(unlist(lapply(MML_in,function(x) ncol(mcols(x))!=49)))){
+    
+    for (sp in samples_in[!samples_in %in% colnames(mcols(MML_in[[idx]]))]){
+      
+      mcols(MML_in[[idx]])[[sp]]=as.numeric(NA)
+      
+    }
+    
+    MML_in[[idx]]=MML_in[[idx]][,samples_in]
+    
+    
+  }
+  saveRDS(MML_in,paste0(folder_in,gsub('.rds','.complete.rds',fn)))
+}
+

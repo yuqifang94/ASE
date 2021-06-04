@@ -17,7 +17,9 @@ export.bed(cpgr_mm10,'../downstream/output/mouse_analysis/QC/mm10_all_CpG.bed')
 chrs <- names(Hsapiens)[1:24]
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Hsapiens[[x]])))
 cpgr <- do.call(c, lapply(1:24, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 2)))) #use first location
-export.bed(cpgr,'../downstream/output/human_analysis/QC/hg19_all_CpG.bed')
+seqlevels(cpgr)=gsub('chr','',seqlevels(cpgr))
+export.bed(sort(cpgr),'../downstream/output/human_analysis/QC/hg19_all_CpG.bed')
+#
 #Need to rerun human coverage analysis
 bed_out=GRanges()
 for (fn in dir(pattern='*.cov')){
