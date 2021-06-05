@@ -6,6 +6,8 @@
 #SBATCH -o mbias_logfile/mbias-%A.out
 #SBATCH -e mbias_logfile/mbias-%A.err
 bam_in=$1
+out_dir=$2
+genome_folder=$3
 echo processing: $bam_in
-bismark_methylation_extractor -o /ibox/afeinbe2/yfang/allele_agnostic_mouse_all/mbias --parallel 12 --genome_folder  /ibox/afeinbe2/yfang/allele_agnostic_mouse_all/CPEL/CPEL_agnostic/cpelasm/fasta --mbias_only -s $bam_in
+bismark_methylation_extractor -o $out_dir --parallel 12 --genome_folder $genome_folder --mbias_only -s $bam_in
 
