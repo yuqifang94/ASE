@@ -235,64 +235,41 @@ saveRDS(NME_in,NME_agnostic_ASM_file)
 saveRDS(MML_in,MML_agnostic_ASM_file)
 
 
-#Read in mouse dMML, dNME, UC
-tissue=c(rep('kidney',4),rep('Lung',4),rep('forebrain',8),rep('liver',7),
-         rep('heart',8),rep('hindbrain',8),rep('midbrain',8),
-         rep('limb',6),rep('EFP',6),rep('NT',5),rep('intestine',4),rep('stomach',4))
-stage=c('day14_5','day15_5','day16_5','day0',
-        'day14_5','day15_5','day16_5','day0',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
-        'day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5','day16_5','day0',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5',
-        'day10_5','day11_5','day12_5','day13_5','day14_5','day15_5',
-        'day11_5','day12_5','day13_5','day14_5','day15_5',
-        'day14_5','day15_5','day16_5','day0',
-        'day14_5','day15_5','day16_5', 'day0')
-
-sample=paste(tissue,stage,sep='-')
-meta_df=data.frame(tissue=tissue,stage=stage,sample=sample,stringsAsFactors = F)
-in_dir='../downstream/data/mouse_analysis/'
-
-#Read in MML and NME
-MML_in=fastDoCall('c',mclapply(dir('./',pattern=".*mml"),read.agnostic.mouse,in_dir='./',mc.cores=20))
+# raeding in mouse MML and NME --------------------------------------------
+#Complimentary regions
+dir_comp='../downstream/data/compliment_MML_NME_model_mouse/'
+MML_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*mml"),
+                               read.agnostic.mouse,in_dir=dir_comp,mc.cores=20))
 MML_in$MML=MML_in$score
 MML_in$score=NULL
-NME_in=fastDoCall('c',mclapply(dir('./',pattern=".*nme"),read.agnostic.mouse,in_dir='./',mc.cores=20))
+NME_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*nme"),read.agnostic.mouse,in_dir=dir_comp,mc.cores=20))
 NME_in$NME=NME_in$score
 NME_in$score=NULL
-saveRDS(NME_in,'NME_agnostic_mouse_all_merged_complement.rds')
-saveRDS(MML_in,'MML_agnostic_mouse_all_merged_complement.rds')
-NME_in_analyzed=readRDS('../final_output_bed_non_MDS/NME_agnostic_mouse_all_merged.rds')
-NME_in_analyzed=NME_in_analyzed[NME_in_analyzed$Sample %in% unique(NME_in$Sample)]
-NME_in_analyzed$score=NULL
-NME_in_analyzed$stat_type='nme'
-NME_in=c(NME_in,NME_in_analyzed)
-saveRDS(NME_in,'NME_agnostic_mouse_all_merged_all_regions.rds')
-
-MML_in_analyzed=readRDS('../final_output_bed_non_MDS/MML_agnostic_mouse_all_merged.rds')
-MML_in_analyzed=MML_in_analyzed[MML_in_analyzed$Sample %in% unique(MML_in$Sample)]
+#Analyzed PRC, DNase and control
+dir_analyzed='../downstream/data/compliment_MML_NME_model_mouse/'
+MML_in_analyzed=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*mml"),
+                               read.agnostic.mouse,in_dir=dir_analyzed,mc.cores=20))
+MML_in_analyzed$MML=MML_in_analyzed$score
 MML_in_analyzed$score=NULL
-MML_in_analyzed$stat_type='mml'
+NME_in_analyzed=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*nme"),read.agnostic.mouse,in_dir=dir_analyzed,mc.cores=20))
+NME_in_analyzed$NME=NME_in_analyzed$score
+NME_in_analyzed$score=NULL
+#Combine two datasets
+NME_in=c(NME_in,NME_in_analyzed)
 MML_in=c(MML_in,MML_in_analyzed)
-saveRDS(MML_in,'NME_agnostic_mouse_all_merged_all_regions.rds')
-#Read in analyzed MML and NME
 #Convert to matrix
-NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2])# 0.735 region have all data
-MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2],'MML')#0.735 region have all data
+NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2&NME_in$N<=17])
+MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2&MML_in$N<=17],'MML')
 
-saveRDS(NME_in_matrix,'NME_matrix_mouse_all_dedup_N2_all_regions.rds')
-saveRDS(MML_in_matrix,'MML_matrix_mouse_all_dedup_N2_all_regions.rds')
+saveRDS(NME_in_matrix,NME_matirx_file)
+saveRDS(MML_in_matrix,MML_matrix_file)
 rm(MML_in)
 rm(NME_in)
 rm(MML_in_matrix)
 rm(NME_in_matrix)
 gc()
-#UC for all complement non MDS: allele_agnostic_uc_complement
-#UC for all DNase_PRC_control non MDS:UC_run_before_MDS
-in_dir='./'
+
+UC_in_dir='./'
 UC_in=fastDoCall('c',mclapply(dir(in_dir,pattern = '.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
 UC_in$UC=UC_in$score
 return(UC_in)},mc.cores=20))
