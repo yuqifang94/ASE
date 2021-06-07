@@ -36,3 +36,6 @@ for (fn in dir(pattern='*.cov')){
 }
 #ASM coverage
 #for fn in ../bam_asm/*.bam; do sbatch coverage_calc.sh hg19_all_CpG.bed $fn "${fn/\.\.\/bam_asm\//}".agnostic.cov; done
+
+#Mbias
+#for fn in ../bam_all/{149,150,HuFGM02,H1}*.bam; do echo sbatch mbias.sh $fn $PWD ~/data/yfang/referenceGenome/hg19_Arioc/; done

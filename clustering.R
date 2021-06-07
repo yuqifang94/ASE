@@ -195,7 +195,7 @@ for(ts in names(cluster_out)){
   cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
   write.csv(region_out,paste0(dir_out,ts,'.csv'))
 }
-cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/cluster_all_region_assignment_filtered.rds'
+cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rd'
 saveRDS(cluster_region_out,cluster_region_out_fn)
 # Put regions with other info ----------------------------------------------------
 

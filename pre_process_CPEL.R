@@ -290,7 +290,8 @@ rm(NME_in)
 rm(MML_in_matrix)
 rm(NME_in_matrix)
 gc()
-#UC for all complement non MDS
+#UC for all complement non MDS: allele_agnostic_uc_complement
+#UC for all DNase_PRC_control non MDS:UC_run_before_MDS
 in_dir='./'
 UC_in=fastDoCall('c',mclapply(dir(in_dir,pattern = '.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
 UC_in$UC=UC_in$score
@@ -298,7 +299,8 @@ return(UC_in)},mc.cores=20))
 UC_in$tissue=sub('-.*','',UC_in$Sample)
 UC_in$Sample=sub('.5-.*-E1','.5-E1',UC_in$Sample)
 #DO not use: final_output_bed_non_MDS/, it's just an arichived version from march
-UC_in_analyzed=fastDoCall('c',mclapply(dir('../UC_run_before_MDS/',pattern = paste0(paste(unique(UC_in$tissue),collapse='|'),'.*uc.bedGraph')),function(x){
+UC_in_analyzed=fastDoCall('c',mclapply(dir('../UC_run_before_MDS/',pattern = paste0(paste(unique(UC_in$tissue),collapse='|'),'.*uc.bedGraph')),
+                                       function(x){
   UC_in=read.agnostic.mouse.uc(paste('../UC_run_before_MDS/',x,sep=''))
 UC_in$UC=UC_in$score
 return(UC_in)},mc.cores=10))
