@@ -190,6 +190,7 @@ GR_file='../downstream/output/human_analysis/CPEL_outputs/GRs_final1.rds'
 GR_allele_file='../downstream/output/human_analysis/CPEL_outputs/GRs_allele_final1.rds'
 hetCpG_gff_file='../downstream/input/hetCpG_gff_final1.rds'
 GR_merge_file="../downstream/output/human_analysis/CPEL_outputs/GR_merge_final12_ls.rds"
+CpG_hg19_file='../downstream/input/human_analysis/CpG_hg19.rds'
 variant_HetCpG_meta_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_final1_ls.rds'
 genomic_features_file="../downstream/input/human_analysis/genomic_features2020.rds"
 NME_agnostic_file="../downstream/input/human_analysis/NME_allele_agnostic_merge_20k_homogeneous_excluding_dMML2.rds"
@@ -199,6 +200,8 @@ NME_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele
 MML_agnostic_DNase_file="../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_MML_homogeneous.rds"
 NME_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/NME_agnostic_ASM.rds"
 MML_agnostic_ASM_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_ASM.rds"
+variant_HetCpG_meta_dt_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_dt.rds'
+variant_HetCpG_meta_dt_uq_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_dt_relative_dNME2uq.rds'
 #This is from Ken
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
@@ -206,6 +209,9 @@ JASPAR_motif_hg19_file='../downstream/output/human_analysis/motif_analysis/motif
 #Mouse analysis
 MML_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/MML_matrix_mouse_all_dedup_N2_all_regions.rds'
 NME_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/NME_matrix_mouse_all_dedup_N2_all_regions.rds'
+CG_density_mouse='../downstream/output/mouse_analysis/CpG_density_NME/region_CG_exp.rds'
+mouse_DNase_control_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_DNase_control.gff'
+mouse_compliment_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff'
 UC_in_matrix_ls_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions.rds'
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
@@ -1214,6 +1220,61 @@ NME_dNME_ken<-function(motif_in,GR_in,stat_in){
   print(proc.time()[[3]]-tt1)
   gc()
   return(motif_in)
+}
+#Find unique type of mutations in SNP analysis in human
+unique_mutation<-function(mutation_in){
+  mutation_in=data.table(all_SNP=mutation_in)
+  mutation_in$unique_class="NA"
+  for(i in 1:nrow(mutation_in)){
+    SNP_in=mutation_in$all_SNP[i]
+    SNP_in_rev=paste0(gsub('.*->','',SNP_in),'->',gsub('->.*','',SNP_in))
+    SNP_in2=c(SNP_in,SNP_in_rev)
+    if(all(mutation_in[all_SNP%in%SNP_in2]$unique_class=="NA")){
+      mutation_in[all_SNP%in%SNP_in2]$unique_class=SNP_in
+    }
+    
+  }
+  mutation_out=mutation_in$unique_class
+  names(mutation_out)=mutation_in$all_SNP
+  return(mutation_out)
+}
+#Convert trinucleotide SNP into SNP
+tri_to_SNP<-function(tri){
+  tri_l=gsub('->.*','',tri)
+  tri_r=gsub('.*->','',tri)
+  return(paste0(substring(tri_l, 2, 2),'->',substring(tri_r, 2, 2)))
+}
+#Get reverse compliment of SNP or trinucleotide
+reverse_comp_SNP<-function(x){
+  return(paste0(reverseComplement(DNAString(gsub('->.*','',x))),'->',
+                reverseComplement(DNAString(gsub('.*->','',x)))))
+  
+  
+}
+#Calculate the dNME based on genotype on left and right of unique genotype and taking into consideration of reverse compliment
+dNME_relative_calc<-function(genome1_tri,genome2_tri,NME1,NME2,tri_SNP,tri_SNP_unique,SNP) {
+  #Check if trinucleotide is in tri_SNP_unique
+  #Getting reverse compliment from original trinucleotide analysis
+  genome1_tri_rev=as.character(reverseComplement(DNAString(genome1_tri)))
+  genome2_tri_rev=as.character(reverseComplement(DNAString(genome2_tri)))
+  #Checking cases: if it's reverse compliment or original
+  if(all(c(genome1_tri,genome2_tri) %in% unlist(strsplit(tri_SNP_unique,'->')))){
+    return(c(NME1,NME2)[which(c(genome1_tri,genome2_tri)==gsub('->.*','',tri_SNP_unique))]-
+             c(NME1,NME2)[which(c(genome1_tri,genome2_tri)==gsub('.*->','',tri_SNP_unique))])
+  }  else 
+    if(all(c(genome1_tri_rev,genome2_tri_rev)%in%unlist(strsplit(tri_SNP_unique,'->')))){
+      return(c(NME1,NME2)[which(c(genome1_tri_rev,genome2_tri_rev)==gsub('->.*','',tri_SNP_unique))]-
+               c(NME1,NME2)[which(c(genome1_tri_rev,genome2_tri_rev)==gsub('.*->','',tri_SNP_unique))])
+    }else 
+      if(all(c(genome1_tri_rev,genome2_tri)%in%unlist(strsplit(tri_SNP_unique,'->')))){
+        return(c(NME1,NME2)[which(c(genome1_tri_rev,genome2_tri)==gsub('->.*','',tri_SNP_unique))]-
+                 c(NME1,NME2)[which(c(genome1_tri_rev,genome2_tri)==gsub('.*->','',tri_SNP_unique))])
+      }else 
+        if(all(c(genome1_tri,genome2_tri_rev)%in%unlist(strsplit(tri_SNP_unique,'->')))){
+          return(c(NME1,NME2)[which(c(genome1_tri,genome2_tri_rev)==gsub('->.*','',tri_SNP_unique))]-
+                   c(NME1,NME2)[which(c(genome1_tri,genome2_tri_rev)==gsub('.*->','',tri_SNP_unique))])
+        }
+  
 }
 
 read.agnostic.mouse<-function(fn,in_dir,replicate="all"){

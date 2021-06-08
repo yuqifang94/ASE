@@ -51,7 +51,7 @@ cgs <- lapply(chrs, function(x) start(matchPattern("CG", Hsapiens[[x]])))
 cpgr <- do.call(c, lapply(1:24, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 
 
-gff_gen(hg19_all_comp_break,cpgr,blacklist_region,'../downstream/output/human_analysis/CPEL_inputs/hg19_allele_agnostic_analysis_compliment.rds',
+gff_gen(hg19_all_comp_break,cpgr,hg19_bl,'../downstream/output/human_analysis/CPEL_inputs/hg19_allele_agnostic_analysis_compliment.rds',
         '../downstream/output/human_analysis/CPEL_inputs/hg19_allele_agnostic_analysis_comp.gff')
 
 # Linux code for correcting format and copy to each file ------------------
@@ -65,7 +65,9 @@ gff_gen(hg19_all_comp_break,cpgr,blacklist_region,'../downstream/output/human_an
 # sed -i 's/chr//g' hg19_allele_agnostic_analysis_comp.gff
 # subj=(H9 HUES64 skin03 STL001 STL002 STL003 STL011 H1 HuFGM02 112 149 150)
 # for i in "${subj[@]}"; do cp hg19_allele_agnostic_analysis_comp.gff /ibox/afeinbe2/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/${i}/cpelasm/${i}_allele_agnostic_analysis.gff; done
-
+#Clean human analysis
+rm(list=ls())
+source("mainFunctions_sub.R")
 # mm10 allele-agnostic analysis for DNase-control, PRC2 binding regions -------------------------------------------
 #https://github.com/Boyle-Lab/Blacklist/blob/master/lists/Blacklist_v1/
 blacklist_region=import.bed('../downstream/input/mouse_analysis/mm10.blacklist.bed.gz')
@@ -94,18 +96,18 @@ TSS_break=c(DNAase,control,PRC_binding)
 #dis com
 TSS_break=dist_calc(TSS_break,TSS)
 gff_gen(TSS_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis.rds',
-        '../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_DNase_control.gff')
+        mouse_DNase_control_gff_file)
 # mm10 allele-agnostic analysis for complementary regions -------------------------------------------
 mm10_all=GRanges(seqinfo(BSgenome.Mmusculus.UCSC.mm10))
 mm10_all=mm10_all[seqnames(mm10_all) %in% paste0('chr',c(1:19,'X','Y'))]
-analyzed_regions=readGFFAsGRanges('../downstream/input/mouse_analysis/mm10_allele_agnostic_analysis_DNase_control.gff')
+analyzed_regions=readGFFAsGRanges(mouse_DNase_control_gff_file)
 mm10_all_comp=setdiff(mm10_all,analyzed_regions)
 mm10_all_comp_break=subdivideGRanges(mm10_all_comp,250)
 chrs <- names(Mmusculus)[1:21]#2276796
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Mmusculus[[x]])))
 cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 gff_gen(mm10_all_comp_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.rds',
-        '../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.gff')
+        mouse_compliment_gff_file)
 
 # mm10 linux reformat -----------------------------------------------------
 #mm10
