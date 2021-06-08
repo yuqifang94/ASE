@@ -94,7 +94,7 @@ TSS_break=c(DNAase,control,PRC_binding)
 #dis com
 TSS_break=dist_calc(TSS_break,TSS)
 gff_gen(TSS_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis.rds',
-        '../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis.gff')
+        '../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_DNase_control.gff')
 # mm10 allele-agnostic analysis for complementary regions -------------------------------------------
 mm10_all=GRanges(seqinfo(BSgenome.Mmusculus.UCSC.mm10))
 mm10_all=mm10_all[seqnames(mm10_all) %in% paste0('chr',c(1:19,'X','Y'))]
@@ -105,7 +105,7 @@ chrs <- names(Mmusculus)[1:21]#2276796
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Mmusculus[[x]])))
 cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 gff_gen(mm10_all_comp_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.rds',
-        '../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis.gff')
+        '../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.gff')
 
 # mm10 linux reformat -----------------------------------------------------
 #mm10

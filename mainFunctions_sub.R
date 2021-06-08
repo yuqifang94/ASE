@@ -206,6 +206,7 @@ JASPAR_motif_hg19_file='../downstream/output/human_analysis/motif_analysis/motif
 #Mouse analysis
 MML_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/MML_matrix_mouse_all_dedup_N2_all_regions.rds'
 NME_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/NME_matrix_mouse_all_dedup_N2_all_regions.rds'
+UC_in_matrix_ls_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions.rds'
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites

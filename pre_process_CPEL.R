@@ -235,7 +235,7 @@ saveRDS(NME_in,NME_agnostic_ASM_file)
 saveRDS(MML_in,MML_agnostic_ASM_file)
 
 
-# raeding in mouse MML and NME --------------------------------------------
+# reading in mouse MML and NME --------------------------------------------
 #Complimentary regions
 dir_comp='../downstream/data/compliment_MML_NME_model_mouse/'
 MML_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*mml"),
@@ -246,7 +246,7 @@ NME_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*nme"),read.agnostic.mouse
 NME_in$NME=NME_in$score
 NME_in$score=NULL
 #Analyzed PRC, DNase and control
-dir_analyzed='../downstream/data/compliment_MML_NME_model_mouse/'
+dir_analyzed='../downstream/data/DNase_control_PRC_MML_NME_model_mouse/'
 MML_in_analyzed=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*mml"),
                                read.agnostic.mouse,in_dir=dir_analyzed,mc.cores=20))
 MML_in_analyzed$MML=MML_in_analyzed$score
@@ -261,37 +261,39 @@ MML_in=c(MML_in,MML_in_analyzed)
 NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2&NME_in$N<=17])
 MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2&MML_in$N<=17],'MML')
 
-saveRDS(NME_in_matrix,NME_matirx_file)
+saveRDS(NME_in_matrix,NME_matrix_file)
 saveRDS(MML_in_matrix,MML_matrix_file)
 rm(MML_in)
 rm(NME_in)
 rm(MML_in_matrix)
 rm(NME_in_matrix)
 gc()
-
-UC_in_dir='./'
-UC_in=fastDoCall('c',mclapply(dir(in_dir,pattern = '.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
+# reading in mouse UC --------------------------------------------
+#Complimentary regions
+UC_in_dir='../downstream/data/compliment_UC_non_MDS_mouse/'
+UC_in=fastDoCall('c',mclapply(dir(UC_in_dir,pattern = '.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(UC_in_dir,x,sep=''))
 UC_in$UC=UC_in$score
 return(UC_in)},mc.cores=20))
 UC_in$tissue=sub('-.*','',UC_in$Sample)
 UC_in$Sample=sub('.5-.*-E1','.5-E1',UC_in$Sample)
-#DO not use: final_output_bed_non_MDS/, it's just an arichived version from march
-UC_in_analyzed=fastDoCall('c',mclapply(dir('../UC_run_before_MDS/',pattern = paste0(paste(unique(UC_in$tissue),collapse='|'),'.*uc.bedGraph')),
+#DNase,control,PRC
+UC_in_dir_analyzed='../downstream/data/DNase_control_PRC_non_MDS_mouse/'
+UC_in_analyzed=fastDoCall('c',mclapply(dir(UC_in_dir,pattern = paste0(paste(unique(UC_in$tissue),collapse='|'),'.*uc.bedGraph')),
                                        function(x){
-  UC_in=read.agnostic.mouse.uc(paste('../UC_run_before_MDS/',x,sep=''))
+  UC_in=read.agnostic.mouse.uc(paste(UC_in_dir_analyzed,x,sep=''))
 UC_in$UC=UC_in$score
-return(UC_in)},mc.cores=10))
-saveRDS(UC_in_analyzed,'../UC_run_before_MDS/UC_agnostic_mouse_dedup_N2_all_time_fix_UC_sub.rds')
+return(UC_in)},mc.cores=20))
 UC_in_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_analyzed$Sample)
-#UC_in_analyzed=readRDS('../UC_run_before_MDS/UC_agnostic_mouse_dedup_N2_all_time_fix_UC.rds')
 UC_in_analyzed=UC_in_analyzed[UC_in_analyzed$Sample %in% unique(UC_in$Sample)]
+#Merging data
 UC_in=c(UC_in_analyzed[UC_in_analyzed$N>=2&UC_in_analyzed$N<=17],UC_in[UC_in$N>=2&UC_in$N<=17])
-UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=7)
+#Convert to matrix
+UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=20)
 names(UC_in_matrix_ls)=unique(UC_in$tissue)
-saveRDS(UC_in_matrix_ls,'UC_agnostic_mouse_matrix_dedup_N2_all_non_MDS.rds')#74% regiOn have all data
+saveRDS(UC_in_matrix_ls,UC_in_matrix_ls_file)
 
 #UC for all possible comparison
-gff_in=import.gff3('mm10_allele_agnostic_analysis.gff')
+gff_in=import.gff3('')
 gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
 UC_in_MDS_comp=data.table(region=gff_in)
 
