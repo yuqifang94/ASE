@@ -6,7 +6,7 @@ source("mainFunctions_sub.R")
 #https://github.com/Boyle-Lab/Blacklist/blob/master/lists/Blacklist_v1/
 hg19_bl=import.bed('../downstream/input/human_analysis/QC/hg19_blacklist.bed.gz')
 #Get all CpG location
-chrs <- names(Hsapiens)[1:24]
+chrs <- names(Hsapiens)[1:22]
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Hsapiens[[x]])))
 cpgr <- do.call(c, lapply(1:24, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 # 20kb from hg19 TSS ------------------------------------------------------
@@ -39,16 +39,16 @@ gff_gen(granges(unique(GR_merge)),cpgr,hg19_bl,'../downstream/output/human_analy
 
 # rest of the regions in hg19 that has not been analyzed ------------------
 hg19_all=GRanges(seqinfo(BSgenome.Hsapiens.UCSC.hg19))
-hg19_all=hg19_all[seqnames(hg19_all) %in% paste0('chr',c(1:22,'X','Y'))]
+hg19_all=hg19_all[seqnames(hg19_all) %in% paste0('chr',1:22)]
 analyzed_regions=c(readRDS('../downstream/input//human_analysis/DNase_hg19_250bp.rds'),
                    readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'),
                    readRDS('../downstream/output/human_analysis/CPEL_inputs/hg19_TSS_20kb_250bp.rds'))
 analyzed_regions=c(granges(analyzed_regions),granges(unique(readRDS(GR_merge_file))))
 hg19_all_comp=setdiff(hg19_all,analyzed_regions)
 hg19_all_comp_break=subdivideGRanges(hg19_all_comp,250)
-chrs <- names(Hsapiens)[1:24]#2276796
+chrs <- names(Hsapiens)[1:22]#2276796
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Hsapiens[[x]])))
-cpgr <- do.call(c, lapply(1:24, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
+cpgr <- do.call(c, lapply(1:22, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 
 
 gff_gen(hg19_all_comp_break,cpgr,hg19_bl,'../downstream/output/human_analysis/CPEL_inputs/hg19_allele_agnostic_analysis_compliment.rds',
