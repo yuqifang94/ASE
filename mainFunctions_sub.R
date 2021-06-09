@@ -255,7 +255,7 @@ gff_gen<-function(TSS_break,cpgr,blacklist_region,rds_save_file,out_name){
   TSS_break_out=TSS_break_out[-queryHits(olap)]
   TSS_break_out_gff=granges(TSS_break_out)
   mcols(TSS_break_out_gff)=mcols(TSS_break_out)[,c('N','CpGs')]
-  TSS_break_out_gff=TSS_break_out_gff[!seqnames(TSS_break_out_gff)%in%c('chrY','chrX')]
+
   export.gff3(sort(unique(TSS_break_out_gff)),out_name)
   saveRDS(TSS_break_out,rds_save_file)
 }

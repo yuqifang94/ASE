@@ -99,7 +99,7 @@ gff_gen(TSS_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/CPE
         mouse_DNase_control_gff_file)
 # mm10 allele-agnostic analysis for complementary regions -------------------------------------------
 mm10_all=GRanges(seqinfo(BSgenome.Mmusculus.UCSC.mm10))
-mm10_all=mm10_all[seqnames(mm10_all) %in% paste0('chr',c(1:19,'X','Y'))]
+mm10_all=mm10_all[seqnames(mm10_all) %in% paste0('chr',c(1:21,'X','Y'))]
 analyzed_regions=readGFFAsGRanges(mouse_DNase_control_gff_file)
 mm10_all_comp=setdiff(mm10_all,analyzed_regions)
 mm10_all_comp_break=subdivideGRanges(mm10_all_comp,250)
