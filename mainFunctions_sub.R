@@ -182,6 +182,8 @@ library(MASS)
 # library(gwascat)
 
 
+# file locations ----------------------------------------------------------
+
 #global pval cutoff file names
 pval_cutoff=0.1 #Onuchic use 0.1
 gff_in_file='../downstream/input/human_analysis/gff_in.rds'
@@ -213,6 +215,10 @@ CG_density_mouse='../downstream/output/mouse_analysis/CpG_density_NME/region_CG_
 mouse_DNase_control_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_DNase_control.gff'
 mouse_compliment_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff'
 UC_in_matrix_ls_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions.rds'
+UC_in_MDS_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions.rds'
+# main functions ----------------------------------------------------------
+
+
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
   # Obtain all CpG sites

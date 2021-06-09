@@ -292,69 +292,30 @@ UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conver
 names(UC_in_matrix_ls)=unique(UC_in$tissue)
 saveRDS(UC_in_matrix_ls,UC_in_matrix_ls_file)
 
-#UC for all possible comparison
-gff_in=import.gff3('')
-gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
-UC_in_MDS_comp=data.table(region=gff_in)
 
-UC_in_comp=fastDoCall('cbind',
-                 mclapply(dir('UC_MDS_compliment/',pattern = '.*uc.bedGraph'),function(x){
-                   read.agnostic.mouse.uc(paste('UC_MDS_compliment/',x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=10))
-#saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
-UC_in_MDS_comp=cbind(UC_in_MDS_comp,UC_in_comp)
-saveRDS(UC_in_MDS_comp,'UC_in_MDS_comp_mt.rds')
+# UC for mouse MDS comparison ---------------------------------------------
+gff_in_compliment=import.gff3(mouse_compliment_gff_file)
+gff_in_compliment=paste0(seqnames(gff_in_compliment),':',start(gff_in_compliment),'-',end(gff_in_compliment))
+UC_in_MDS_comp=data.table(region=gff_in_compliment)
+compliment_MDS_dir='../downstream/data/compliment_UC_MDS_mouse/'
+UC_in_MDS_comp_UC=fastDoCall('cbind',
+                             mclapply(dir(compliment_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
+                               read.agnostic.mouse.uc(paste(compliment_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=10))
+
+UC_in_MDS_comp=cbind(UC_in_MDS_comp,UC_in_MDS_comp_UC)
+saveRDS(UC_in_MDS_comp,'../downstream/output/UC_in_MDS_comp.rds')#This is temporary, delete afterwards
 #Filter based on N first to save space
-gff_in=import.gff3('mm10_allele_agnostic_analysis_DNase_control.gff')
-gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
-UC_in_MDS_comp_analyzed_dt=data.table(region=gff_in)
-UC_in_comp_analyzed=fastDoCall('cbind',
-                      mclapply(dir('UC_MDS_compliment/',pattern = '.*uc.bedGraph'),function(x){
-                        read.agnostic.mouse.uc(paste('MDS_fixed/',x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=10))
-UC_in_MDS_comp_analyzed_dt=cbind(UC_in_MDS_comp_analyzed_dt,UC_in_comp_analyzed)
-saveRDS(UC_in_MDS_comp_analyzed_dt,'UC_in_MDS_comp_analyzed_dt.rds')
-
-
-
-
-#cut into pieces to do fastDoCall
-UC_in_MDS_comp_analyzed_dt=fastDoCall('rbind',lapply(UC_in_MDS_comp_analyzed,convert_GR,direction="DT"))
-UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
-UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
-UC_in_MDS_analyzed=UC_in_MDS_analyzed[UC_in_MDS_analyzed$Sample %in% unique(UC_in_MDS_comp$Sample)]
-UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
-UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
-saveRDS(UC_in_MDS_analyzed,'UC_in_MDS_analyzed.rds')
-
-
-#UC_run_before_MDS folder
-in_dir='../downstream/data/mouse_analysis/UC_run_before_MDS/'
-UC_in=GRanges()
-UC_in_ls=mclapply(dir(in_dir,pattern = 'mm10.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
-UC_in$UC=UC_in$score
-return(UC_in)},mc.cores=24)
-UC_in=fastDoCall('c',UC_in_ls)
-UC_in=UC_in[UC_in$N>=2]
-#saveRDS(UC_in,'UC_agnostic_mouse_dedup_N2_all_time_fix_UC.rds')#74% regiOn have all data
-#UC_in_matrix=agnostic_matrix_conversion(UC_in,'UC')#duplicated regions due to error,waiting for one more to finish
-UC_in$tissue=sub('-.*','',UC_in$Sample)
-UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=12)
-names(UC_in_matrix_ls)=unique(UC_in$tissue)
-saveRDS(UC_in_matrix_ls,'../downstream/input/UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds')#74% regiOn have all data
-
-#read in UC for MDS
-in_dir='../downstream/data/mouse_analysis/'
-MDS_file=dir(in_dir,pattern = 'mm10.*uc.bedGraph')
-
-gff_in=import.gff3('../mm10_allele_agnostic_analysis.gff')
-gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
-UC_out=data.table(region=gff_in)
-
-UC_in=fastDoCall('cbind',
-                 mclapply(MDS_file,function(x){
-                   read.agnostic.mouse.uc(paste(in_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=24))
-#saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
-UC_out=cbind(UC_out,UC_in)
-saveRDS(UC_out,'../downstream/input/UC_agnostic_mouse_N2_MDS_fix.rds')#74% regiOn have all data
+DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
+gff_in_DNase=import.gff3(mouse_DNase_control_gff_file)
+gff_in_DNase=paste0(seqnames(gff_in_DNase),':',start(gff_in_DNase),'-',end(gff_in_DNase))
+UC_in_analyzed_MDS=data.table(region=gff_in_DNase)
+UC_in_analyzed_MDS_UC=fastDoCall('cbind',
+                                 mclapply(dir(compliment_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
+                                   read.agnostic.mouse.uc(paste(DNase_conrol_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_DNase)},mc.cores=10))
+UC_in_analyzed_MDS=cbind(UC_in_analyzed_MDS,UC_in_analyzed_MDS_UC)
+saveRDS(UC_in_analyzed_MDS,'../downstream/output/UC_in_analyzed_MDS.rds')#This is temporary, delete afterwards
+UC_in_MDS_all=rbind(UC_in_MDS_comp,UC_in_analyzed_MDS)
+saveRDS(UC_in_MDS_all,UC_in_MDS_all_file)
 
 
 #Read in mouse NME and scRNA

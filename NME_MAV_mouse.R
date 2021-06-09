@@ -40,6 +40,34 @@ cor.test(NME_in$density,NME_in$NME)
 # MAV vs NME -------------------------------------------------
 NME_in_dt=readRDS('../downstream/output/mouse_analysis/NME_MAV/NME_in_limb_ENOCD3_imputed.rds')
 NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]
+#enhancer regions
+enhancer=readRDS('../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds')
+olap_enhancer=findOverlaps(convert_GR(NME_in_dt$region),enhancer)
+NME_in_dt_enc=NME_in_dt[queryHits(olap_enhancer)]
+NME_in_dt_enc$gene_enc=enhancer[subjectHits(olap_enhancer)]$`Target Gene `
+dir='../downstream/data/Mouse_C1/'
+for(st in unique(NME_in_dt_enc$stage)){
+  tt1=proc.time()[[3]]
+  if(file.exists(paste0(dir,sub('E','',st),'.rds'))){
+    scRNA_in=readRDS(paste0(dir,sub('E','',st),'.rds'))
+    scRNA_in=scRNA_in[rownames(scRNA_in)%in% unique(c(NME_in_dt[(stage==st)]$gene)),]
+    if(nrow(scRNA_in)>0){
+      #Add hypervar to TSS 
+      NME_in_dt_enc[(stage==st)]$hyper_var=scRNA_in[NME_in_dt_enc[(stage==st)]$gene_enc,"hypervar_logvar"]
+      NME_in_dt_enc[(stage==st)]$var=scRNA_in[NME_in_dt_enc[(stage==st)]$gene,"var"]
+      NME_in_dt_enc[(stage==st)]$mean=scRNA_in[NME_in_dt_enc[(stage==st)]$gene,"mean"]
+      
+    }
+  }else{cat("File not exist for ",st,'\n')}
+  cat('Finish processing ',sub('E','',st),'in: ',proc.time()[[3]]-tt1,'\n')
+  
+}
+NME_in_dt_enc_median_NME=NME_in_dt_enc[,list(NME=median(NME)),by=list(gene_enc,stage,hyper_var)]
+NME_in_dt_enc_median_NME[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][order(cor,decreasing=T)]
+
+NME_in_dt_enc[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][!is.na(cor)][order(cor,decreasing=T)]
+cat(NME_in_dt_enc[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][cor>0.5]$gene_enc,sep='\n')
+
 MML_in=readRDS('../downstream/input/mouse_analysis/MML_agnostic_mouse_all_merged.rds')
 MML_in=convert_GR(MML_in[MML_in$tissue=="limb"&MML_in$N>1],direction="DT")
 MML_in$region_sample=paste0(MML_in$region,'_',MML_in$Sample)

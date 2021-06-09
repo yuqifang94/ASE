@@ -904,3 +904,47 @@ ggplot(plot_dt,aes(x=density, y=score,color=stat_type))+
   ylim(c(0,1))+geom_smooth()+theme_glob+xlab("CpG density")+
   ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1)) + theme(legend.position="bottom")
 dev.off()
+
+
+# preprocess CPEL ---------------------------------------------------------
+
+
+#cut into pieces to do fastDoCall
+UC_in_MDS_comp_analyzed_dt=fastDoCall('rbind',lapply(UC_in_MDS_comp_analyzed,convert_GR,direction="DT"))
+UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed=UC_in_MDS_analyzed[UC_in_MDS_analyzed$Sample %in% unique(UC_in_MDS_comp$Sample)]
+UC_in_MDS_analyzed$tissue=sub('-.*','',UC_in_MDS_analyzed$Sample)
+UC_in_MDS_analyzed$Sample=sub('.5-.*-E1','.5-E1',UC_in_MDS_analyzed$Sample)
+saveRDS(UC_in_MDS_analyzed,'UC_in_MDS_analyzed.rds')
+
+
+#UC_run_before_MDS folder
+in_dir='../downstream/data/mouse_analysis/UC_run_before_MDS/'
+UC_in=GRanges()
+UC_in_ls=mclapply(dir(in_dir,pattern = 'mm10.*uc.bedGraph'),function(x){UC_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
+UC_in$UC=UC_in$score
+return(UC_in)},mc.cores=24)
+UC_in=fastDoCall('c',UC_in_ls)
+UC_in=UC_in[UC_in$N>=2]
+#saveRDS(UC_in,'UC_agnostic_mouse_dedup_N2_all_time_fix_UC.rds')#74% regiOn have all data
+#UC_in_matrix=agnostic_matrix_conversion(UC_in,'UC')#duplicated regions due to error,waiting for one more to finish
+UC_in$tissue=sub('-.*','',UC_in$Sample)
+UC_in_matrix_ls=mclapply(unique(UC_in$tissue),function(x) agnostic_matrix_conversion(UC_in[UC_in$tissue==x],'UC'),mc.cores=12)
+names(UC_in_matrix_ls)=unique(UC_in$tissue)
+saveRDS(UC_in_matrix_ls,'../downstream/input/UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds')#74% regiOn have all data
+
+#read in UC for MDS
+in_dir='../downstream/data/mouse_analysis/'
+MDS_file=dir(in_dir,pattern = 'mm10.*uc.bedGraph')
+
+gff_in=import.gff3('../mm10_allele_agnostic_analysis.gff')
+gff_in=paste0(seqnames(gff_in),':',start(gff_in),'-',end(gff_in))
+UC_out=data.table(region=gff_in)
+
+UC_in=fastDoCall('cbind',
+                 mclapply(MDS_file,function(x){
+                   read.agnostic.mouse.uc(paste(in_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in)},mc.cores=24))
+#saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
+UC_out=cbind(UC_out,UC_in)
+saveRDS(UC_out,'../downstream/input/UC_agnostic_mouse_N2_MDS_fix.rds')#74% regiOn have all data
