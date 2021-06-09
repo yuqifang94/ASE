@@ -8,7 +8,7 @@ hg19_bl=import.bed('../downstream/input/human_analysis/QC/hg19_blacklist.bed.gz'
 #Get all CpG location
 chrs <- names(Hsapiens)[1:22]
 cgs <- lapply(chrs, function(x) start(matchPattern("CG", Hsapiens[[x]])))
-cpgr <- do.call(c, lapply(1:24, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
+cpgr <- do.call(c, lapply(1:22, function(x) GRanges(names(Hsapiens)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 # 20kb from hg19 TSS ------------------------------------------------------
 extend_size=20000
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
