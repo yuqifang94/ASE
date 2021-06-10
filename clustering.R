@@ -1,13 +1,13 @@
 rm(list=ls())
 source('mainFunctions_sub.R')
 # clustering K-means --------------------------------------------------------------
-dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/uc_01/'
+
 total_run=10
 #Convert into df with major
 cutoffs=0.1
 cluster_out=list()
 for(fn in c(paste0('uc_',cutoffs,'_',1:10,'.rds'))){
-  cluster_in=readRDS(paste0(dir_in,fn))
+  cluster_in=readRDS(paste0(dir_cluster_in_01,fn))
   for(ts in names(cluster_in)){
     if(fn==paste0('uc_',cutoffs,'_',1,'.rds')){
       cluster_out[[ts]]=data.table(regions=names(cluster_in[[ts]]),cluster_1=cluster_in[[ts]])

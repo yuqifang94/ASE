@@ -234,6 +234,39 @@ rm(MML_in_sp)
 saveRDS(NME_in,NME_agnostic_ASM_file)
 saveRDS(MML_in,MML_agnostic_ASM_file)
 
+# Allele-agnostic analysis for rest of regions --------------------------------------------------------
+in_dir='../downstream/data//'
+NME_in=GRanges()
+MML_in=GRanges()
+for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
+  cat('Reading in',fn,'\n')
+  stat_in=toupper(sub('.*_','',sub('.bedGraph','',fn)))
+  sample_in=sub('_phased.*','',sub('.bedGraph','',fn))
+  subject_in=sub('_.*','',sample_in)
+  tissue_in=sub(paste0(subject_in,'_'),'',sample_in)
+  sample_in=paste0(tissue_in,' - ',subject_in)
+  
+  if(sample_in=="ESC_paired - H1"){sample_in="ESC - H1"}
+  
+  
+  if(stat_in=="NME"){
+    NME_in_sp=read.bedGraph.informME(paste0(in_dir,fn))
+    NME_in_sp$Sample=sample_in
+    NME_in_sp$statistics=stat_in
+    NME_in=c(NME_in,NME_in_sp)}
+  else if(stat_in=="MML"){
+    MML_in_sp=read.bedGraph.informME(paste0(in_dir,fn))
+    MML_in_sp$Sample=sample_in
+    MML_in_sp$statistics=stat_in
+    MML_in=c(MML_in,MML_in_sp)}else
+    {cat("Error stat_in:", stat_in,'\n')}
+}
+rm(NME_in_sp)
+rm(MML_in_sp)
+#NME in check: 51459969
+#MML in check: 51459969
+saveRDS(NME_in,NME_agnostic_comp_file)
+saveRDS(MML_in,MML_agnostic_comp_file)
 
 # reading in mouse MML and NME --------------------------------------------
 #Complimentary regions
@@ -257,9 +290,9 @@ NME_in_analyzed$score=NULL
 #Combine two datasets
 NME_in=c(NME_in,NME_in_analyzed)
 MML_in=c(MML_in,MML_in_analyzed)
-#Convert to matrix
-NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2&NME_in$N<=17])
-MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2&MML_in$N<=17],'MML')
+#Convert to matrix: note here I didn't filter out the N<=17 since all NME and MML are intersect with UC regions in later analysis, the filtering in only done in UC
+NME_in_matrix=agnostic_matrix_conversion(NME_in[NME_in$N>=2])
+MML_in_matrix=agnostic_matrix_conversion(MML_in[MML_in$N>=2],'MML')
 
 saveRDS(NME_in_matrix,NME_matrix_file)
 saveRDS(MML_in_matrix,MML_matrix_file)
