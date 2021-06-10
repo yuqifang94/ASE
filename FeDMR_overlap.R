@@ -14,6 +14,22 @@ for(ts in names(UC_01)){
     feDMR_ts=c(feDMR_ts, makeGRangesFromDataFrame(fread(paste0(feDMR_dir,tsv_in)),keep.extra.columns=T))
     
   }
-  
+
+  olap_all=findOverlaps(UC_all[[ts]],feDMR_ts)
+  olap_UC_01=findOverlaps(convert_GR(names(UC_01[[ts]])),feDMR_ts)
+  FeDMR_olap=rbind(FeDMR_olap,
+                   data.table(tissue=ts,
+                              total_UC_analyzed=length(UC_all[[ts]]),
+                              total_UC_01=length(UC_01[[ts]]),
+                              overlap_total_UC_feDMR=length(unique(queryHits(olap_all))),
+                              overlap_UC_01_feDMR=length(unique(queryHits(olap_UC_01))),
+                              total_FeDMR=length(feDMR_ts),
+                              FeDMR_covered_all_UC=length(unique(subjectHits(olap_all))),
+                              FeDMR_covered_uc_01=length(unique(subjectHits(olap_UC_01)))
+                              
+                              ))
   
 }
+FeDMR_olap$proportion_overlap_uc_01=FeDMR_olap$FeDMR_covered_uc_01/FeDMR_olap$FeDMR_covered_all_UC
+FeDMR_olap$proportion_overlap_uc_all=FeDMR_olap$FeDMR_covered_all_UC/FeDMR_olap$total_FeDMR
+saveRDS(FeDMR_olap,'../downstream/output/mouse_analysis/Ecker_comparison/FeDMR_olap.rds')

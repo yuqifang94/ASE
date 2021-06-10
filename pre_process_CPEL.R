@@ -235,7 +235,7 @@ saveRDS(NME_in,NME_agnostic_ASM_file)
 saveRDS(MML_in,MML_agnostic_ASM_file)
 
 # Allele-agnostic analysis for rest of regions --------------------------------------------------------
-in_dir='../downstream/data//'
+in_dir='../downstream/data/compliment_MML_NME_human/'
 NME_in=GRanges()
 MML_in=GRanges()
 for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
@@ -263,11 +263,20 @@ for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
 }
 rm(NME_in_sp)
 rm(MML_in_sp)
-#NME in check: 51459969
-#MML in check: 51459969
+#NME in check: 202721894
+#MML in check: 202721894
 saveRDS(NME_in,NME_agnostic_comp_file)
 saveRDS(MML_in,MML_agnostic_comp_file)
-
+saveRDS(c(readRDS(NME_agnostic_file),
+          readRDS(NME_agnostic_DNase_file),
+          readRDS(NME_agnostic_ASM_file),
+          readRDS(NME_agnostic_comp_file)
+                  ),NME_agnostic_all_file)
+saveRDS(c(readRDS(MML_agnostic_file),
+          readRDS(MML_agnostic_DNase_file),
+          readRDS(MML_agnostic_ASM_file),
+          readRDS(MML_agnostic_comp_file)
+),MML_agnostic_all_file)
 # reading in mouse MML and NME --------------------------------------------
 #Complimentary regions
 dir_comp='../downstream/data/compliment_MML_NME_model_mouse/'

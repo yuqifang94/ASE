@@ -11,7 +11,6 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
 
 # Preprocess SNP files to get unique SNP and trinucleotide -----------------------------------------------------
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
-olap=findOverlaps(variant_HetCpG_meta,genomic_features$`CpG island`)
 variant_HetCpG_meta_dt=convert_GR(variant_HetCpG_meta,direction='DT')
 variant_HetCpG_meta_dt$SNP=apply(variant_HetCpG_meta_dt[,list(REF,ALT)],1,function(x) paste(x,collapse = '->'))
 variant_HetCpG_meta_dt$tri_SNP=paste0(variant_HetCpG_meta_dt$REF_tri,'->',variant_HetCpG_meta_dt$ALT_tri)
