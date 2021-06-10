@@ -231,8 +231,8 @@ rm(NME_in_sp)
 rm(MML_in_sp)
 #NME in check: 51459969
 #MML in check: 51459969
-saveRDS(NME_in,NME_agnostic_ASM_file)
-saveRDS(MML_in,MML_agnostic_ASM_file)
+saveRDS(NME_in[NME_in$N>=2],NME_agnostic_ASM_file)
+saveRDS(MML_in[MML_in$N>=2],MML_agnostic_ASM_file)
 
 # Allele-agnostic analysis for rest of regions --------------------------------------------------------
 in_dir='../downstream/data/compliment_MML_NME_human/'
@@ -265,8 +265,10 @@ rm(NME_in_sp)
 rm(MML_in_sp)
 #NME in check: 202721894
 #MML in check: 202721894
-saveRDS(NME_in,NME_agnostic_comp_file)
-saveRDS(MML_in,MML_agnostic_comp_file)
+saveRDS(NME_in[NME_in$N>=2],NME_agnostic_comp_file)
+saveRDS(MML_in[MML_in$N>=2],MML_agnostic_comp_file)
+
+
 saveRDS(c(readRDS(NME_agnostic_file),
           readRDS(NME_agnostic_DNase_file),
           readRDS(NME_agnostic_ASM_file),

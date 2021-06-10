@@ -206,8 +206,8 @@ NME_agnostic_comp_file="../downstream/output/human_analysis/CPEL_outputs/NME_agn
 MML_agnostic_comp_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_comp.rds"
 NME_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/NME_agnostic_all.rds"
 MML_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_all.rds"
-variant_HetCpG_meta_dt_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_dt.rds'
-variant_HetCpG_meta_dt_uq_file='../downstream/output/human_analysis/CPEL_outputs/variant_HetCpG_meta_dt_relative_dNME2uq.rds'
+variant_HetCpG_meta_dt_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt.rds'
+variant_HetCpG_meta_dt_uq_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt_relative_dNME2uq.rds'
 #This is from Ken
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'

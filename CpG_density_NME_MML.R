@@ -164,7 +164,7 @@ GR_merge_dt$dNME_relative_more_less=GR_merge_dt$dNME_relative
 GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative_more_less=GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative*sign(GR_merge_dt[GR_merge_dt$CpGdiff!=0]$CpGdiff)
 t.test(GR_merge_dt[CpGdiff!=0&dNME_pval<=pval_cutoff]$dNME_relative_more_less,alternative="less")
 #Figure 3C
-pdf('../downstream/output/graphs/Figure3/Figure3A_CpG_number_NME.pdf',width=7,height=7)
+pdf('../downstream/output/human_analysis/CpG_density/CpG_number_NME.pdf',width=7,height=7)
 ggplot(GR_merge_dt[dNME_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_stat,fill=CpG_stat))+
   geom_violin()+xlab("")+
   theme_glob+ylab('relative dNME')+theme(legend.position = "none")
@@ -172,7 +172,7 @@ dev.off()
 #Line plot for dNME
 GR_merge_dt_sig_density_diff=GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
-pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dNME_ratio.pdf',width=7,height=7)
+pdf('../downstream/output/human_analysis/CpG_density???FigureS4_CpG_density_dNME_ratio.pdf',width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dNME_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dNME")+
   theme_glob+
@@ -181,7 +181,7 @@ dev.off()
 #Line plot for dMML
 GR_merge_dt_sig_density_diff=GR_merge_dt[dMML_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
-pdf('../downstream/output/graphs/Figure3/FigureS4_CpG_density_dMML_ratio.pdf',width=7,height=7)
+pdf('../downstream/output/human_analysis/CpG_density???FigureS4_CpG_density_dMML_ratio.pdf',width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dMML_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dMML")+
   theme_glob+
