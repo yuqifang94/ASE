@@ -109,7 +109,11 @@ cgs <- lapply(chrs, function(x) start(matchPattern("CG", Mmusculus[[x]])))
 cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 gff_gen(mm10_all_comp_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.rds',
         mouse_compliment_gff_file)
-
+#Sanity check
+for(i in c(1:19,'X','Y')){seqlength=seqlength+length(BSgenome.Mmusculus.UCSC.mm10[[paste0('chr',i)]])} 
+mm10_all_break=subdivideGRanges(mm10_all,250)
+mm10_all_break$CpG=countOverlaps(mm10_all_break,cpgr)
+sum(width(mm10_all_comp_break[mm10_all_comp_break$CpG>0]))/seqlength#0.7355
 # mm10 linux reformat -----------------------------------------------------
 #mm10
 # sed -i 's/%2c/,/g' mm10_allele_agnostic_analysis.gff

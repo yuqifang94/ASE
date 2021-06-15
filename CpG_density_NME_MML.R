@@ -2,12 +2,7 @@ rm(list=ls())
 source("mainFunctions_sub.R")
 #Define ggplot theme
 
-theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
-                 axis.title.x=element_text(hjust=0.5,size=20,face="bold"),
-                 axis.title.y=element_text(hjust=0.5,size=20,face="bold"),
-                 axis.text.x=element_text(size=12),
-                 axis.text.y=element_text(size=12))
-                # text=element_text(family="Space Mono"))
+
 
 # Preprocess SNP files to get unique SNP and trinucleotide -----------------------------------------------------
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
@@ -91,6 +86,12 @@ color_theme=c(rainbow(length(unique(variant_HetCpG_meta_dt$SNP))))
 variant_SNP_tri=data.table()
 variant_SNP_tri_out=list()
 names(color_theme)=unique(variant_HetCpG_meta_dt$SNP)
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
+                                 axis.title.x=element_text(hjust=0.5,size=20,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=20,face="bold"),
+                                 axis.text.x=element_text(size=12),
+                                 axis.text.y=element_text(size=12))
+# text=element_text(family="Space Mono"))
 for (sn in unique(variant_HetCpG_meta_dt$SNP)){
   #OR calculation
   for(tri in unique(variant_HetCpG_meta_dt[SNP==sn]$tri_SNP_unique)){
@@ -128,10 +129,12 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
    variant_SNP_tri=data.table()
 
 }
-#Getting png files with mono-spaced font
+saveRDS(variant_SNP_tri_out,'../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out.rds')
+#Getting png files with mono-spaced font in windows setting, use the variant_SNP_tri_out
+variant_SNP_tri_out=readRDS('../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out.rds')
 library(extrafont)
 loadfonts()
-png('../downstream/output/graphs/Figure2/Figure-4B-variant_OR_tri3_two_cat_greater_CG_bg_rev.png',
+png('../downstream/output/human_analysis/CpG_densityvariant_OR_tri3_two_cat_greater_CG_bg_rev_hg19.png',
     width=7,height=7,units='in',res=1080, family = 'Consolas')
 #SNP_het=SNP_het[c("C>G", names(SNP_het)[names(SNP_het)!="C>G"])]
 ggarrange(plotlist=SNP_het, nrow=2,ncol=2,common.legend = T,legend="bottom",label.x = 'Odds ratio')
@@ -150,29 +153,30 @@ GR_merge$dMML_relative=GR_merge$MML1-GR_merge$MML2
 GR_merge_dt=convert_GR(GR_merge,'DT')
 #density difference difference
 GR_merge_dt$density_diff=GR_merge_dt[,(CG_allele_extend_g1-CG_allele_extend_g2)/CGcont_exp ]
-#Correlation 
+#Correlation:-0.390
 cor.test(GR_merge_dt[dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$dNME_relative, 
          GR_merge_dt[dNME_pval<=pval_cutoff&dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$density_diff)
 
-#Figure 3A
-#Catogrizing regions
+#Figure C for density
+#Categorizing regions
 GR_merge_dt$CpG_stat="No difference"
 GR_merge_dt[CpGdiff!=0]$CpG_stat="With CpG difference"
 GR_merge_dt$CpG_stat=factor(GR_merge_dt$CpG_stat,levels = c("With CpG difference","No difference"))
 #Alwasy using allele with more CG minus alleles with less CG
 GR_merge_dt$dNME_relative_more_less=GR_merge_dt$dNME_relative
 GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative_more_less=GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative*sign(GR_merge_dt[GR_merge_dt$CpGdiff!=0]$CpGdiff)
+#Test for if "With CpG difference" is significantly smaller thant "No difference"
 t.test(GR_merge_dt[CpGdiff!=0&dNME_pval<=pval_cutoff]$dNME_relative_more_less,alternative="less")
-#Figure 3C
-pdf('../downstream/output/human_analysis/CpG_density/CpG_number_NME.pdf',width=7,height=7)
+#Figure C
+pdf(paste0(figure_path,'CpG_number_NME_hg19.pdf',width=7,height=7))
 ggplot(GR_merge_dt[dNME_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_stat,fill=CpG_stat))+
   geom_violin()+xlab("")+
   theme_glob+ylab('relative dNME')+theme(legend.position = "none")
 dev.off()
-#Line plot for dNME
+#Line plot for dNME vs density
 GR_merge_dt_sig_density_diff=GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
-pdf('../downstream/output/human_analysis/CpG_density???FigureS4_CpG_density_dNME_ratio.pdf',width=7,height=7)
+pdf(paste0(figure_path,'CpG_density_dNME_ratio_hg19.pdf'),width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dNME_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dNME")+
   theme_glob+
@@ -181,32 +185,35 @@ dev.off()
 #Line plot for dMML
 GR_merge_dt_sig_density_diff=GR_merge_dt[dMML_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
-pdf('../downstream/output/human_analysis/CpG_density???FigureS4_CpG_density_dMML_ratio.pdf',width=7,height=7)
+pdf('../downstream/output/graphs_tables/CpG_density_dMML_ratio_hg19.pdf',width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dMML_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dMML")+
   theme_glob+
   theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 dev.off()
 
-#allele-agnotic density ---------------------------------------
+#allele-agnostic density ---------------------------------------
+CG_exp_agnostic_hg19_file='../downstream/output/human_analysis/CpG_density/analyzed_region_hg19.rds'
+#NME
 NME_in=readRDS(NME_agnostic_file)
+analyzed_region=unique(granges(NME_in))
+gr_seq=getSeq(Hsapiens,analyzed_region,as.character=T)
+analyzed_region$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
+saveRDS(analyzed_region,CG_exp_agnostic_hg19_file)
+analyzed_region=readRDS('../downstream/output/human_analysis/CpG_density/analyzed_region_CG_hg19.rds')
+NME_in=readRDS(NME_agnostic_file)
+NME_in_olap=findOverlaps(NME_in,analyzed_region,type='equal')
+NME_in$CGcont_exp[queryHits(NME_in_olap)]=analyzed_region$CGcont_exp[subjectHits(NME_in_olap)]
 CpG_hg19=readRDS(CpG_hg19_file)
 NME_in$CG_hg19=countOverlaps(NME_in,CpG_hg19)
-NME_in_gr=unique(granges(NME_in))
-gr_seq=getSeq(Hsapiens,NME_in_gr,as.character=T)
-NME_in_gr$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
-NME_in_olap=findOverlaps(NME_in,NME_in_gr,type='equal')
-NME_in$CGcont_exp[queryHits(NME_in_olap)]=NME_in_gr$CGcont_exp[subjectHits(NME_in_olap)]
 NME_in$density=NME_in$CG_hg19/NME_in$CGcont_exp
-NME_in=readRDS(NME_agnostic_file)
-NME_in=NME_in[seqnames(NME_in)%in%paste0("chr",1:22)]
-cor.test(NME_in$density,NME_in$NME,method='pearson')
+cor.test(NME_in$density,NME_in$NME,method='pearson')#-0.21
 #Making boxplot of this with different interval
 NME_in$density_quant=findInterval(NME_in$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
 NME_in$density_quant=factor(quant_conv[NME_in$density_quant],levels=quant_conv)
 #PLotting boxplot
-pdf('../downstream/output/graphs/Figure3/Figure3D_CpG_density_NME_boxplot_CG_exp.pdf',width=3.5,height=3.5)#Totally having 69530406 points
+pdf(paste0(figure_path,'CpG_density_NME_boxplot_CG_exp.pdf',width=3.5,height=3.5))#Totally having 69530406 points
 ggplot(as.data.frame(mcols(NME_in)),aes(x=density_quant, y=NME))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -220,12 +227,47 @@ olap_shores=findOverlaps(NME_in,genomic_features$`CpG shore`)
 olap_shelf=findOverlaps(NME_in,genomic_features$`CpG shelf`)
 olap_open_sea=findOverlaps(NME_in,genomic_features$`CpG open sea`)
 
-olap_islands=findOverlaps(MML_in,genomic_features$`CpG island`)
 
 CpG_density_NME=rbind(data.table(NME=NME_in$NME[queryHits(olap_islands)],feature='islands'),
                       data.table(NME=NME_in$NME[queryHits(olap_shores)],feature='shores'),
                       data.table(NME=NME_in$NME[queryHits(olap_shelf)],feature='shelf'),
                       data.table(NME=NME_in$NME[queryHits(olap_open_sea)],feature='open sea'))
+#MML
+MML_in=readRDS(MML_agnostic_file)
+CpG_hg19=readRDS(CpG_hg19_file)
+MML_in$CG_hg19=countOverlaps(MML_in,CpG_hg19)
+analyzed_region=readRDS()
+MML_in_olap=findOverlaps(MML_in,MML_in_gr,type='equal')
+MML_in$CGcont_exp[queryHits(MML_in_olap)]=MML_in_gr$CGcont_exp[subjectHits(MML_in_olap)]
+MML_in$density=MML_in$CG_hg19/MML_in$CGcont_exp
+MML_in=readRDS(MML_agnostic_file)
+MML_in=MML_in[seqnames(MML_in)%in%paste0("chr",1:22)]
+cor.test(MML_in$density,MML_in$MML,method='pearson')
+#Making boxplot of this with different interval
+MML_in$density_quant=findInterval(MML_in$density,seq(0,1,0.1))
+quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
+MML_in$density_quant=factor(quant_conv[MML_in$density_quant],levels=quant_conv)
+#PLotting boxplot
+pdf('../downstream/output/graphs/Figure3/Figure3D_CpG_density_MML_boxplot_CG_exp.pdf',width=3.5,height=3.5)#Totally having 69530406 points
+ggplot(as.data.frame(mcols(MML_in)),aes(x=density_quant, y=MML))+
+  ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
+  ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()   
+
+#Feature enrichment of low MML regions
+genomic_features=readRDS(genomic_features_file)
+#Figure S5
+olap_islands=findOverlaps(MML_in,genomic_features$`CpG island`)
+olap_shores=findOverlaps(MML_in,genomic_features$`CpG shore`)
+olap_shelf=findOverlaps(MML_in,genomic_features$`CpG shelf`)
+olap_open_sea=findOverlaps(MML_in,genomic_features$`CpG open sea`)
+
+olap_islands=findOverlaps(MML_in,genomic_features$`CpG island`)
+
+CpG_density_MML=rbind(data.table(MML=MML_in$MML[queryHits(olap_islands)],feature='islands'),
+                      data.table(MML=MML_in$MML[queryHits(olap_shores)],feature='shores'),
+                      data.table(MML=MML_in$MML[queryHits(olap_shelf)],feature='shelf'),
+                      data.table(MML=MML_in$MML[queryHits(olap_open_sea)],feature='open sea'))
 
 # In mouse context --------------------------------------------------------
 mml=readRDS(MML_matrix_file)

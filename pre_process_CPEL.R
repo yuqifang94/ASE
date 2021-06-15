@@ -279,6 +279,10 @@ saveRDS(c(readRDS(MML_agnostic_file),
           readRDS(MML_agnostic_ASM_file),
           readRDS(MML_agnostic_comp_file)
 ),MML_agnostic_all_file)
+#Unique analyzed region
+unique_gr=unique(granges(MML_all))
+CG_hg19=getCpgSitesH19()
+length(subsetByOverlaps(CG_hg19,unique_gr))/length(CG_hg19[seqnames(CG_hg19) %in% c(paste0('chr',c(1:22,'X','Y')))])#0.8720719
 # reading in mouse MML and NME --------------------------------------------
 #Complimentary regions
 dir_comp='../downstream/data/compliment_MML_NME_model_mouse/'

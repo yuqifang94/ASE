@@ -208,6 +208,7 @@ NME_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/NME_agno
 MML_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_all.rds"
 variant_HetCpG_meta_dt_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt.rds'
 variant_HetCpG_meta_dt_uq_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt_relative_dNME2uq.rds'
+figure_path='../downstream/output/graphs_tables/
 #This is from Ken
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
@@ -226,7 +227,7 @@ dir_cluster_in_01='../downstream/input/mouse_analysis/clustering/tissue_specific
 
 
 #Get CpG sites from hg19
-getCpgSitesH19 <- function(chrsOfInterest=paste("chr",1:22,sep="")){
+getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
   # Obtain all CpG sites
   cgs <- lapply(chrsOfInterest, function(x) GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),width=2)))
   
