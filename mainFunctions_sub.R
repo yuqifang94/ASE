@@ -208,7 +208,7 @@ NME_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/NME_agno
 MML_agnostic_all_file="../downstream/output/human_analysis/CPEL_outputs/MML_agnostic_all.rds"
 variant_HetCpG_meta_dt_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt.rds'
 variant_HetCpG_meta_dt_uq_file='../downstream/output/human_analysis/CpG_density/variant_HetCpG_meta_dt_relative_dNME2uq.rds'
-figure_path='../downstream/output/graphs_tables/
+figure_path='../downstream/output/graphs_tables/'
 #This is from Ken
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
