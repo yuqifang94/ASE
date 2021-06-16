@@ -948,3 +948,77 @@ UC_in=fastDoCall('cbind',
 #saveRDS(UC_in,paste0('UC_agnostic_mouse_dedup_MDS_',i,'.rds'))#74% regiOn have all data
 UC_out=cbind(UC_out,UC_in)
 saveRDS(UC_out,'../downstream/input/UC_agnostic_mouse_N2_MDS_fix.rds')#74% regiOn have all data
+
+
+# from clustering.R -------------------------------------------------------
+
+#Plot non-repeats
+
+re_web=readRDS('../downstream/output/mouse_analysis/repeats/re_web.rds')
+dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/currently_in_use/ts_cluster_0_1_non_repeats/'
+lapply(dir(dir_in,pattern='csv'),function(x){
+  
+  csv_in=fread(paste0(dir_in,x))
+  olap=findOverlaps(convert_GR(csv_in$regions,direction='GR'),re_web,minoverlap =0.5*mean(width(convert_GR(csv_in$regions,direction='GR'))))
+  cat('percent removed for ',unique(csv_in$tisue),'is ',length(unique(queryHits(olap)))/nrow(csv_in),'\n')
+  write.csv(csv_in[-unique(queryHits(olap))],paste0(dir_in,x),row.names = F)
+  
+  
+  
+})
+
+# summary_stat=data.table()
+# for(fn in dir(dir_in,pattern='csv')){
+#   csv_in=fread(paste0(dir_in,fn))
+#   tissue=gsub('.csv','',fn)
+#   remain_region=csv_in$region%in%cluster_result[[tissue]]$regions
+#   total_region=nrow(csv_in)
+#   cluster_result_ts=cluster_result[[tissue]]$cluster
+#   names(cluster_result_ts)=cluster_result[[tissue]]$regions
+#   csv_in=csv_in[remain_region]
+#   #Looking into the detail
+#   csv_in$old_cluster=csv_in$cluster
+#   csv_in$cluster=cluster_result_ts[csv_in$region]
+#   for(clu in 1:10){
+#     #Find the major cluster goes into
+#     csv_in_clu=csv_in[old_cluster==clu]  
+#     major_cluster=names(which.max(table(csv_in_clu$cluster)))
+#     
+#     summary_stat=rbind(summary_stat,
+#                        data.table(remained_region=sum(remain_region),
+#                                   total_region=total_region,
+#                                   consistent_region=sum(csv_in_clu$cluster==major_cluster),
+#                                   tissue=tissue,
+#                                   cluster=clu,
+#                                   total_region_cluster=nrow(csv_in_clu)))
+#   }
+#   csv_in$old_cluster=NULL
+#   write.csv(csv_in,paste0(dir_out,fn),row.names = F)
+# }
+# summary_stat$percent_consistent=summary_stat$consistent_region/summary_stat$total_region_cluster
+# saveRDS(summary_stat,'../downstream/output/CpG_N17_filter_clustering_consistencyv2.rds')
+# write.csv(summary_stat,'../downstream/output/percent_consistent_N17_kmeans.csv')
+# hist(summary_stat$percent_consistent,main="kmeans",xlab="proportion of region having consistent assignment")
+# # Prepare folder of desired regions: ../downstream/input/ts_cluster_0_1/ ----------------------------------------------
+# uc=readRDS('../downstream/output/uc_matrix_DNase.rds')
+# analyzed_regions=readRDS('../downstream/output/mm10_allele_agnostic_analysis.rds')
+# analyzed_regions_N17_N2=analyzed_regions[analyzed_regions$N>=2&analyzed_regions$N<=17]
+# analyzed_regions_N17_N2=paste0(seqnames(analyzed_regions_N17_N2),":",start(analyzed_regions_N17_N2),'-',end(analyzed_regions_N17_N2))
+# uc_ft=lapply(uc,function(x) x[rownames(x) %in%analyzed_regions_N17_N2, ])
+# for(x in names(uc_ft)){
+#   
+#   cat(x,':',nrow(uc_ft[[x]])/nrow(uc[[x]]),'\n')
+# }
+# 
+# # EFP : 0.9766308 
+# # NT : 0.9742735 
+# # forebrain : 0.9732378 
+# # heart : 0.9737051 
+# # hindbrain : 0.9741982 
+# # limb : 0.97602 
+# # liver : 0.972034 
+# # midbrain : 0.9730241 
+# saveRDS(uc_ft,'../downstream/output/uc_matrix_DNase_ft_N17.rds')
+# UC_merge=readRDS('../downstream/output/UC_merge_max_loc.rds')
+# UC_merge=lapply(UC_merge,function(x) x[rownames(x) %in%analyzed_regions_N17_N2, ])
+# saveRDS(UC_merge,'../downstream/output/UC_merge_max_loc_ft_N17.rds')

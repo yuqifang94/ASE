@@ -193,14 +193,15 @@ ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dMML_rel
 dev.off()
 
 #allele-agnostic density ---------------------------------------
-CG_exp_agnostic_hg19_file='../downstream/output/human_analysis/CpG_density/analyzed_region_hg19.rds'
+CG_exp_agnostic_hg19_file='../downstream/output/human_analysis/CpG_density/analyzed_region_CG_hg19.rds'
 #NME
 NME_in=readRDS(NME_agnostic_file)
 analyzed_region=unique(granges(NME_in))
 gr_seq=getSeq(Hsapiens,analyzed_region,as.character=T)
 analyzed_region$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
 saveRDS(analyzed_region,CG_exp_agnostic_hg19_file)
-analyzed_region=readRDS('../downstream/output/human_analysis/CpG_density/analyzed_region_CG_hg19.rds')
+
+analyzed_region=readRDS(CG_exp_agnostic_hg19_file)
 NME_in=readRDS(NME_agnostic_file)
 NME_in_olap=findOverlaps(NME_in,analyzed_region,type='equal')
 NME_in$CGcont_exp[queryHits(NME_in_olap)]=analyzed_region$CGcont_exp[subjectHits(NME_in_olap)]
@@ -213,7 +214,7 @@ NME_in$density_quant=findInterval(NME_in$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
 NME_in$density_quant=factor(quant_conv[NME_in$density_quant],levels=quant_conv)
 #PLotting boxplot
-pdf(paste0(figure_path,'CpG_density_NME_boxplot_CG_exp.pdf',width=3.5,height=3.5))#Totally having 69530406 points
+pdf(paste0(figure_path,'CpG_density_NME_boxplot_CG_exp.pdf',width=3.5,height=3.5))
 ggplot(as.data.frame(mcols(NME_in)),aes(x=density_quant, y=NME))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -232,23 +233,27 @@ CpG_density_NME=rbind(data.table(NME=NME_in$NME[queryHits(olap_islands)],feature
                       data.table(NME=NME_in$NME[queryHits(olap_shores)],feature='shores'),
                       data.table(NME=NME_in$NME[queryHits(olap_shelf)],feature='shelf'),
                       data.table(NME=NME_in$NME[queryHits(olap_open_sea)],feature='open sea'))
+
+pdf(paste0(figure_path,'CpG_density_NME_features.pdf',width=3.5,height=3.5))
+ggplot(as.data.frame(CpG_density_NME),aes(x=feature, y=NME))+
+  ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
+  ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off() 
 #MML
 MML_in=readRDS(MML_agnostic_file)
 CpG_hg19=readRDS(CpG_hg19_file)
 MML_in$CG_hg19=countOverlaps(MML_in,CpG_hg19)
-analyzed_region=readRDS()
-MML_in_olap=findOverlaps(MML_in,MML_in_gr,type='equal')
-MML_in$CGcont_exp[queryHits(MML_in_olap)]=MML_in_gr$CGcont_exp[subjectHits(MML_in_olap)]
+analyzed_region=readRDS(CG_exp_agnostic_hg19_file)
+MML_in_olap=findOverlaps(MML_in,analyzed_region,type='equal')
+MML_in$CGcont_exp[queryHits(MML_in_olap)]=analyzed_region$CGcont_exp[subjectHits(MML_in_olap)]
 MML_in$density=MML_in$CG_hg19/MML_in$CGcont_exp
-MML_in=readRDS(MML_agnostic_file)
-MML_in=MML_in[seqnames(MML_in)%in%paste0("chr",1:22)]
-cor.test(MML_in$density,MML_in$MML,method='pearson')
+cor.test(MML_in$density,MML_in$MML,method='pearson')#-0.346
 #Making boxplot of this with different interval
 MML_in$density_quant=findInterval(MML_in$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
 MML_in$density_quant=factor(quant_conv[MML_in$density_quant],levels=quant_conv)
 #PLotting boxplot
-pdf('../downstream/output/graphs/Figure3/Figure3D_CpG_density_MML_boxplot_CG_exp.pdf',width=3.5,height=3.5)#Totally having 69530406 points
+pdf(paste0(figure_path,'CpG_density_MML_features.pdf',width=3.5,height=3.5),width=3.5,height=3.5)
 ggplot(as.data.frame(mcols(MML_in)),aes(x=density_quant, y=MML))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -269,15 +274,23 @@ CpG_density_MML=rbind(data.table(MML=MML_in$MML[queryHits(olap_islands)],feature
                       data.table(MML=MML_in$MML[queryHits(olap_shelf)],feature='shelf'),
                       data.table(MML=MML_in$MML[queryHits(olap_open_sea)],feature='open sea'))
 
+pdf(paste0(figure_path,'CpG_density_NME_features.pdf',width=3.5,height=3.5))
+ggplot(CpG_density_MML,aes(x=feature, y=MML))+
+  ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
+  ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off() 
+
 # In mouse context --------------------------------------------------------
 mml=readRDS(MML_matrix_file)
 nme=readRDS(NME_matrix_file)
 mm10_CpG=getCpgSitesmm10()
+CG_exp_agnostic_mm10_file='../downstream/output/mouse_analysis/CpG_density/analyzed_region_mm10.rds'
 nme$CG_mm10=countOverlaps(nme,mm10_CpG)
 mml$CG_mm10=countOverlaps(mml,mm10_CpG)
 density_gr=unique(c(granges(nme),granges(mml)))
 gr_seq=getSeq(Mmusculus,density_gr,as.character=T)
 density_gr$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
+saveRDS(density_gr,CG_exp_agnostic_mm10_file)
 #the regions are the same for mml and nme so use same gr files
 saveRDS(density_gr,CG_density_mouse)
 nme_olap=findOverlaps(nme,density_gr,type='equal')
@@ -286,8 +299,6 @@ nme$density=nme$CG_mm10/nme$CGcont_exp
 mml_olap=findOverlaps(mml,density_gr,type='equal')
 mml$CGcont_exp[queryHits(mml_olap)]=density_gr$CGcont_exp[subjectHits(mml_olap)]
 mml$density=mml$CG_mm10/mml$CGcont_exp
-nme=nme[seqnames(nme) %in% paste0("chr",1:19)]
-mml=mml[seqnames(mml) %in% paste0("chr",1:19)]
 nme$density_quant=findInterval(nme$density,seq(0,1,0.1))
 mml$density_quant=findInterval(mml$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
@@ -305,6 +316,6 @@ density_mouse_calc<-function(gr_in,stat_name="NME"){
           ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
           ylab(stat_name)+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1)))
 }
-pdf('../downstream/output/graphs/Figure3/mouse_NME_density_boxplot.pdf',width=3.5,height=3.5)
+pdf(paste0(figure_path,'mouse_NME_density_boxplot.pdf'),width=3.5,height=3.5)
 density_mouse_calc(nme,stat_name="NME")
 dev.off()
