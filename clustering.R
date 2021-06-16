@@ -1,7 +1,6 @@
 rm(list=ls())
 source('mainFunctions_sub.R')
 # clustering K-means --------------------------------------------------------------
-
 total_run=10
 #Convert into df with major
 cutoffs=0.1
@@ -48,83 +47,9 @@ for(ts in names(cluster_out)){
 }
 dev.off()
 
-# created merged object for all UC, dMML and dNME ----------------------------------------
-#in cpelasm
-mml <- readRDS(MML_matrix_file)
-mml=convert_GR(mml,direction="matrix")
-nme <- readRDS(NME_matrix_file)
-nme=convert_GR(nme,direction="matrix")
-uc=readRDS(UC_in_matrix_ls_file)
-uc=lapply(uc,convert_GR,direction="matrix")
-UC_merge=lapply(names(uc),function(x){
-  uc_in=uc[[x]]
-  mml_in=mml[,grepl(x,colnames(mml))]
-  nme_in=nme[,grepl(x,colnames(nme))]
-  regions=intersect(intersect(rownames(uc_in),rownames(mml_in)),rownames(nme_in))
-  uc_in=uc_in[regions,]
-  
-  colnames(nme_in)=gsub('.*-','',gsub("-all","",colnames(nme_in)))
-  colnames(mml_in)=gsub('.*-','',gsub("-all","",colnames(mml_in)))
-  mml_in=mml_in[regions,]
-  nme_in=nme_in[regions,]
-  time_series=gsub(paste0(x,'-'),'',gsub("-all","",colnames(uc_in)))
-  dnme=do.call(cbind,lapply(time_series,function(x){
-    return(abs(nme_in[,gsub('-.*','',x)]-nme_in[,gsub('.*-','',x)]))
-    
-  }))
-  dmml=do.call(cbind,lapply(time_series,function(x){
-    return(abs(mml_in[,gsub('-.*','',x)]-mml_in[,gsub('.*-','',x)]))
-    
-  }))
-  colnames(uc_in)=paste0("UC-",colnames(uc_in))
-  colnames(dmml)=paste0("dMML-",time_series)
-  colnames(dnme)=paste0("dNME-",time_series)
-  return(cbind(uc_in,dmml,dnme))
-})
-names(UC_merge)=names(uc)
-saveRDS(UC_merge,UC_merge_file)
-UC_merge_max_loc=lapply(UC_merge,function(x){
-  cat("Percent all data:",sum(rowSums(is.na(x))==0)/nrow(x),'\n')
-  x=as.data.frame(x[rowSums(is.na(x))==0,])
-  uc_dt=  x[,grepl("UC-",colnames(x))]
-  dNME_dt=  x[,grepl("dNME-",colnames(x))]
-  dMML_dt=  x[,grepl("dMML-",colnames(x))]
 
-  x$dMML_max_pair=apply(dMML_dt,1,max)
-  x$dNME_max_pair=apply(dNME_dt,1,max)
-  x$UC_max_pair=apply(uc_dt,1,max)
-  x$dMML_max_time=gsub('dMML-','',colnames(dMML_dt)[apply(dMML_dt,1,which.max)])
-  x$dNME_max_time=gsub('dNME-','',colnames(dNME_dt)[apply(dNME_dt,1,which.max)])
- 
-  uc_max=apply(uc_dt,1,which.max)
-  x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
-  x$dNME_max_UC_pair=dNME_dt[cbind(seq_along(uc_max), uc_max)]
-  #x$UC_max_UC_pair=uc_dt[cbind(seq_along(uc_max), uc_max)]
-  x$dMML_max_UC_pair=dMML_dt[cbind(seq_along(uc_max), uc_max)]
-  adj_time=paste0(paste0("E",10:15,'.5'),'-',paste0("E",11:16,'.5'))
-  uc_max_adj=unlist(apply(x[,(grep(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))],1,which.max))
-  
-  x$UC_max_time_adj=gsub('UC-','',colnames(x))[(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][uc_max_adj]
-  x$dNME_max_UC_pair_adj=x[,(grepl(paste0('dNME-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
-  x$UC_max_UC_pair_adj=x[,(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
-  x$dMML_max_UC_pair_adj=x[,(grepl(paste0('dMML-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
-  return(x)
-  
-})
-names(UC_merge_max_loc)=names(UC_merge)
-saveRDS(UC_merge_max_loc,UC_merge_max_loc_file)
-
-cluster=readRDS(paste0(cluster_out))
-UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
-  print(x)
-  return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
-  
-})
-names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
-saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
 # Find regions belong to major cluster ------------------------------------
 UC_merge=readRDS(UC_merge_max_loc_file)
-dir_out='../downstream/input/mouse_analysis/clustering/tissue_specific/currently_in_use/ts_cluster_0_1/'
 cluster_region_out=list()
 for(ts in names(cluster_out)){
   cluster_out_ts=cluster_out[[ts]]
@@ -167,9 +92,9 @@ for(ts in names(cluster_out)){
   cluster_region_out[[ts]]=region_out
   
   cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
-  write.csv(region_out,paste0(dir_out,ts,'.csv'))
+  write.csv(region_out,paste0(dir_out_cluster01,ts,'.csv'))
 }
-cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rd'
+
 saveRDS(cluster_region_out,cluster_region_out_fn)
 # Put regions with other info ----------------------------------------------------
 
@@ -186,8 +111,7 @@ lapply(names(cluster_out),function(x){
 # Percent left for: limb 0.9862634 
 # Percent left for: liver 0.8056983 
 # Percent left for: midbrain 0.9104696 
-#change based on method
-# cluster_result=readRDS('../downstream/input/uc_cluster_filterN17/uc_0.1.rds')
+
 cluster_result=readRDS(cluster_region_out_fn)
 
 # Plot heatmap ------------------------------------------------------------
@@ -196,14 +120,12 @@ library(RColorBrewer)
 library(pheatmap)
 library(gplots)
 source('mainFunctions_sub.R')
-UC_merge=readRDS('../downstream/input/mouse_analysis/UC_only_all_regions.rds')
+UC_merge=readRDS(UC_merge_file)
 UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
 d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
 names(d)=names(UC_merge)
-dmml <-readRDS('../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds')
-dnme <-readRDS('../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds')
-#dmml <- sapply(dmml,abs)
-#dnme <- sapply(dnme,abs)
+dmml <-readRDS(dmml_cor_file)
+dnme <-readRDS(dnme_cor_file)
 tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
 timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 #clu <- readRDS('../downstream/input/Jason_UC_cluster/uc_0.1.rds')
@@ -262,23 +184,12 @@ sum(rowSums(is.na(mat_out))!=0)/nrow(mat_out)
 #Refine plotting parameters
 colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
 rownames(colann) <- colnames(mat_out)
-
-
 c1 <- mouse_color()
 c2 <- brewer.pal(10,'Set3')
 names(c2) <- 1:10
 c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
 names(c4) <- sort(unique(colann[,1]))
-# tiff(paste0('../downstream/output/heatmap_acrosstissue/',n,'.tiff'),width=3000,height=3000,res=300)
-# #png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
-# pheatmap(mat,cluster_rows = F,annotation_row = rowann,cluster_cols = F,
-#          annotation_col = colann,show_colnames = F,show_rownames = F,
-#          gaps_row = row_gap,gaps_col = cumsum(rle(colann[,1])$lengths),
-#          annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4,dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)))
-# dev.off()
-
 tiff('../downstream/output/mouse_analysis/clustering/heatmap_acrosstissue/all_sc_N17_ft_kmeans_10run_filtered_all.tiff',width=5000,height=5000,res=300)
-#png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
 pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
          annotation_col = colann,show_colnames = F,show_rownames = F,
          gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
@@ -287,3 +198,77 @@ pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,clust
                                   ))
 dev.off()
 
+# created merged object for all UC, dMML and dNME ----------------------------------------
+#in cpelasm
+mml <- readRDS(MML_matrix_file)
+mml=convert_GR(mml,direction="matrix")
+nme <- readRDS(NME_matrix_file)
+nme=convert_GR(nme,direction="matrix")
+uc=readRDS(UC_in_matrix_ls_file)
+uc=lapply(uc,convert_GR,direction="matrix")
+UC_merge=lapply(names(uc),function(x){
+  uc_in=uc[[x]]
+  mml_in=mml[,grepl(x,colnames(mml))]
+  nme_in=nme[,grepl(x,colnames(nme))]
+  regions=intersect(intersect(rownames(uc_in),rownames(mml_in)),rownames(nme_in))
+  uc_in=uc_in[regions,]
+  
+  colnames(nme_in)=gsub('.*-','',gsub("-all","",colnames(nme_in)))
+  colnames(mml_in)=gsub('.*-','',gsub("-all","",colnames(mml_in)))
+  mml_in=mml_in[regions,]
+  nme_in=nme_in[regions,]
+  time_series=gsub(paste0(x,'-'),'',gsub("-all","",colnames(uc_in)))
+  dnme=do.call(cbind,lapply(time_series,function(x){
+    return(abs(nme_in[,gsub('-.*','',x)]-nme_in[,gsub('.*-','',x)]))
+    
+  }))
+  dmml=do.call(cbind,lapply(time_series,function(x){
+    return(abs(mml_in[,gsub('-.*','',x)]-mml_in[,gsub('.*-','',x)]))
+    
+  }))
+  colnames(uc_in)=paste0("UC-",colnames(uc_in))
+  colnames(dmml)=paste0("dMML-",time_series)
+  colnames(dnme)=paste0("dNME-",time_series)
+  return(cbind(uc_in,dmml,dnme))
+})
+names(UC_merge)=names(uc)
+saveRDS(UC_merge,UC_merge_file)
+UC_merge_max_loc=lapply(UC_merge,function(x){
+  cat("Percent all data:",sum(rowSums(is.na(x))==0)/nrow(x),'\n')
+  x=as.data.frame(x[rowSums(is.na(x))==0,])
+  uc_dt=  x[,grepl("UC-",colnames(x))]
+  dNME_dt=  x[,grepl("dNME-",colnames(x))]
+  dMML_dt=  x[,grepl("dMML-",colnames(x))]
+  
+  x$dMML_max_pair=apply(dMML_dt,1,max)
+  x$dNME_max_pair=apply(dNME_dt,1,max)
+  x$UC_max_pair=apply(uc_dt,1,max)
+  x$dMML_max_time=gsub('dMML-','',colnames(dMML_dt)[apply(dMML_dt,1,which.max)])
+  x$dNME_max_time=gsub('dNME-','',colnames(dNME_dt)[apply(dNME_dt,1,which.max)])
+  
+  uc_max=apply(uc_dt,1,which.max)
+  x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
+  x$dNME_max_UC_pair=dNME_dt[cbind(seq_along(uc_max), uc_max)]
+  #x$UC_max_UC_pair=uc_dt[cbind(seq_along(uc_max), uc_max)]
+  x$dMML_max_UC_pair=dMML_dt[cbind(seq_along(uc_max), uc_max)]
+  adj_time=paste0(paste0("E",10:15,'.5'),'-',paste0("E",11:16,'.5'))
+  uc_max_adj=unlist(apply(x[,(grep(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))],1,which.max))
+  
+  x$UC_max_time_adj=gsub('UC-','',colnames(x))[(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][uc_max_adj]
+  x$dNME_max_UC_pair_adj=x[,(grepl(paste0('dNME-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$UC_max_UC_pair_adj=x[,(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$dMML_max_UC_pair_adj=x[,(grepl(paste0('dMML-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  return(x)
+  
+})
+names(UC_merge_max_loc)=names(UC_merge)
+saveRDS(UC_merge_max_loc,UC_merge_max_loc_file)
+
+cluster=readRDS(paste0(dir_cluster_in_01,'uc_0.1_1.rds'))
+UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
+  print(x)
+  return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
+  
+})
+names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
+saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)

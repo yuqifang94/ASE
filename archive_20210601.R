@@ -1022,3 +1022,12 @@ lapply(dir(dir_in,pattern='csv'),function(x){
 # UC_merge=readRDS('../downstream/output/UC_merge_max_loc.rds')
 # UC_merge=lapply(UC_merge,function(x) x[rownames(x) %in%analyzed_regions_N17_N2, ])
 # saveRDS(UC_merge,'../downstream/output/UC_merge_max_loc_ft_N17.rds')
+
+# tiff(paste0('../downstream/output/heatmap_acrosstissue/',n,'.tiff'),width=3000,height=3000,res=300)
+# #png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
+# pheatmap(mat,cluster_rows = F,annotation_row = rowann,cluster_cols = F,
+#          annotation_col = colann,show_colnames = F,show_rownames = F,
+#          gaps_row = row_gap,gaps_col = cumsum(rle(colann[,1])$lengths),
+#          annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4,dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)))
+# dev.off()
+#png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)

@@ -226,6 +226,10 @@ dir_cluster_in_01='../downstream/input/mouse_analysis/clustering/tissue_specific
 UC_merge_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions.rds'
 UC_merge_max_loc_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc.rds'
 UC_merge_max_loc_01_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc_01.rds'
+dir_out_cluster01='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_assigned/'
+cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rds'
+dmml_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds'
+dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds'
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
