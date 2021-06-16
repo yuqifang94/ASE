@@ -4,11 +4,10 @@ source('mainFunctions_sub.R')
 #Clustering assignment
 dir_in_cluster='../downstream/input/mouse_analysis/clustering/tissue_specific/'
 dir_out_cluster='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/'
-dir_in_cor=paste0(dir_out_cluster,'cluster_assigned/')
-dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
+
 dir_in_cor_Jason='../downstream/input/mouse_analysis/correlation_analysis/all_regions/'
-dMML_cor=readRDS(paste0(dir_in_cor_Jason,'fulldmmlcor.rds'))
-dNME_cor=readRDS(paste0(dir_in_cor_Jason,'fulldnmecor.rds'))
+dMML_cor=readRDS(dmml_cor_file)
+dNME_cor=readRDS(dnme_cor_file)
 dmml_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudmmlcor.rds'))
 dnme_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudnmecor.rds'))
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
@@ -19,14 +18,14 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
 
 
 cutoffs=0.1
-cluster_assignment(dir_in_cluster,dir_out_cluster,cutoffs)
+cluster_assignment(dir_in_cluster,dir_out_cluster,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn)
 #Merge into data table
 #Filtered result
 cor_dt_pre_process_fn=paste0(dir_out_rds_correlation,'correlation_dt_N17_kmeans_10run_filtered_all_regions.rds')
 if(!file.exists(cor_dt_pre_process_fn)){
   cor_dt_filtered=lapply(names(dNME_cor),cor_dt_preprocessing,dMML_cor=dMML_cor,
                          dNME_cor=dNME_cor,dmml_perm=dmml_perm,dnme_perm=dnme_perm,
-                         filtered=TRUE,folder_input=dir_in_cor)
+                         filtered=TRUE,folder_input=dir_out_cluster01)
   names(cor_dt_filtered)=names(dNME_cor)
   saveRDS(cor_dt_filtered,cor_dt_pre_process_fn)
 }

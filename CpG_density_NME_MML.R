@@ -281,16 +281,18 @@ ggplot(CpG_density_MML,aes(x=feature, y=MML))+
 dev.off() 
 
 # In mouse context --------------------------------------------------------
+CG_exp_agnostic_mm10_file='../downstream/output/mouse_analysis/CpG_density/analyzed_region_mm10.rds'
 mml=readRDS(MML_matrix_file)
 nme=readRDS(NME_matrix_file)
-mm10_CpG=getCpgSitesmm10()
-CG_exp_agnostic_mm10_file='../downstream/output/mouse_analysis/CpG_density/analyzed_region_mm10.rds'
-nme$CG_mm10=countOverlaps(nme,mm10_CpG)
-mml$CG_mm10=countOverlaps(mml,mm10_CpG)
 density_gr=unique(c(granges(nme),granges(mml)))
 gr_seq=getSeq(Mmusculus,density_gr,as.character=T)
 density_gr$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
 saveRDS(density_gr,CG_exp_agnostic_mm10_file)
+density_gr=readRDS(CG_exp_agnostic_mm10_file)
+mm10_CpG=getCpgSitesmm10()
+
+nme$CG_mm10=countOverlaps(nme,mm10_CpG)
+mml$CG_mm10=countOverlaps(mml,mm10_CpG)
 #the regions are the same for mml and nme so use same gr files
 saveRDS(density_gr,CG_density_mouse)
 nme_olap=findOverlaps(nme,density_gr,type='equal')
@@ -317,5 +319,8 @@ density_mouse_calc<-function(gr_in,stat_name="NME"){
           ylab(stat_name)+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1)))
 }
 pdf(paste0(figure_path,'mouse_NME_density_boxplot.pdf'),width=3.5,height=3.5)
+density_mouse_calc(nme,stat_name="NME")
+dev.off()
+pdf(paste0(figure_path,'mouse_MMLE_density_boxplot.pdf'),width=3.5,height=3.5)
 density_mouse_calc(nme,stat_name="NME")
 dev.off()

@@ -1031,3 +1031,22 @@ lapply(dir(dir_in,pattern='csv'),function(x){
 #          annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4,dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)))
 # dev.off()
 #png(paste0('/dcl01/hongkai/data/zji4/ase/mouse/plot/heatmap/combine_nosubcluster/heatmap_acrosstissue/',n,'.png'),width = 800,height=800,res=300)
+
+# Put regions with other info ----------------------------------------------------
+
+lapply(names(cluster_out),function(x){
+  cluster_out_ts=cluster_out[[x]]
+  UC_merge_max_loc_sub_ts=UC_merge_max_loc_sub[[x]]
+  
+})
+# Percent left for: EFP 0.9209754 
+# Percent left for: NT 0.9990584 
+# Percent left for: forebrain 0.9823054 
+# Percent left for: heart 0.9347036 
+# Percent left for: hindbrain 0.9234645 
+# Percent left for: limb 0.9862634 
+# Percent left for: liver 0.8056983 
+# Percent left for: midbrain 0.9104696 
+
+cluster_result=readRDS(cluster_region_out_fn)
+

@@ -227,9 +227,10 @@ UC_merge_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_reg
 UC_merge_max_loc_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc.rds'
 UC_merge_max_loc_01_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc_01.rds'
 dir_out_cluster01='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_assigned/'
-cluster_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rds'
+cluster_01_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rds'
 dmml_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds'
 dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds'
+dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
@@ -1748,12 +1749,11 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 #Clustering assignment
-cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
+cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cluster_region_out_fn){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
   total_run=10
-  cutoff_fn=gsub('\\.','_',cutoffs)
   #Convert into df with major
-  
+  cutoffs=0.1
   cluster_out=list()
   for(fn in c(paste0('uc_',cutoffs,'_',1:10,'.rds'))){
     cluster_in=readRDS(paste0(dir_in,fn))
@@ -1785,7 +1785,11 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
     return(x)
     
   })
-  pdf(paste0(dir_out,'proportion_run_kmeans_10_all_regions_',cutoff_fn,'.pdf'),width=3,height=3)
+  
+  
+  
+  
+  pdf(paste0(figure_path,'proportion_run_kmeans_10_all_regions_mm10.pdf'),width=3,height=3)
   for(ts in names(cluster_out)){
     hist(cluster_out[[ts]]$percent_cluster_in,xlab="Proportion of runs in major cluster",main=ts)
     
@@ -1794,30 +1798,9 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
   dev.off()
   
   
-  
-
-  UC_max_loc_sub_fn=paste0(dir_out,'UC_merge_max_loc_cluster',cutoff_fn,'.rds')
- 
-  if(!file.exists(UC_max_loc_sub_fn)){
-    cluster=readRDS(paste0(dir_in,'uc_',cutoffs,'_1.rds'))
-    UC_merge_max_loc=readRDS('../downstream/input/mouse_analysis/clustering/UC_merge_max_loc_all_regions.rds')
-    UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
-      print(x)
-      return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
-      
-    }) 
-    names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
-    cat('Saving:',UC_max_loc_sub_fn,'\n')
-    saveRDS(UC_merge_max_loc_sub,UC_max_loc_sub_fn)
-    rm(UC_merge_max_loc_sub)
-    
-  }
-  UC_merge=readRDS(UC_max_loc_sub_fn)
-  # Find core clusters and assign rest of the regions ----------------------
-  
+  # Find regions belong to major cluster ------------------------------------
+  UC_merge=readRDS(UC_merge_max_loc_file)
   cluster_region_out=list()
-  dir_out_assigned=paste0(dir_out,'cluster_assigned/')
-  ifelse(!dir.exists(file.path(dir_out_assigned)), dir.create(file.path(dir_out_assigned)), FALSE)
   for(ts in names(cluster_out)){
     cluster_out_ts=cluster_out[[ts]]
     UC_ts=UC_merge[[ts]][,grepl('UC-',colnames(UC_merge[[ts]]))]
@@ -1859,9 +1842,17 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
     cluster_region_out[[ts]]=region_out
     
     cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
-    write.csv(region_out,paste0(dir_out_assigned,ts,'.csv'))
+    write.csv(region_out,paste0(dir_out,ts,'.csv'))
   }
-  cluster_region_out_fn=paste0(dir_out,'cluster_all_region_assignment_filtered_',cutoff_fn,'.rds')
+  #UC=0.1 result
+  # Percent left for: EFP 0.9988164
+  # Percent left for: forebrain 0.9481921
+  # Percent left for: heart 0.9686033
+  # Percent left for: hindbrain 0.9411712
+  # Percent left for: limb 0.9991228
+  # Percent left for: liver 0.8832303
+  # Percent left for: midbrain 0.9891808
+  
   saveRDS(cluster_region_out,cluster_region_out_fn)
   
   # Plot heatmap ------------------------------------------------------------
@@ -1869,13 +1860,15 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
   library(RColorBrewer)
   library(pheatmap)
   library(gplots)
-  UC_merge=readRDS('../downstream/input/mouse_analysis/UC_only_all_regions.rds')
+  UC_merge=readRDS(UC_merge_file)
   UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
   d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
   names(d)=names(UC_merge)
-  
+  dmml <-readRDS(dmml_cor_file)
+  dnme <-readRDS(dnme_cor_file)
   tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+
   clu=readRDS(cluster_region_out_fn)
   clu=lapply(clu,function(x){
     out=as.numeric(x$cluster)
@@ -1891,7 +1884,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
   })
   d <- sapply(d,function(i) {
     
-    #i <- i[rowSums(i) > 0,]
+    i <- i[rowSums(i) > 0,]
     i <- i[,colnames(i) %in% timeorder]
     i <- i[,order(match(colnames(i),timeorder))]
     
@@ -1915,35 +1908,46 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1){
       
       tmp
     }))
+    na_ma=-which(rowSums(is.na(mat))>0)
+    if(length(na_ma)>0){
+      mat= mat[na_ma,]
+      rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                           #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                           #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                           stringsAsFactors = F)
+      rowann=rowann[na_ma,]
+    }else{
+      
+      rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                           #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                           #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                           stringsAsFactors = F)
+    }
     mat_out=rbind(mat_out,mat)
-   
-    print(head(mat_out))
-    rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
-                         
-                         stringsAsFactors = F)
+    print(head(mat))
     rownames(rowann) <- rownames(mat)
     rowann <- rowann[,ncol(rowann):1]
     rowann_out=rbind(rowann_out,rowann)
+    #row_gap=c(row_gap,row_gap[length(row_gap)]+cumsum(rle(sub(':.*','',cl))$lengths))
     row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
   }
+  
   #Refine plotting parameters
   colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
   rownames(colann) <- colnames(mat_out)
-  cat("Number of regions contain NA:",sum(rowSums(is.na(mat_out))!=0),'\n')
-  
   c1 <- mouse_color()
   c2 <- brewer.pal(10,'Set3')
   names(c2) <- 1:10
   c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
   names(c4) <- sort(unique(colann[,1]))
+  #remove row with all NA 
   
-  tiff(paste0(dir_out,'all_sc_N17_ft_kmeans_10run_filtered_all_',cutoff_fn,'.tiff'),width=5000,height=5000,res=300)
-  
+  tiff(paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',gsub('.','',cutoffs),'.tiff'),width=5000,height=5000,res=500)
   pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
            annotation_col = colann,show_colnames = F,show_rownames = F,
            gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
            annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4
-                                    
+                                    #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)
            ))
   dev.off()
   

@@ -1,3 +1,4 @@
+#No longer in use for clustering part
 rm(list=ls())
 source('mainFunctions_sub.R')
 # clustering K-means --------------------------------------------------------------
@@ -94,25 +95,15 @@ for(ts in names(cluster_out)){
   cat("Percent left for:",ts,nrow(region_out)/nrow(cluster_out_ts),'\n')
   write.csv(region_out,paste0(dir_out_cluster01,ts,'.csv'))
 }
+# Percent left for: EFP 0.9988164
+# Percent left for: forebrain 0.9481921
+# Percent left for: heart 0.9686033
+# Percent left for: hindbrain 0.9411712
+# Percent left for: limb 0.9991228
+# Percent left for: liver 0.8832303
+# Percent left for: midbrain 0.9891808
 
 saveRDS(cluster_region_out,cluster_region_out_fn)
-# Put regions with other info ----------------------------------------------------
-
-lapply(names(cluster_out),function(x){
-  cluster_out_ts=cluster_out[[x]]
-  UC_merge_max_loc_sub_ts=UC_merge_max_loc_sub[[x]]
-  
-})
-# Percent left for: EFP 0.9209754 
-# Percent left for: NT 0.9990584 
-# Percent left for: forebrain 0.9823054 
-# Percent left for: heart 0.9347036 
-# Percent left for: hindbrain 0.9234645 
-# Percent left for: limb 0.9862634 
-# Percent left for: liver 0.8056983 
-# Percent left for: midbrain 0.9104696 
-
-cluster_result=readRDS(cluster_region_out_fn)
 
 # Plot heatmap ------------------------------------------------------------
 
@@ -152,7 +143,7 @@ d <- sapply(d,function(i) {
   i <- i[complete.cases(i),]
 })
 
-mat_out=matrix(ncol=39)
+mat_out=matrix(ncol=39,nrow=0)
 rowann_out=data.frame()
 row_gap=c(0)
 for (n in names(d)) {
@@ -168,19 +159,30 @@ for (n in names(d)) {
     
     tmp
   }))
-  mat_out=rbind(mat_out,mat)
-  print(head(mat_out))
+  na_ma=-which(rowSums(is.na(mat))>0)
+  if(length(na_ma)>0){
+  mat= mat[na_ma,]
   rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
                        #dMMLJSDcor=dmml[[n]][rownames(mat)],
                        #dNMEJSDcor=dnme[[n]][rownames(mat)],
                        stringsAsFactors = F)
+  rowann=rowann[na_ma,]
+  }else{
+    
+    rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                         #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                         #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                         stringsAsFactors = F)
+  }
+  mat_out=rbind(mat_out,mat)
+  print(head(mat))
   rownames(rowann) <- rownames(mat)
   rowann <- rowann[,ncol(rowann):1]
   rowann_out=rbind(rowann_out,rowann)
   #row_gap=c(row_gap,row_gap[length(row_gap)]+cumsum(rle(sub(':.*','',cl))$lengths))
   row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
 }
-sum(rowSums(is.na(mat_out))!=0)/nrow(mat_out)
+
 #Refine plotting parameters
 colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
 rownames(colann) <- colnames(mat_out)
@@ -189,7 +191,9 @@ c2 <- brewer.pal(10,'Set3')
 names(c2) <- 1:10
 c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
 names(c4) <- sort(unique(colann[,1]))
-tiff('../downstream/output/mouse_analysis/clustering/heatmap_acrosstissue/all_sc_N17_ft_kmeans_10run_filtered_all.tiff',width=5000,height=5000,res=300)
+#remove row with all NA 
+
+tiff(paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all.tiff'),width=5000,height=5000,res=500)
 pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
          annotation_col = colann,show_colnames = F,show_rownames = F,
          gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
@@ -199,7 +203,7 @@ pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,clust
 dev.off()
 
 # created merged object for all UC, dMML and dNME ----------------------------------------
-#in cpelasm
+
 mml <- readRDS(MML_matrix_file)
 mml=convert_GR(mml,direction="matrix")
 nme <- readRDS(NME_matrix_file)
