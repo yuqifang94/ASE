@@ -1749,7 +1749,7 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 #Clustering assignment
-cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cluster_region_out_fn){
+cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_path){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
   cat('reading in clustering result\n')
   total_run=10
@@ -1789,16 +1789,16 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cl
   })
   
   
-  
-  
-  pdf(paste0(figure_path,'proportion_run_kmeans_10_all_regions_mm10.pdf'),width=3,height=3)
-  for(ts in names(cluster_out)){
-    hist(cluster_out[[ts]]$percent_cluster_in,xlab="Proportion of runs in major cluster",main=ts)
-    
-    
-  }
-  dev.off()
-  
+  # cat('plotting proportion major cluster\n')
+  # 
+  # pdf(paste0(figure_path,'proportion_run_kmeans_10_all_regions_mm10.pdf'),width=3,height=3)
+  # for(ts in names(cluster_out)){
+  #   hist(cluster_out[[ts]]$percent_cluster_in,xlab="Proportion of runs in major cluster",main=ts)
+  #   
+  #   
+  # }
+  # dev.off()
+  # 
   
   # Find regions belong to major cluster ------------------------------------
   cat('assigning minor cluster based on correlation\n')
