@@ -2,9 +2,6 @@ rm(list=ls())
 source('mainFunctions_sub.R')
 # Correlation matrix forming ----------------------------------------------
 #Clustering assignment
-dir_in_cluster='../downstream/input/mouse_analysis/clustering/tissue_specific/'
-dir_out_cluster='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/'
-
 dir_in_cor_Jason='../downstream/input/mouse_analysis/correlation_analysis/all_regions/'
 dMML_cor=readRDS(dmml_cor_file)
 dNME_cor=readRDS(dnme_cor_file)
@@ -17,8 +14,7 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.text.y=element_text(size=16))
 
 
-cutoffs=0.1
-cluster_assignment(dir_in_cluster,dir_out_cluster,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn)
+cluster_assignment(dir_cluster_in_01,dir_out_cluster01,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn)
 #Merge into data table
 #Filtered result
 cor_dt_pre_process_fn=paste0(dir_out_rds_correlation,'correlation_dt_N17_kmeans_10run_filtered_all_regions.rds')

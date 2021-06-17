@@ -1751,6 +1751,7 @@ matrix_conv<-function(dt_in,value.var){
 #Clustering assignment
 cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cluster_region_out_fn){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
+  cat('reading in clustering result\n')
   total_run=10
   #Convert into df with major
   cutoffs=0.1
@@ -1769,6 +1770,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cl
     
     
   }
+  cat('finding major cluster\n')
   #Find major cluster use cluster_1 as reference
   cluster_out=lapply(cluster_out,function(x){
     for(i in 1:10){
@@ -1799,6 +1801,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cl
   
   
   # Find regions belong to major cluster ------------------------------------
+  cat('assigning minor cluster based on correlation\n')
   UC_merge=readRDS(UC_merge_max_loc_file)
   cluster_region_out=list()
   for(ts in names(cluster_out)){
@@ -1856,7 +1859,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn=cl
   saveRDS(cluster_region_out,cluster_region_out_fn)
   
   # Plot heatmap ------------------------------------------------------------
-  
+  cat('Plotting heatmap\n')
   library(RColorBrewer)
   library(pheatmap)
   library(gplots)

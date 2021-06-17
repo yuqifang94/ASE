@@ -365,7 +365,83 @@ saveRDS(UC_in_analyzed_MDS,'../downstream/output/UC_in_analyzed_MDS.rds')#This i
 UC_in_MDS_all=rbind(UC_in_MDS_comp,UC_in_analyzed_MDS)
 saveRDS(UC_in_MDS_all,UC_in_MDS_all_file)
 
+# created merged object for all UC, dMML and dNME ----------------------------------------
 
+mml <- readRDS(MML_matrix_file)
+mml=convert_GR(mml,direction="matrix")
+nme <- readRDS(NME_matrix_file)
+nme=convert_GR(nme,direction="matrix")
+uc=readRDS(UC_in_matrix_ls_file)
+uc=lapply(uc,convert_GR,direction="matrix")
+UC_merge=lapply(names(uc),function(x){
+  uc_in=uc[[x]]
+  mml_in=mml[,grepl(x,colnames(mml))]
+  nme_in=nme[,grepl(x,colnames(nme))]
+  regions=intersect(intersect(rownames(uc_in),rownames(mml_in)),rownames(nme_in))
+  uc_in=uc_in[regions,]
+  
+  colnames(nme_in)=gsub('.*-','',gsub("-all","",colnames(nme_in)))
+  colnames(mml_in)=gsub('.*-','',gsub("-all","",colnames(mml_in)))
+  mml_in=mml_in[regions,]
+  nme_in=nme_in[regions,]
+  time_series=gsub(paste0(x,'-'),'',gsub("-all","",colnames(uc_in)))
+  dnme=do.call(cbind,lapply(time_series,function(x){
+    return(abs(nme_in[,gsub('-.*','',x)]-nme_in[,gsub('.*-','',x)]))
+    
+  }))
+  dmml=do.call(cbind,lapply(time_series,function(x){
+    return(abs(mml_in[,gsub('-.*','',x)]-mml_in[,gsub('.*-','',x)]))
+    
+  }))
+  colnames(uc_in)=paste0("UC-",colnames(uc_in))
+  colnames(dmml)=paste0("dMML-",time_series)
+  colnames(dnme)=paste0("dNME-",time_series)
+  return(cbind(uc_in,dmml,dnme))
+})
+names(UC_merge)=names(uc)
+saveRDS(UC_merge,UC_merge_file)
+UC_merge_max_loc=lapply(UC_merge,function(x){
+  cat("Percent all data:",sum(rowSums(is.na(x))==0)/nrow(x),'\n')
+  x=as.data.frame(x[rowSums(is.na(x))==0,])
+  uc_dt=  x[,grepl("UC-",colnames(x))]
+  dNME_dt=  x[,grepl("dNME-",colnames(x))]
+  dMML_dt=  x[,grepl("dMML-",colnames(x))]
+  
+  x$dMML_max_pair=apply(dMML_dt,1,max)
+  x$dNME_max_pair=apply(dNME_dt,1,max)
+  x$UC_max_pair=apply(uc_dt,1,max)
+  x$dMML_max_time=gsub('dMML-','',colnames(dMML_dt)[apply(dMML_dt,1,which.max)])
+  x$dNME_max_time=gsub('dNME-','',colnames(dNME_dt)[apply(dNME_dt,1,which.max)])
+  
+  uc_max=apply(uc_dt,1,which.max)
+  x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
+  x$dNME_max_UC_pair=dNME_dt[cbind(seq_along(uc_max), uc_max)]
+  #x$UC_max_UC_pair=uc_dt[cbind(seq_along(uc_max), uc_max)]
+  x$dMML_max_UC_pair=dMML_dt[cbind(seq_along(uc_max), uc_max)]
+  adj_time=paste0(paste0("E",10:15,'.5'),'-',paste0("E",11:16,'.5'))
+  uc_max_adj=unlist(apply(x[,(grep(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))],1,which.max))
+  
+  x$UC_max_time_adj=gsub('UC-','',colnames(x))[(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][uc_max_adj]
+  x$dNME_max_UC_pair_adj=x[,(grepl(paste0('dNME-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$UC_max_UC_pair_adj=x[,(grepl(paste0('UC-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  x$dMML_max_UC_pair_adj=x[,(grepl(paste0('dMML-.*',adj_time,collapse="|",sep=''),colnames(x)))][cbind(seq_along(uc_max_adj), uc_max_adj)]
+  return(x)
+  
+})
+names(UC_merge_max_loc)=names(UC_merge)
+saveRDS(UC_merge_max_loc,UC_merge_max_loc_file)
+
+cluster=readRDS(paste0(dir_cluster_in_01,'uc_0.1_1.rds'))
+UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
+  print(x)
+  return(UC_merge_max_loc[[x]][names(cluster[[x]]),])
+  
+})
+names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
+saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
+
+
+# TBC ---------------------------------------------------------------------
 #Read in mouse NME and scRNA
 NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged.rds')
 dir='../downstream/data/Mouse_C1/'
