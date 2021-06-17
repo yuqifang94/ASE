@@ -517,7 +517,7 @@ for(i in 1:10){
 gsea_out_top=do.call('rbind',lapply(gsea_out,function(x) x[padj<=0.1][order(padj,-NES)][1:5]))
 
 #Getting Enhancer from Bin
-bin_supp=as.data.table(read_xlsx('../downstream/output/bin_supp.xlsx',sheet='S8c.Enhancer-Gene-Map-Replicatd',skip=1))
+bin_supp=as.data.table(read_xlsx('../downstream/input/mouse_analysis/enhancer_selection//bin_supp.xlsx',sheet='S8c.Enhancer-Gene-Map-Replicatd',skip=1))
 bin_supp_gr=GRanges(seqnames=bin_supp$chrom,ranges=IRanges(start=bin_supp$start,end=bin_supp$end))
 mcols(bin_supp_gr)=bin_supp[,c(-1,-2,-3)]
 colnames(mcols(bin_supp_gr))=gsub('\\...*','',colnames(mcols(bin_supp_gr)))

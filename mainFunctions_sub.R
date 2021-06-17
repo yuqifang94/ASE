@@ -231,6 +231,8 @@ cluster_01_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_
 dmml_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds'
 dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds'
 dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
+bin_enhancer_rds='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.rds'
+bin_enhancer_bed='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed'
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
@@ -1867,8 +1869,8 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
   d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
   names(d)=names(UC_merge)
-  dmml <-readRDS(dmml_cor_file)
-  dnme <-readRDS(dnme_cor_file)
+  # dmml <-readRDS(dmml_cor_file)
+  # dnme <-readRDS(dnme_cor_file)
   tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 
@@ -1994,7 +1996,7 @@ cor_dt_preprocessing<-function(x,dMML_cor,dNME_cor,dmml_perm,dnme_perm,filtered=
    #Difference between out_dt and csv_in dt from x and y chromosom
     dMML_perm_in=dMML_perm_in[region%in%out_dt$region]
     dNME_perm_in=dNME_perm_in[region%in%out_dt$region]
-    enhancer=readRDS("../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds")
+    enhancer=readRDS(bin_enhancer_rds)
     out_dt_gr=convert_GR(out_dt$region)#20210509, was csv_in$region, bug
     olap=findOverlaps(out_dt_gr,enhancer)
     out_dt$enhancer=FALSE

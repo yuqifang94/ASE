@@ -214,7 +214,7 @@ NME_in$density_quant=findInterval(NME_in$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
 NME_in$density_quant=factor(quant_conv[NME_in$density_quant],levels=quant_conv)
 #PLotting boxplot
-pdf(paste0(figure_path,'CpG_density_NME_boxplot_CG_exp.pdf',width=3.5,height=3.5))
+pdf(paste0(figure_path,'CpG_density_NME_boxplot_CG_exp.pdf'),width=3.5,height=3.5)
 ggplot(as.data.frame(mcols(NME_in)),aes(x=density_quant, y=NME))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -234,7 +234,7 @@ CpG_density_NME=rbind(data.table(NME=NME_in$NME[queryHits(olap_islands)],feature
                       data.table(NME=NME_in$NME[queryHits(olap_shelf)],feature='shelf'),
                       data.table(NME=NME_in$NME[queryHits(olap_open_sea)],feature='open sea'))
 
-pdf(paste0(figure_path,'CpG_density_NME_features.pdf',width=3.5,height=3.5))
+pdf(paste0(figure_path,'CpG_density_NME_features.pdf'),width=3.5,height=3.5)
 ggplot(as.data.frame(CpG_density_NME),aes(x=feature, y=NME))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -253,7 +253,7 @@ MML_in$density_quant=findInterval(MML_in$density,seq(0,1,0.1))
 quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
 MML_in$density_quant=factor(quant_conv[MML_in$density_quant],levels=quant_conv)
 #PLotting boxplot
-pdf(paste0(figure_path,'CpG_density_MML_features.pdf',width=3.5,height=3.5),width=3.5,height=3.5)
+pdf(paste0(figure_path,'CpG_density_MML_features.pdf'),width=3.5,height=3.5)
 ggplot(as.data.frame(mcols(MML_in)),aes(x=density_quant, y=MML))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -274,7 +274,7 @@ CpG_density_MML=rbind(data.table(MML=MML_in$MML[queryHits(olap_islands)],feature
                       data.table(MML=MML_in$MML[queryHits(olap_shelf)],feature='shelf'),
                       data.table(MML=MML_in$MML[queryHits(olap_open_sea)],feature='open sea'))
 
-pdf(paste0(figure_path,'CpG_density_NME_features.pdf',width=3.5,height=3.5))
+pdf(paste0(figure_path,'CpG_density_MML_features.pdf'),width=3.5,height=3.5)
 ggplot(CpG_density_MML,aes(x=feature, y=MML))+
   ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
   ylab("MML")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -309,7 +309,7 @@ nme$density_quant=factor(quant_conv[nme$density_quant],levels=quant_conv)
 mml$density_quant=factor(quant_conv[mml$density_quant],levels=quant_conv)
 density_mouse_calc<-function(gr_in,stat_name="NME"){
   gr_in=mcols(gr_in)
-  gr_in=melt.data.table(as.data.table(gr_in),id.vars = c("CG_mm10","CGcont_exp","density"),variable.name = "Sample",value.name="stat_in")
+  gr_in=melt.data.table(as.data.table(gr_in),id.vars = c("CG_mm10","CGcont_exp","density","density_quant"),variable.name = "Sample",value.name="stat_in")
   gr_in$density_quant=findInterval(gr_in$density,seq(0,1,0.1))
   #NME_in$density_quant[NME_in$density_quant==6]=5#11th quantile is the maximum number, move to 10th
   quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
