@@ -233,6 +233,7 @@ dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regio
 dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
 bin_enhancer_rds='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.rds'
 bin_enhancer_bed='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed'
+GO_01_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/'
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
@@ -2045,7 +2046,7 @@ der_flat_finder<-function(der_in,diff_in,density_in,direction=-1,quant=0.05){
 }
 create_folder<-function(folder_out){ifelse(!dir.exists(file.path(folder_out)), dir.create(file.path(folder_out)), FALSE)}
 correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=0.2,quant=0.25,subsmple_plot=1,
-                                 dir_figure="../downstream/output/mouse_analysis/correlation/kmeans_10_run_unfiltered/"){
+                                 dir_figure){
   theme_density=theme_classic()+theme(legend.position = "bottom",
                                       axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                                       axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
@@ -2434,11 +2435,9 @@ plot_correlation<-function(tissue_out_filtered,pdf_fn){
   dev.off()
   
 }
-assign_regions<-function(tissue_out_filtered,folder_in,DNAase){
+assign_regions<-function(tissue_out_filtered,folder_in_clu,DNAase){
   #assign regions 
-  folder_out=paste0(folder_in,'region_assigned/')
-  folder_in_clu=paste0(folder_in,'cluster_assigned/')
-  create_folder(folder_out)
+
   DNAase=convert_GR(DNAase,direction="DT")
   lapply(tissue_out_filtered,function(cor_dt_in){
     tissue_in=unique(cor_dt_in$tissue)
@@ -2452,7 +2451,7 @@ assign_regions<-function(tissue_out_filtered,folder_in,DNAase){
     dt_nearest=GenomicRanges::distanceToNearest(convert_GR(csv_in$regions),tss)
     csv_in$distance=mcols(dt_nearest)$distance
     csv_in$gene=names(tss)[subjectHits(dt_nearest)]
-    write.csv(csv_in,paste0(folder_out,tissue_in,'.csv'),row.names = F)
+    write.csv(csv_in,paste0(folder_in_clu,tissue_in,'.csv'),row.names = F)
     return(NULL)
   })
   

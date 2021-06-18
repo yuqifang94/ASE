@@ -1106,3 +1106,34 @@ cluster_result=readRDS(cluster_region_out_fn)
 # saveRDS(chromHMM_pooled,'../downstream/output/chromHMM.rds')
 # chromHMM_enhancer=chromHMM_pooled[sub('-.*','',as.character(chromHMM_pooled$chrom_state))=="En"]
 # saveRDS(chromHMM_enhancer,'../downstream/output/chromHMM_enhancer.rds')
+
+
+
+# GO analysis -------------------------------------------------------------
+
+# #filter by repeats
+# 
+# dir_in='../downstream/input/mouse_analysis/clustering/tissue_specific/currently_in_use/ts_cluster_0_1_non_repeats/region_assigned/'
+# re_web=readRDS('../downstream/output/mouse_analysis/repeats/re_web.rds')
+# cor_dt_filtered=readRDS('../downstream/output/mouse_analysis/correlation/correlation_dt_N17_kmeans_10run_filtered_all_regions_non_repeats.rds')
+# names(cor_dt_filtered)=NULL
+# olap_enhancer=findOverlaps(enhancer,re_web,minoverlap = mean(width(convert_GR(do.call('rbind',cor_dt_filtered)$region))))
+# enhancer_bg=subsetByOverlaps(enhancer[unique(queryHits(olap_enhancer))],uc_gr)
+# bg_enhancer=unique(enhancer_bg$`Target Gene`)
+# olap_tss=findOverlaps(enhancer,re_web,maxgap = 2000)
+# bg_promoter=names(subsetByOverlaps(tss[unique(queryHits(olap_tss))],uc_gr,maxgap = 2000))
+
+# # Write motif analysis result ---------------------------------------------
+# motif_dir='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0510/'
+# motif_all=data.table()
+# for(fn in dir(motif_dir,pattern='csv')){
+#   stat=gsub('.csv','',gsub('.*_','',fn))
+#   csv_in=fread(paste0(motif_dir,fn))
+#   csv_in$motif=gsub('.*_','',csv_in$motif)
+#   csv_out=csv_in[,grepl("motif|FDR",colnames(csv_in)),with=F]
+#   colnames(csv_out)=c('motif','FDR')
+#   csv_out$stat=stat
+#   csv_out$tissue=gsub('_.*','',fn)
+#   motif_all=rbind(motif_all,csv_out)
+#   }
+# write.csv(motif_all[FDR<=0.1,list(tissue,motif,FDR,stat)],'../downstream/output/mouse_analysis/motif_analysis/motif_all_Ken.csv')

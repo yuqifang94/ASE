@@ -28,18 +28,19 @@ if(!file.exists(cor_dt_pre_process_fn)){
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
 tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,
-                           dir_figure=paste0(dir_out_rds_correlation,'/correlation_figure/'))
+                           dir_figure=paste0(dir_out_rds_correlation,'/UC_01/correlation_figure/'))
 names(tissue_out_filtered)=names(cor_dt_filtered)
 tissue_out_filtered_fn=paste0(dir_out_rds_correlation,'tissue_out_N17_kmeans_10run_filtered_all_region.rds')
 saveRDS(tissue_out_filtered,tissue_out_filtered_fn)
-lapply(tissue_out_filtered,nrow)
-cluster_out=readRDS('../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rds')
-lapply(cluster_out,function(x) nrow(x[!grepl('chrX|chrY',regions)]))
-tissue_out_filtered_enhancer=lapply(tissue_out_filtered,function(x) x[queryHits(findOverlaps(convert_GR(x$region),bin_enhancer))])
-# Plot the distribution of each category ----------------------------------
-#Promoter
-plot_correlation(tissue_out_filtered,pdf_fn=paste0(dir_out_rds_correlation,'correlation_main.pdf'))
 
+# Plot the distribution of each category ----------------------------------
+#all
+plot_correlation(tissue_out_filtered,pdf_fn=paste0(dir_out_rds_correlation,'correlation_main.pdf'))
+#enhancer
+bin_enhancer=readRDS(bin_enhancer_rds)
+tissue_out_filtered_enhancer=lapply(tissue_out_filtered,function(x) x[queryHits(findOverlaps(convert_GR(x$region),bin_enhancer))])
+plot_correlation(tissue_out_filtered_enhancer,pdf_fn=paste0(dir_out_rds_correlation,'correlation_main_enhancer.pdf'))
+#Promoter
 mm10_TSS=get_mm10_tss()
 tissue_out_filtered_promoter=lapply(tissue_out_filtered,function(tissue_out_filtered_ts){
   olap=findOverlaps(convert_GR(tissue_out_filtered_ts$region,direction = 'GR'),mm10_TSS,maxgap = 2000)
@@ -51,12 +52,8 @@ tissue_out_filtered_promoter=lapply(tissue_out_filtered,function(tissue_out_filt
 tissue_out_filtered_promoter=do.call(rbind,tissue_out_filtered_promoter)
 plot_correlation(tissue_out_filtered_promoter,pdf_fn=paste0(dir_out_rds_correlation,'correlation_main_promoter.pdf'))
 
-
-
 # Assign region type to each region in csv_folder -------------------------
 
 #Assign DNase region
 DNAase=readRDS('../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp.rds')
-
-
-assign_regions(tissue_out_filtered,dir_out_cluster,DNAase)
+assign_regions(tissue_out_filtered,dir_out_cluster01,DNAase)
