@@ -1137,3 +1137,62 @@ cluster_result=readRDS(cluster_region_out_fn)
 #   motif_all=rbind(motif_all,csv_out)
 #   }
 # write.csv(motif_all[FDR<=0.1,list(tissue,motif,FDR,stat)],'../downstream/output/mouse_analysis/motif_analysis/motif_all_Ken.csv')
+
+
+# Mouse motif preprocessing.R ---------------------------------------------
+
+# DNase vs control tissue-specific--------------------------------------------------------
+NME_in=readRDS('../downstream/output/mouse_analysis/CPEL_output/NME_matrix_mouse_all_dedup_N2_all_regions.rds')
+DNAase_in=readRDS('../downstream/input/mouse_analysis/motif_site_tissue_specific/DNase_mm10_peak_sample_250bp.rds')
+names(DNAase_in)=gsub('C57BL/6 | tissue embryo| tissue male embryo |\\(| days\\)','',names(DNAase_in))
+names(DNAase_in)=gsub('embryonic facial prominence','EFP', names(DNAase_in))
+names(DNAase_in)=gsub('neural tube','NT', names(DNAase_in))
+names(DNAase_in)=gsub(' ','', names(DNAase_in))
+names(DNAase_in)=sub('1','-E1', names(DNAase_in))
+#NME
+colnames(mcols(NME_in))=sub('-all','',colnames(mcols(NME_in)))
+mcols(NME_in)=mcols(NME_in)[,which(colnames(mcols(NME_in))%in% names(DNAase_in))]
+DNAase_in=DNAase_in[which(names(DNAase_in) %in% colnames(mcols(NME_in)))]
+JASPAR_motif=readRDS('../downstream/input/mouse_analysis/motif_site_tissue_specific/motif_JASPAR_mm10.rds')
+for(ts in names(DNAase_in)){
+  tt1=proc.time()[[3]]
+  NME_in_ts=NME_in
+  mcols(NME_in_ts)=mcols(NME_in_ts)[,which(colnames(mcols(NME_in))==ts)]
+  NME_in_ts=subsetByOverlaps(NME_in_ts,DNAase_in[[ts]])
+  colnames(mcols(NME_in_ts))='NME'
+  NME_in_ts$Sample=ts
+  NME_in_ts=NME_in_ts[!grepl('chrX|chrY',seqnames(NME_in_ts))]
+  JASPAR_motif_DNase_sp=mclapply(JASPAR_motif,NME_dNME_ken,GR_in=NME_in_ts,stat_in='NME',mc.cores=24)
+  
+  saveRDS(JASPAR_motif_DNase_sp,paste('../downstream/output/mouse_analysis/mouse_motif_tissue_specific/JASPAR_motif_mm10_NME_',ts,'_agnostic_merged_DNase.rds'))
+  JASPAR_motif_DNase_sp=NA
+  # JASPAR_motif_control_sp=mclapply(JASPAR_motif[split_data==i],NME_dNME_ken,GR_in=NME_in_control,stat_in='NME',mc.cores=24)
+  # saveRDS(JASPAR_motif_control_sp,paste('../downstream/output/mouse_motif/mouse_motif_tissue_specific/JASPAR_motif_mm10_NME_',i,'_agnostic_merged_control.rds'))
+  # JASPAR_motif_control_sp=NA
+  
+  proc.time()[[3]]-tt1
+}
+#MML
+MML_in=readRDS('../downstream/output/mouse_analysis/CPEL_output/MML_matrix_mouse_all_dedup_N2_all_regions.rds')
+colnames(mcols(MML_in))=sub('-all','',colnames(mcols(MML_in)))
+mcols(MML_in)=mcols(MML_in)[,which(colnames(mcols(MML_in))%in% names(DNAase_in))]
+DNAase_in=DNAase_in[which(names(DNAase_in) %in% colnames(mcols(MML_in)))]
+JASPAR_motif=readRDS('../downstream/input/mouse_analysis/motif_site_tissue_specific/motif_JASPAR_mm10.rds')
+for(ts in names(DNAase_in)){
+  tt1=proc.time()[[3]]
+  MML_in_ts=MML_in
+  mcols(MML_in_ts)=mcols(MML_in_ts)[,which(colnames(mcols(MML_in))==ts)]
+  MML_in_ts=subsetByOverlaps(MML_in_ts,DNAase_in[[ts]])
+  colnames(mcols(MML_in_ts))='MML'
+  MML_in_ts$Sample=ts
+  MML_in_ts=MML_in_ts[!grepl('chrX|chrY',seqnames(MML_in_ts))]
+  JASPAR_motif_DNase_sp=mclapply(JASPAR_motif,NME_dNME_ken,GR_in=MML_in_ts,stat_in='MML',mc.cores=24)
+  
+  saveRDS(JASPAR_motif_DNase_sp,paste('../downstream/output/mouse_analysis/mouse_motif_tissue_specific/JASPAR_motif_mm10_MML_',ts,'_agnostic_merged_DNase.rds'))
+  JASPAR_motif_DNase_sp=NA
+  # JASPAR_motif_control_sp=mclapply(JASPAR_motif[split_data==i],MML_dMML_ken,GR_in=MML_in_control,stat_in='NME',mc.cores=24)
+  # saveRDS(JASPAR_motif_control_sp,paste('../downstream/output/mouse_motif/mouse_motif_tissue_specific/JASPAR_motif_mm10_NME_',i,'_agnostic_merged_control.rds'))
+  # JASPAR_motif_control_sp=NA
+  
+  proc.time()[[3]]-tt1
+}

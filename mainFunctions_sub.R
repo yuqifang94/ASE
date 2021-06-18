@@ -213,6 +213,10 @@ figure_path='../downstream/output/graphs_tables/'
 DNase_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp.rds'
 control_hg19_file='../downstream/input/human_analysis/DNase_hg19_250bp_control.rds'
 JASPAR_motif_hg19_file='../downstream/output/human_analysis/motif_analysis/motif_JASPAR_hg19.rds'
+#This is from Ken
+DNase_mm10_file='../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp.rds'
+control_mm10_file='../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp_control.rds'
+JASPAR_motif_mm10_file='../downstream/input/mouse_analysis/motif_analysis/motif_JASPAR_mm10.rds'
 #Mouse analysis
 MML_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/MML_matrix_mouse_all_dedup_N2_all_regions.rds'
 NME_matrix_file='../downstream/output/mouse_analysis/CPEL_outputs/NME_matrix_mouse_all_dedup_N2_all_regions.rds'

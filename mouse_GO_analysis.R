@@ -10,7 +10,7 @@ tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
 uc_gr=lapply(UC_merge,function(x) rownames(x))
 uc_gr=Reduce(intersect,uc_gr)
 uc_gr=convert_GR(uc_gr)
-enhancer=readRDS(bin_enhancer_rds)
+enhancer=readRDS(bin_enhancer_rds)#21441
 enhancer_bg=subsetByOverlaps(enhancer,uc_gr)
 bg_enhancer=unique(enhancer_bg$`Target Gene`)
 #Prepare promoter background gene
