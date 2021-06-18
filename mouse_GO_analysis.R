@@ -21,7 +21,7 @@ bg_promoter=names(subsetByOverlaps(tss,uc_gr,maxgap = 2000))
 
 # GO run for promoters, enhancers and different catogries -----------------
 for(enc_type in c("enhancer","promoter")){
-  enc_type="promoter"
+  enc_type="enhancer"
   GO_out_all=list()
   for(region_type in c("all","NME only","Neither","Both","MML only")){
     GO_out_all[[region_type]]=list()
