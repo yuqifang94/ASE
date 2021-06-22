@@ -1,12 +1,13 @@
 source('mainFunctions_sub.R')
 
 # DNase vs control --------------------------------------------------------
-output_dir='../downstream/output/mouse_motif_Ken/'
+output_dir='../downstream/output/mouse_analysis/mouse_motif_Ken/'
 NME_in=readRDS(NME_matrix_file)
 NME_in=convert_GR(NME_in,direction='DT')
 NME_in=melt.data.table(NME_in,id.vars = 'region',variable.name = 'Sample',value.name = 'NME')
 NME_in=NME_in[!is.na(NME_in$NME)]
 NME_in$Sample=gsub('\\.','-',NME_in$Sample)
+NME_in$Sample=gsub('-5','\\.5',NME_in$Sample)
 NME_in_gr=convert_GR(NME_in$region,direction='GR')
 mcols(NME_in_gr)=NME_in[,list(Sample,NME)]
 NME_in=NME_in_gr
@@ -38,6 +39,7 @@ MML_in=convert_GR(MML_in,direction='DT')
 MML_in=melt.data.table(MML_in,id.vars = 'region',variable.name = 'Sample',value.name = 'MML')
 MML_in=MML_in[!is.na(MML_in$MML)]
 MML_in$Sample=gsub('\\.','-',MML_in$Sample)
+MML_in$Sample=gsub('-5','\\.5',MML_in$Sample)
 MML_in_gr=convert_GR(MML_in$region,direction='GR')
 mcols(MML_in_gr)=MML_in[,list(Sample,MML)]
 MML_in=MML_in_gr
@@ -63,4 +65,12 @@ for(i in 1:12){
   proc.time()[[3]]-tt1
 }
 
-
+# #Checking with old file
+# current_MML =readRDS('../downstream/output/mouse_analysis/mouse_motif_Ken/JASPAR_motif_mm10_MML_1_agnostic_merged_DNase.rds')
+# old_MML=readRDS('/scratch/users/yfang27@jhu.edu/yfang/allele/Running_Code/downstream/output/mouse_motif/MML/DNase/JASPAR_motif_mm10_MML_1_agnostic_merged_DNase.rds')
+# #All true
+# for(i in 1:length(current_MML)){
+#   colnames(mcols(current_MML[[i]]))=gsub('-5','\\.5', colnames(mcols(current_MML[[i]])))
+# cat(sum(rowSums(is.na(as.matrix(mcols(old_MML[[i]]))[,colnames(mcols(current_MML[[i]]))]))==0)==sum(rowSums(is.na(as.matrix(mcols(current_MML[[i]]))))==0),'\n')
+# 
+# }

@@ -365,6 +365,22 @@ saveRDS(UC_in_analyzed_MDS,'../downstream/output/UC_in_analyzed_MDS.rds')#This i
 UC_in_MDS_all=rbind(UC_in_MDS_comp,UC_in_analyzed_MDS)
 saveRDS(UC_in_MDS_all,UC_in_MDS_all_file)
 
+
+# MDS for DNase only regions ----------------------------------------------
+
+DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
+gff_in_DNase=import.gff3(mouse_DNase_control_gff_file)
+gff_in_DNase=paste0(seqnames(gff_in_DNase),':',start(gff_in_DNase),'-',end(gff_in_DNase))
+UC_in_analyzed_MDS=data.table(region=gff_in_DNase)
+UC_in_analyzed_MDS_UC=fastDoCall('cbind',
+                                 mclapply(dir(DNase_conrol_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
+                                   read.agnostic.mouse.uc(paste(DNase_conrol_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_DNase)},mc.cores=10))
+UC_in_analyzed_MDS=cbind(UC_in_analyzed_MDS,UC_in_analyzed_MDS_UC)
+saveRDS(UC_in_analyzed_MDS,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_control_PRC.rds')
+DNase_mm10=readRDS(DNase_mm10_file)
+DNase_mm10=convert_GR(DNase_mm10,dir='DT')
+UC_in_analyzed_MDS_DNase=UC_in_analyzed_MDS[region%in% DNase_mm10$region]
+saveRDS(UC_in_analyzed_MDS_DNase,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_only.rds')
 # created merged object for all UC, dMML and dNME ----------------------------------------
 
 mml <- readRDS(MML_matrix_file)
@@ -440,12 +456,7 @@ UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
 names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
 saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
 
-# Read in mouse enhancer from Bin's paper--------------------------------------------------
-bin_supp=fread('../downstream/input/mouse_analysis/enhancer_selection/s8C_enhancer_bin.csv',skip=1)
-bin_supp_gr=GRanges(seqnames=bin_supp$chrom,ranges=IRanges(start=bin_supp$start,end=bin_supp$end))
-mcols(bin_supp_gr)=bin_supp[,c(-1,-2,-3)]
-colnames(mcols(bin_supp_gr))=gsub('\\...*','',colnames(mcols(bin_supp_gr)))
-saveRDS(bin_supp_gr,bin_enhancer_rds)
+
 
 # TBC ---------------------------------------------------------------------
 #Read in mouse NME and scRNA

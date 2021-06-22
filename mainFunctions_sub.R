@@ -2406,6 +2406,20 @@ assign_regions<-function(tissue_out_filtered,folder_in_clu,DNAase){
   })
   
 }
+#For promoter enhancer comparison
+diff_stat_extraction<-function(UC_merge_in,stat,csv_in){
+  
+  dt_out=UC_merge_in[rn %in% csv_in$regions,.SD,.SDcols=c(1,which(grepl(paste0(stat,'-'),colnames(UC_merge_in))))]
+  dt_out=melt.data.table(dt_out,variable.name='sample',value.name=stat)
+  dt_out$tissue=tissue_in
+  dt_out$enhancer=csv_in[match(dt_out$rn,regions)]$enhancer
+  dt_out$distance=csv_in[match(dt_out$rn,regions)]$distance
+  dt_out[,states:="NA"]
+  dt_out[enhancer==TRUE,states:="enhancers"]
+  dt_out[abs(distance)<=2000,states:="promoters"]
+  return(dt_out)
+  
+}
 GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR_dir='../downstream/input/FeDMR_Ecker/',
                     motif_Ken_dir='../downstream/input/Ken_motif_binding_site/',FDR_cutoff=0.1,mm10_CpG=cgs,out_dir='../downstream/output/mouse_analysis/GO_analysis/GO_sheets/'){
   #Annotate cluster

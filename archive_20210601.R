@@ -1196,3 +1196,23 @@ for(ts in names(DNAase_in)){
   
   proc.time()[[3]]-tt1
 }
+
+
+# promoter_vs_enhancer_mouse ----------------------------------------------
+
+#max dMML/dNME in non-adjacent vs adjacent 
+
+csv_out$dMML_max_time=gsub('E','',gsub('\\.5','',csv_out$dMML_max_time))
+csv_out$dMML_max_time_diff=abs(as.numeric(gsub('-.*','',csv_out$dMML_max_time))-as.numeric(gsub('.*-','',csv_out$dMML_max_time)))
+csv_out$dNME_max_time=gsub('E','',gsub('\\.5','',csv_out$dNME_max_time))
+csv_out$dNME_max_time_diff=abs(as.numeric(gsub('-.*','',csv_out$dNME_max_time))-as.numeric(gsub('.*-','',csv_out$dNME_max_time)))
+csv_out$UC_max_time=gsub('E','',gsub('\\.5','',csv_out$UC_max_time))
+csv_out$UC_max_time_diff=abs(as.numeric(gsub('-.*','',csv_out$UC_max_time))-as.numeric(gsub('.*-','',csv_out$UC_max_time)))
+#boxplot time of maximum value
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=tissue,y=dMML_max_time_diff,fill=states))+geom_boxplot()+ylab("dMML time change")
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=tissue,y=dNME_max_time_diff,fill=states))+geom_boxplot()+ylab("dNME time change")
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=tissue,y=UC_max_time_diff,fill=states))+geom_boxplot()+ylab("UC time change")
+
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=dMML_max_time_diff,color=states))+geom_density()+ylab("dMML time change")
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=dNME_max_time_diff,color=states))+geom_density()+ylab("dNME time change")
+ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=UC_max_time_diff,color=states))+geom_density()+ylab("dNME time change")

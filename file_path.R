@@ -54,3 +54,4 @@ dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
 bin_enhancer_rds='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.rds'
 bin_enhancer_bed='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed'
 GO_01_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/'
+tissue_out_filtered_fn=paste0(dir_out_rds_correlation,'tissue_out_N17_kmeans_10run_filtered_all_region.rds')

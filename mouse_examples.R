@@ -1,15 +1,7 @@
 rm(list=ls())
 source('mainFunctions_sub.R')
 #get UC_merge_max_loc_cluster01.rds
-UC_merge_max_loc=readRDS('~/scratch_feinberg/yfang/allele_agnostic_mouse_all/CPEL/CPEL_agnostic/cpelasm/cpelasm/UC_merge_max_loc_all_regions.rds')
-cluster_in=readRDS('/home-4/zji4@jhu.edu/scratch/andy_ASE/cluster/res/uc_0.1_1.rds')
-UC_merge_max_loc_01=list()
-for(ts in names(UC_merge_max_loc)){
-  UC_merge_max_loc_01[[ts]]=UC_merge_max_loc[[ts]][names(cluster_in[[ts]]),]
-  
-  
-}
-saveRDS(UC_merge_max_loc_01,'../downstream/input/mouse_analysis/UC_merge_max_loc_cluster01.rds')
+UC_merge_max_loc_01=readRDS(UC_merge_max_loc_01_file)
 #Read in selected GO regions
 region_in_fn='../downstream/output/mouse_analysis/correlation/tissue_out_N17_kmeans_10run_filtered_all_region.rds'
 enhancer_fn='../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds'

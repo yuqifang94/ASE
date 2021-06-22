@@ -2,8 +2,6 @@ rm(list=ls())
 source("mainFunctions_sub.R")
 #Define ggplot theme
 
-
-
 # Preprocess SNP files to get unique SNP and trinucleotide -----------------------------------------------------
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
 variant_HetCpG_meta_dt=convert_GR(variant_HetCpG_meta,direction='DT')
@@ -69,7 +67,7 @@ variant_HetCpG_meta_dt$dNME_relative=-variant_HetCpG_meta_dt[,list(dNME_relative
   
 
 #Convert everything to gain CG, id SNPs with CG changes
-variant_HetCpG_meta_dt$CpG_change='Gain CG'
+variant_HetCpG_meta_dt$CpG_change='Lose CG'
 variant_HetCpG_meta_dt[((grepl('CG',REF_tri )) & (grepl('CG',ALT_tri)))|(!grepl('CG',REF_tri )) & (!grepl('CG',ALT_tri))]$CpG_change='No CG change'
 saveRDS(variant_HetCpG_meta_dt,variant_HetCpG_meta_dt_uq_file)
 variant_HetCpG_meta_dt=readRDS(variant_HetCpG_meta_dt_uq_file)
