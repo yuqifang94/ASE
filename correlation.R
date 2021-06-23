@@ -28,7 +28,7 @@ if(!file.exists(cor_dt_pre_process_fn)){
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
 tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,
-                           dir_figure=paste0(dir_out_rds_correlation,'/UC_01/correlation_figure/'))
+                           dir_figure=paste0(dir_out_rds_correlation,'correlation_figure/'))
 names(tissue_out_filtered)=names(cor_dt_filtered)
 
 saveRDS(tissue_out_filtered,tissue_out_filtered_fn)

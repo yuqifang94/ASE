@@ -50,7 +50,7 @@ dir_out_cluster01='../downstream/output/mouse_analysis/clustering/tissue_specifi
 cluster_01_region_out_fn='../downstream/output/mouse_analysis/clustering/tissue_specific/UC_0_1/cluster_all_region_assignment_filtered_0_1.rds'
 dmml_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds'
 dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds'
-dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/'
+dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/UC_01/'
 bin_enhancer_rds='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.rds'
 bin_enhancer_bed='../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed'
 GO_01_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/'
@@ -61,5 +61,6 @@ GO_01_promoter_fn=paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run
 gene_example_dir=paste0(GO_01_dir,'gene_examples/')
 tissue_region_motif_all_regions_fn="../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_regions.rds"
 #This is from Ken via slack
+mouse_motif_dir='../downstream/output/mouse_analysis/motif_analysis/'
 Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
-region_motif_dir='../downstream/output/mouse_analysis/motif_analysis/region_motif/'
+region_motif_dir=paste0(mouse_motif_dir,'motif_analysis/region_motif/')

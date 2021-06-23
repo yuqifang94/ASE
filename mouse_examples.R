@@ -1,7 +1,6 @@
 rm(list=ls())
 source('mainFunctions_sub.R')
 
-
 ChiP_motif_dir='../downstream/output/mouse_analysis/motif_analysis/motif_Chip_rds/'
 region_in=readRDS(tissue_out_filtered_fn)
 #Getting Bin enhancer
@@ -13,7 +12,7 @@ region_in_enhancer=lapply(region_in,function(x) {
   x=x[queryHits(olap)]
   x$gene=enhancer[subjectHits(olap)]$`Target Gene`
   return(x)
-}
+})
 
 region_in_enhancer=lapply(region_in_enhancer,function(x){
   x=x[,list(region,tissue,cluster,gene,region_type,dMML_cor,dNME_cor)]
@@ -67,11 +66,8 @@ for(ts in names(enhancer_regions)){
 }
 saveRDS(enhancer_regions,enhancer_region_fn)
 
-
-
-
 #create pubMed searching queue based on tissue
-
+#This needs to be run in Windows environment
 enhancer_regions=readRDS(enhancer_region_fn)
 #table for key items
 #In format of  "Dlx3[Title/Abstract] AND craniofacial[Title/Abstract]AND (Human OR Mouse)"
@@ -101,7 +97,6 @@ for(ts in tissue_sel){
   enhancer_regions_motif=enhancer_regions[[ts]][(!is.na(dNME_motif)|!is.na(dMML_motif))&(!is.na(GO_ID))]
   enhancer_regions_motif=enhancer_regions_motif[order(dNME_max_pair,decreasing=T)]
   selected_genes=unique(enhancer_regions_motif$gene)
-  source('pubmed_rec.R')
   gene_pub_med=do.call(rbind,lapply(selected_genes,pubmed_rec,keys=key_terms[ts]))
   if(!is.null(gene_pub_med)){
     #maximum countof 300
@@ -142,11 +137,11 @@ for(ts in tissue_sel){
  
 }
 
-saveRDS(enhancer_regions_motif_dNME_all,'../downstream/output/mouse_analysis/motif_analysis/enhancer_regions_motif_dNME_all.rds')
-saveRDS(enhancer_regions_motif_dMML_all,'../downstream/output/mouse_analysis/motif_analysis/enhancer_regions_motif_dMML_all.rds')
+saveRDS(enhancer_regions_motif_dNME_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all.rds'))
+saveRDS(enhancer_regions_motif_dMML_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all.rds'))
 
-enhancer_regions_motif_dNME_all=readRDS('../downstream/output/mouse_analysis/motif_analysis/enhancer_regions_motif_dNME_all.rds')
-enhancer_regions_motif_dMML_all=readRDS('../downstream/output/mouse_analysis/motif_analysis/enhancer_regions_motif_dMML_all.rds')
+enhancer_regions_motif_dNME_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all.rds'))
+enhancer_regions_motif_dMML_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all.rds'))
 
 enhancer_regions_motif_dNME_all_dNME=do.call(rbind,enhancer_regions_motif_dNME_all)
 enhancer_regions_motif_dNME_all_dNME=enhancer_regions_motif_dNME_all_dNME[region_type=='NME only',list(tissue,dNME_motif,cluster,gene,dNME_max_pair,dNME_cor,dMML_max_pair,dMML_cor,UC_max_time,PMID)]

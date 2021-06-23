@@ -5,8 +5,9 @@ pan_mutation_single=pan_mutation[(ref%in%nc)&(alt %in% nc),list(chr,pos,ref,alt,
 pan_mutation_single=makeGRangesFromDataFrame(pan_mutation_single,seqnames.field = "chr",start.field = "pos",end.field = "pos")
 seqlevels(pan_mutation_single)=paste0("chr",seqlevels(pan_mutation_single))
 variant_human=readRDS(variant_HetCpG_meta_file)
-subsetByOverlaps(variant_human,pan_mutation_single)
-#No overlap
+subsetByOverlaps(variant_human,pan_mutation_single)#No overlap
+
+#From https://cancer.sanger.ac.uk/cosmic/download
 pan_mutation_coding=fread('../downstream/input/CosmicMutantExport.tsv.gz')
 pan_mutation_coding=pan_mutation_coding[,list(`HGNC ID`,HGVSG,`Primary site`,`Primary histology`,`Genome-wide screen`,
                                               GENOMIC_MUTATION_ID,GRCh,`Mutation genome position`,`Mutation Description`,
