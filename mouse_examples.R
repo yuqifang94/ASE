@@ -3,7 +3,6 @@ source('mainFunctions_sub.R')
 #get UC_merge_max_loc_cluster01.rds
 UC_merge_max_loc_01=readRDS(UC_merge_max_loc_01_file)
 #Read in selected GO regions
-region_in_fn='../downstream/output/mouse_analysis/correlation/tissue_out_N17_kmeans_10run_filtered_all_region.rds'
 enhancer_fn='../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds'
 enhancer_bed_out_fn='../downstream/output/mouse_analysis/enhancers/bin_enhancer.bed'
 UC_merge_fn='../downstream/input/mouse_analysis/UC_merge_max_loc_cluster01.rds'
@@ -14,7 +13,7 @@ Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_
 region_motif_dir='../downstream/output/mouse_analysis/motif_analysis/region_motif/'
 gene_example_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/gene_examples/'
 ChiP_motif_dir='../downstream/output/mouse_analysis/motif_analysis/motif_Chip_rds/'
-region_in=readRDS(region_in_fn)
+region_in=readRDS(tissue_out_filtered_fn)
 #Getting Bin enhancer
 enhancer=readRDS(enhancer_fn)
 region_in_enhancer=lapply(region_in,function(x) {
