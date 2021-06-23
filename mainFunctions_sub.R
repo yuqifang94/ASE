@@ -155,7 +155,7 @@ library(MASS)
 
 #Pubmed
 
- library(rentrez)
+library(rentrez)
 library(easyPubMed)
 # Not in use --------------------------------------------------------------
 # 
