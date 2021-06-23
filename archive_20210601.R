@@ -1216,3 +1216,55 @@ ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=tissue,y=UC_max_time_
 ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=dMML_max_time_diff,color=states))+geom_density()+ylab("dMML time change")
 ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=dNME_max_time_diff,color=states))+geom_density()+ylab("dNME time change")
 ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=UC_max_time_diff,color=states))+geom_density()+ylab("dNME time change")
+#From mouse example.R
+# mouse_motif_overlap -----------------------------------------------------
+# tissue_sel=c("forebrain","heart",'limb','midbrain','hindbrain','liver','EFP')
+# GO_out_all=readRDS('../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run/GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_enhancer.rds')
+# GO_out_all=lapply(GO_out_all$all,function(x) do.call(rbind,lapply(x,function(y) 
+#   cbind(y$csv_in_ts_clu[,gsub('UC-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
+#         y$csv_in_ts_clu[,gsub('dMML-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
+#         y$csv_in_ts_clu[,gsub('dNME-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
+#    #y$csv_in_ts_clu[,grepl("UC-|dNME-|dMML-",colnames(y$csv_in_ts_clu)),with=FALSE],
+#     y$csv_in_ts_clu[,list(cluster,region,region_type)]))))
+# cor_in=readRDS('../downstream/output/mouse_analysis/correlation/tissue_out_N17_kmeans_10run_filtered_ref11.rds')
+# GO_out_all=lapply(GO_out_all,function(x) {
+#   uc_dt=  x[,grepl("UC-",colnames(x)),with=FALSE]
+#   dNME_dt=  x[,grepl("dNME-",colnames(x)),with=FALSE]
+#   dMML_dt=  x[,grepl("dMML-",colnames(x)),with=FALSE]
+#   uc_max=apply(uc_dt,1,which.max)
+#   x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
+#   x$dNME_max_UC_pair=as.data.frame(dNME_dt)[cbind(seq_along(uc_max), uc_max)]
+#   x$UC_max_UC_pair=as.data.frame(uc_dt)[cbind(seq_along(uc_max), uc_max)]
+#   x$dMML_max_UC_pair=as.data.frame(dMML_dt)[cbind(seq_along(uc_max), uc_max)]
+#   return(x)
+# })
+# enhancer_regions=readRDS('../downstream/output/mouse_analysis/enhancers/GO_regions_enchancer.rds')
+
+# CpG_mm10=CpG_mm10=getCpgSitesmm10()
+# end(CpG_mm10)=start(CpG_mm10)+1
+# motif_locus_ken_CG=lapply(motif_locus_ken,function(motifs) {
+#   for(mt in names(motifs)){
+#     if(length(motifs[[mt]])>0){
+#     motifs[[mt]]$mouse_region=motifs[[mt]]$region
+#     motifs[[mt]]$region=NULL
+#     motifs[[mt]]$motif=mt
+#     motifs[[mt]]$NCG=countOverlaps(motifs[[mt]],CpG_mm10,minoverlap = 2)
+#     }
+#     
+#   }
+#   return(do.call(c,motifs))
+#   
+# })
+# motif_locus_ken_CG=lapply(motif_locus_ken_CG,function(x){
+#   
+#   names(x)=NULL
+#   return(do.call('c',x))
+#   
+# }
+#   
+#   )
+# motif_locus_ken_CG_olap=lapply(motif_locus_ken_CG,function(x) x[x$NCG>0])
+# motif_locus_ken_CG_olap=lapply(motif_locus_ken_CG_olap,convert_GR,dir="DT")
+# 
+# 
+# saveRDS(motif_locus_ken_CG,'../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_locus_CG.rds')

@@ -3,29 +3,22 @@ source('mainFunctions_sub.R')
 #get UC_merge_max_loc_cluster01.rds
 UC_merge_max_loc_01=readRDS(UC_merge_max_loc_01_file)
 #Read in selected GO regions
-enhancer_fn='../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds'
-enhancer_bed_out_fn='../downstream/output/mouse_analysis/enhancers/bin_enhancer.bed'
-UC_merge_fn='../downstream/input/mouse_analysis/UC_merge_max_loc_cluster01.rds'
-enhancer_region_fn='../downstream/output/mouse_analysis/GO_analysis/all_regions_enchancer.rds'
-GO_out_fn='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_01_enhancer.rds'
 motif_Ken_fn='../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_regions.rds'
 Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
 region_motif_dir='../downstream/output/mouse_analysis/motif_analysis/region_motif/'
-gene_example_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run_01/gene_examples/'
+
 ChiP_motif_dir='../downstream/output/mouse_analysis/motif_analysis/motif_Chip_rds/'
 region_in=readRDS(tissue_out_filtered_fn)
 #Getting Bin enhancer
-#t
-enhancer=readRDS(enhancer_fn)
+enhancer=readRDS(bin_enhancer_rds)
+UC_merge=readRDS(UC_merge_max_loc_file)
+#Getting target genes
 region_in_enhancer=lapply(region_in,function(x) {
   olap=findOverlaps(convert_GR(x$region),enhancer)
   x=x[queryHits(olap)]
   x$gene=enhancer[subjectHits(olap)]$`Target Gene`
   return(x)
-})
-enhancer_bed_out=data.table(chr=seqnames(enhancer),start=start(enhancer),end=end(enhancer),genes=enhancer$`Target Gene`)
-write.table(enhancer_bed_out,enhancer_bed_out_fn,row.names = F,col.names =F,quote=F )
-UC_merge=readRDS(UC_merge_fn)
+}
 
 region_in_enhancer=lapply(region_in_enhancer,function(x){
   x=x[,list(region,tissue,cluster,gene,region_type,dMML_cor,dNME_cor)]
@@ -41,7 +34,7 @@ region_in_enhancer=lapply(region_in_enhancer,function(x){
 })
 saveRDS(region_in_enhancer,enhancer_region_fn)
 # #Mouse gene example
-GO_out_all=readRDS(GO_out_fn)
+GO_out_all=readRDS(GO_01_enhancer_fn)
 enhancer_regions=readRDS(enhancer_region_fn)
 enhancer_regions_all=list()
 tissue_sel=names(enhancer_regions)
@@ -54,59 +47,9 @@ for(ts in tissue_sel){
   enhancer_regions_all[[ts]]=enhancer_regions_ts
   write.csv(enhancer_regions_ts,paste0(gene_example_dir,ts,'.csv'),row.names = F)
 }
-# saveRDS(enhancer_regions_all,enhancer_region_fn)
-# mouse_motif_overlap -----------------------------------------------------
-# tissue_sel=c("forebrain","heart",'limb','midbrain','hindbrain','liver','EFP')
-# GO_out_all=readRDS('../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run/GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_enhancer.rds')
-# GO_out_all=lapply(GO_out_all$all,function(x) do.call(rbind,lapply(x,function(y) 
-#   cbind(y$csv_in_ts_clu[,gsub('UC-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
-#         y$csv_in_ts_clu[,gsub('dMML-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
-#         y$csv_in_ts_clu[,gsub('dNME-','',colnames(y$csv_in_ts_clu)) %in% paste0('E',10:20,'.5-E',11:21,'.5'),with=FALSE],
-#    #y$csv_in_ts_clu[,grepl("UC-|dNME-|dMML-",colnames(y$csv_in_ts_clu)),with=FALSE],
-#     y$csv_in_ts_clu[,list(cluster,region,region_type)]))))
-# cor_in=readRDS('../downstream/output/mouse_analysis/correlation/tissue_out_N17_kmeans_10run_filtered_ref11.rds')
-# GO_out_all=lapply(GO_out_all,function(x) {
-#   uc_dt=  x[,grepl("UC-",colnames(x)),with=FALSE]
-#   dNME_dt=  x[,grepl("dNME-",colnames(x)),with=FALSE]
-#   dMML_dt=  x[,grepl("dMML-",colnames(x)),with=FALSE]
-#   uc_max=apply(uc_dt,1,which.max)
-#   x$UC_max_time=gsub('UC-','',colnames(uc_dt)[uc_max])
-#   x$dNME_max_UC_pair=as.data.frame(dNME_dt)[cbind(seq_along(uc_max), uc_max)]
-#   x$UC_max_UC_pair=as.data.frame(uc_dt)[cbind(seq_along(uc_max), uc_max)]
-#   x$dMML_max_UC_pair=as.data.frame(dMML_dt)[cbind(seq_along(uc_max), uc_max)]
-#   return(x)
-# })
-# enhancer_regions=readRDS('../downstream/output/mouse_analysis/enhancers/GO_regions_enchancer.rds')
-
-# CpG_mm10=CpG_mm10=getCpgSitesmm10()
-# end(CpG_mm10)=start(CpG_mm10)+1
-# motif_locus_ken_CG=lapply(motif_locus_ken,function(motifs) {
-#   for(mt in names(motifs)){
-#     if(length(motifs[[mt]])>0){
-#     motifs[[mt]]$mouse_region=motifs[[mt]]$region
-#     motifs[[mt]]$region=NULL
-#     motifs[[mt]]$motif=mt
-#     motifs[[mt]]$NCG=countOverlaps(motifs[[mt]],CpG_mm10,minoverlap = 2)
-#     }
-#     
-#   }
-#   return(do.call(c,motifs))
-#   
-# })
-# motif_locus_ken_CG=lapply(motif_locus_ken_CG,function(x){
-#   
-#   names(x)=NULL
-#   return(do.call('c',x))
-#   
-# }
-#   
-#   )
-# motif_locus_ken_CG_olap=lapply(motif_locus_ken_CG,function(x) x[x$NCG>0])
-# motif_locus_ken_CG_olap=lapply(motif_locus_ken_CG_olap,convert_GR,dir="DT")
-# 
-# 
-# saveRDS(motif_locus_ken_CG,'../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_locus_CG.rds')
-motif_locus_ken=readRDS(motif_Ken_fn)
+saveRDS(enhancer_regions_all,enhancer_region_fn)
+#This file contains all regions we analzyed and which motif is their binding site
+motif_locus_ken=readRDS(tissue_region_motif_all_regions_fn)
 enhancer_regions=readRDS(enhancer_region_fn)
 motif_enhancer_dNME=list()
 motif_enhancer_dMML=list()

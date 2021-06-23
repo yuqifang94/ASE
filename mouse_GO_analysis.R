@@ -37,8 +37,7 @@ for(enc_type in c("enhancer","promoter")){
       GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){
         return(list(GO_out_cluster_all=x$GO_out_cluster_all,
                     csv_in_ts_clu=cbind(x$csv_in_ts_clu,as.data.table(UC_merge[[ts]][x$csv_in_ts_clu$region,!grepl('max',colnames(UC_merge[[ts]]))]))))
-        
-        
+       
       })
       
     }
@@ -49,9 +48,8 @@ for(enc_type in c("enhancer","promoter")){
 
 # Plot heatmaps -----------------------------------------------------------
 
-enc_type='enhancer'
-cutoff_fn='01'
-GO_out_all=readRDS(paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
+
+GO_out_all=readRDS(GO_01_enhancer_fn)
 tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
 #Plot all terms in a single plot
 for(region_type in names(GO_out_all)){
@@ -61,7 +59,7 @@ for(region_type in names(GO_out_all)){
 }
 enc_type='promoter'
 cutoff_fn='01'
-GO_out_all=readRDS(paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
+GO_out_all=readRDS(GO_01_promoter_fn)
 for(region_type in names(GO_out_all)){
   plot_GO_heatmap_all(tissue_all,GO_out_all[[region_type]],region_type=region_type,enc_type="promoter",ptcount=0,FDR_cutoff=0.2,
                       dir_plot=GO_01_dir)
