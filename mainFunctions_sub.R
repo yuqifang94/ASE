@@ -152,6 +152,11 @@ library(MotifDb)
 library(MASS)
   
 })
+
+#Pubmed
+
+ library(rentrez)
+library(easyPubMed)
 # Not in use --------------------------------------------------------------
 # 
 # if (!requireNamespace("Repitools", quietly = TRUE))
@@ -2573,8 +2578,7 @@ motif_sig_Ken<-function(ts,stat,motif_locus_ken,enhancer_regions_ts,dir_in_Ken='
   return(list(motif_locus_dt=motif_locus_dt_collapse,motif_locus=motif_locus))
 }
 pubmed_rec<-function(genes,keys){
-  library(rentrez)
-  library(easyPubMed)
+ 
   my_query=paste0('(',genes,'[Title/Abstract]) AND ',keys,' AND (Human OR Mouse)')
   print(my_query)
    tt1=proc.time()[[3]]
