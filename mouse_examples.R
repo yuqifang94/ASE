@@ -15,6 +15,7 @@ gene_example_dir='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10r
 ChiP_motif_dir='../downstream/output/mouse_analysis/motif_analysis/motif_Chip_rds/'
 region_in=readRDS(tissue_out_filtered_fn)
 #Getting Bin enhancer
+#t
 enhancer=readRDS(enhancer_fn)
 region_in_enhancer=lapply(region_in,function(x) {
   olap=findOverlaps(convert_GR(x$region),enhancer)
