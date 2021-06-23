@@ -60,3 +60,6 @@ GO_01_enhancer_fn=paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run
 GO_01_promoter_fn=paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_01_promoter.rds')
 gene_example_dir=paste0(GO_01_dir,'gene_examples/')
 tissue_region_motif_all_regions_fn="../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_regions.rds"
+#This is from Ken via slack
+Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
+region_motif_dir='../downstream/output/mouse_analysis/motif_analysis/region_motif/'
