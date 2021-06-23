@@ -1268,3 +1268,119 @@ ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=UC_max_time_diff,colo
 # 
 # 
 # saveRDS(motif_locus_ken_CG,'../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_locus_CG.rds')
+  # enhancer_regions_ts$dNME_max_UC_pair =GO_out_all[[ts]][match(enhancer_regions_ts$region,region)]$dNME_max_UC_pair
+  # enhancer_regions_ts$dMML_max_UC_pair =GO_out_all[[ts]][match(enhancer_regions_ts$region,region)]$dMML_max_UC_pair
+  # enhancer_regions_ts$dNME_UC_cor=cor_in[[ts]][match(enhancer_regions_ts$region,region)]$dNME_cor
+  # enhancer_regions_ts$dMML_UC_cor=cor_in[[ts]][match(enhancer_regions_ts$region,region)]$dMML_cor
+
+      
+    #if(length(PMID_unique)>300){
+      #Counting number of citations
+    # breaks=ceiling(length(PMID_unique)/300)
+    # PMID_cut=cut(1:length(PMID_unique),breaks,label=FALSE)
+    # #Sys.sleep(300)
+    # pmc_ref_count=c()
+    # for(idx in 1:breaks){
+    # 
+    #   pmc_ref_count=c(pmc_ref_count,do.call(c,lapply(entrez_summary(db="pubmed", id=PMID_unique[PMID_cut==idx]),function(x) x$pmcrefcount)))
+    #   Sys.sleep(120)
+    # }
+    # }else( pmc_ref_count=do.call(c,lapply(entrez_summary(db="pubmed", id=PMID_unique),function(x) x$pmcrefcount)))
+    # 
+    # gene_pub_med$pmc_count=pmc_ref_count[gene_pub_med$PMID]
+    #gene_pub_med_collapse=gene_pub_med[,list(PMID=paste(PMID,collapse=";"),pmc_count=paste(pmc_count,collapse = ';'),title=paste(title,collapse=' ; ')),by=gene]
+    # Writing output ----------------------------------------------------------
+# 
+# 
+# for(ts in names(enhancer_regions_motif_dNME_all)){
+#   write.csv(enhancer_regions_motif_dNME_all[[ts]][,list(region,tissue,dNME_motif,cluster,gene,region_type,
+#                                               dNME_max_UC_pair ,dMML_max_UC_pair,UC_max_time,
+#                                               UC_max_time,UC_max_pair,dNME_UC_cor,
+#                                               dMML_UC_cor,dNME_UC_cor,PMID,title,GO_ID)],
+#             paste0(region_motif_dir,ts,'_dNME_Pubmed_annotated.csv'),
+#             row.names = F,quote=F)
+#   
+#   
+# }
+# write.csv(do.call(rbind,lapply(enhancer_regions_motif_dNME_all,function(x) 
+#   x[region_type=="dNME_only",list(tissue,dNME_motif,gene,UC_max_time,
+#                                   dNME_max_UC_pair,dNME_UC_cor,
+#                                   dMML_max_UC_pair,dMML_UC_cor,
+#                                   UC_max_pair,
+#                                   PMID,GO_ID)])),
+#   '../downstream/output/mouse_analysis/motif_analysis/region_motif/all_regions_dNME_only.csv',row.names = F,quote=F)
+# write.csv(do.call(rbind,lapply(enhancer_regions_motif_dMML_all,function(x) 
+#   x[region_type=="dMML_only",list(tissue,dMML_motif,gene,UC_max_time,
+#                                   dNME_max_UC_pair,dNME_UC_cor,
+#                                   dMML_max_UC_pair,dMML_UC_cor,
+#                                   UC_max_pair,
+#                                   PMID,GO_ID)])),
+#   '../downstream/output/mouse_analysis/motif_analysis/region_motif/all_regions_dMML_only.csv',row.names = F,quote=F)
+# #Read in and rank the dNME motif and dMML motif separately
+# dir_motif_gene='../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/'
+# #dNME only motif, need to have annotated GO terms
+# motif_dNME_out=data.table()
+# for(fn in dir(dir_motif_gene,pattern='dNME')){
+#   csv_in=fread(paste0(dir_motif_gene,fn))
+#   # need to have annotated GO terms
+#   GO_in=fread(paste0('../downstream/output/mouse_analysis/GO_analysis/gene_examples/',unique(csv_in$tissue),'.csv'))
+#   csv_in=csv_in[region %in% GO_in$region&region_type=="dNME_only"]
+#   csv_in$GO_terms=GO_in[match(csv_in$region,region)]$GO_terms
+#   #Change to dNME accordingly
+#   csv_in$rank1=csv_in[,list(rank=rank(dNME_UC_cor)),by=motif]$rank
+#   csv_in$rank2=csv_in[,list(rank=rank(dNME_max_UC_pair)),by=motif]$rank
+#   motif_dNME_out=rbind(motif_dNME_out,csv_in[,.SD[order(rank1+rank2,decreasing=T)],by=motif])
+# 
+# }
+# write.csv(motif_dNME_out[,list(motif,region,gene,tissue,
+#                                 UC_max_time ,
+#                                 dNME_max_UC_pair,UC_max_pair,dMML_max_UC_pair,
+#                                 dNME_UC_cor,dMML_UC_cor,
+#                                 cluster,GO_terms)],'../downstream/output/mouse_analysis/motif_analysis/mouse_motif_example_GO_dNME.csv',
+#           row.names = F)
+# 
+# 
+# #Check the distribution in forebrain
+# 
+# forebrain_dMML=fread('../downstream/output/mouse_analysis/motif_analysis/region_motif/Forebrain_dMML_temp.csv')
+# forebrain_dNME=fread('../downstream/output/mouse_analysis/motif_analysis/region_motif/Forebrain_dNME_temp.csv')
+# 
+# # archived ----------------------------------------------------------------
+# 
+# 
+# #dNME region
+# region_sample=list()
+# set.seed(123)
+# for(ts in names(GO_out_all)){
+# 
+#   motif_dNME=Ken_motif_merge(readRDS(paste0('../downstream/input/mouse_analysis/motif_analysis/Ken_motif_locus/',ts,'_motif_site_dNME.rds')))
+#   if(!is.null(motif_dNME)){
+#     GO_out_all_ts=GO_out_all[[ts]]
+#     GO_out_all_ts_dNME=GO_out_all_ts[region_type=="dNME_only"]
+# 
+#     GO_out_all_ts_dNME$motif_dNME=convert_GR(motif_dNME,direction="DT")[match(GO_out_all_ts_dNME$region,region)]$motif
+#     GO_out_all_ts_dNME$tissue=ts
+#     GO_out_all_ts_dNME_motif=GO_out_all_ts_dNME[!is.na(motif_dNME)]
+#     region_sample[[ts]]=GO_out_all_ts_dNME_motif[sample(1:nrow(GO_out_all_ts_dNME_motif),20)]
+#   }
+# }
+# #dMML region
+# region_sample=list()
+# set.seed(123)
+# for(ts in names(GO_out_all)){
+# 
+#   motif_dMML=Ken_motif_merge(readRDS(paste0('../downstream/input/mouse_analysis/motif_analysis/Ken_motif_locus/',ts,'_motif_site_dMML.rds')))
+#   if(!is.null(motif_dMML)){
+#     GO_out_all_ts=GO_out_all[[ts]]
+#     GO_out_all_ts_dMML=GO_out_all_ts[region_type=="dMML_only"]
+# 
+#     GO_out_all_ts_dMML$motif_dMML=convert_GR(motif_dMML,direction="DT")[match(GO_out_all_ts_dMML$region,region)]$motif
+#     GO_out_all_ts_dMML$tissue=ts
+#     GO_out_all_ts_dMML_motif=GO_out_all_ts_dMML[!is.na(motif_dMML)]
+#     if(nrow(GO_out_all_ts_dMML_motif)>20){
+#     region_sample[[ts]]=GO_out_all_ts_dMML_motif[sample(1:nrow(GO_out_all_ts_dMML_motif),20)]
+#     }else(region_sample[[ts]]=GO_out_all_ts_dMML_motif)
+#   }
+# }
+# write.csv(region_sample$heart[,list(region,UC_max_time,UC_max_UC_pair,dMML_max_UC_pair,dNME_max_UC_pair,motif_dMML,tissue)],
+#           '../downstream/output/mouse_analysis/examples/dMML_heart_GO_motif.csv')

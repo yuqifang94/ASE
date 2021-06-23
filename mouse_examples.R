@@ -1,11 +1,6 @@
 rm(list=ls())
 source('mainFunctions_sub.R')
-#get UC_merge_max_loc_cluster01.rds
-UC_merge_max_loc_01=readRDS(UC_merge_max_loc_01_file)
-#Read in selected GO regions
-motif_Ken_fn='../downstream/output/mouse_analysis/motif_analysis/tissue_region_motif_all_regions.rds'
-Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
-region_motif_dir='../downstream/output/mouse_analysis/motif_analysis/region_motif/'
+
 
 ChiP_motif_dir='../downstream/output/mouse_analysis/motif_analysis/motif_Chip_rds/'
 region_in=readRDS(tissue_out_filtered_fn)
@@ -54,18 +49,10 @@ enhancer_regions=readRDS(enhancer_region_fn)
 motif_enhancer_dNME=list()
 motif_enhancer_dMML=list()
 for(ts in names(enhancer_regions)){
-  
   enhancer_regions_ts=enhancer_regions[[ts]]
-  # enhancer_regions_ts$dNME_max_UC_pair =GO_out_all[[ts]][match(enhancer_regions_ts$region,region)]$dNME_max_UC_pair
-  # enhancer_regions_ts$dMML_max_UC_pair =GO_out_all[[ts]][match(enhancer_regions_ts$region,region)]$dMML_max_UC_pair
-  # enhancer_regions_ts$dNME_UC_cor=cor_in[[ts]][match(enhancer_regions_ts$region,region)]$dNME_cor
-  # enhancer_regions_ts$dMML_UC_cor=cor_in[[ts]][match(enhancer_regions_ts$region,region)]$dMML_cor
-
   dMML_motif=motif_sig_Ken(ts,"dMML",motif_locus_ken,enhancer_regions_ts,dir_in_Ken=Ken_motif_folder)
   dNME_motif=motif_sig_Ken(ts,"dNME",motif_locus_ken,enhancer_regions_ts,dir_in_Ken=Ken_motif_folder)
-
  #motif_region relationship
-  
   motif_enhancer_dNME[[ts]]=dNME_motif$motif_locus
   motif_enhancer_dMML[[ts]]=dMML_motif$motif_locus
   #Region-motif relationship 
@@ -114,26 +101,12 @@ for(ts in tissue_sel){
   enhancer_regions_motif=enhancer_regions[[ts]][(!is.na(dNME_motif)|!is.na(dMML_motif))&(!is.na(GO_ID))]
   enhancer_regions_motif=enhancer_regions_motif[order(dNME_max_pair,decreasing=T)]
   selected_genes=unique(enhancer_regions_motif$gene)
+  source('pubmed_rec.R')
   gene_pub_med=do.call(rbind,lapply(selected_genes,pubmed_rec,keys=key_terms[ts]))
   if(!is.null(gene_pub_med)){
     #maximum countof 300
     PMID_unique=unique(gene_pub_med$PMID)
-    
-    #if(length(PMID_unique)>300){
-      #Counting number of citations
-    # breaks=ceiling(length(PMID_unique)/300)
-    # PMID_cut=cut(1:length(PMID_unique),breaks,label=FALSE)
-    # #Sys.sleep(300)
-    # pmc_ref_count=c()
-    # for(idx in 1:breaks){
-    # 
-    #   pmc_ref_count=c(pmc_ref_count,do.call(c,lapply(entrez_summary(db="pubmed", id=PMID_unique[PMID_cut==idx]),function(x) x$pmcrefcount)))
-    #   Sys.sleep(120)
-    # }
-    # }else( pmc_ref_count=do.call(c,lapply(entrez_summary(db="pubmed", id=PMID_unique),function(x) x$pmcrefcount)))
-    # 
-    # gene_pub_med$pmc_count=pmc_ref_count[gene_pub_med$PMID]
-    #gene_pub_med_collapse=gene_pub_med[,list(PMID=paste(PMID,collapse=";"),pmc_count=paste(pmc_count,collapse = ';'),title=paste(title,collapse=' ; ')),by=gene]
+
     gene_pub_med_collapse=gene_pub_med[,list(PMID=paste(PMID,collapse=";"),title=paste(title,collapse=' ; ')),by=gene]
     #Only genes with Pubmed literature
     enhancer_regions_motif_dNME=enhancer_regions_motif[!is.na(dNME_motif)]
@@ -142,7 +115,7 @@ for(ts in tissue_sel){
     enhancer_regions_motif_dMML=cbind(enhancer_regions_motif_dMML,gene_pub_med_collapse[match(enhancer_regions_motif_dMML$gene,gene)])
   }
   else{
-    enhancer_regions_motif_dNME=enhancer_regions_motif[!is.na(dNME_motif)]
+  enhancer_regions_motif_dNME=enhancer_regions_motif[!is.na(dNME_motif)]
   enhancer_regions_motif_dMML=enhancer_regions_motif[!is.na(dMML_motif)]
   enhancer_regions_motif_dMML$PMID=NA
   enhancer_regions_motif_dNME$PMID=NA
