@@ -26,29 +26,28 @@ region_in_enhancer=lapply(region_in_enhancer,function(x){
   return(x)
   
 })
-saveRDS(region_in_enhancer,enhancer_region_fn)
+
 # #Mouse gene example
 GO_out_all=readRDS(GO_01_enhancer_fn)
-enhancer_regions=readRDS(enhancer_region_fn)
-enhancer_regions_all=list()
-tissue_sel=names(enhancer_regions)
+
+tissue_sel=names(region_in_enhancer)
 for(ts in tissue_sel){
   select_top_GO_out=select_top_GO(GO_out_all$all,ts,ptcount=0,FDR_cutoff=0.1,FC_cutoff=1.5)
   ts_sel_genes=unique(unlist(strsplit(select_top_GO_out$tissue_all_merged[FDR<=0.1&FC>=1.5]$genes,';')))
-  enhancer_regions_ts=enhancer_regions[[ts]][gene %in% ts_sel_genes][order(dNME_max_pair,decreasing=T)]
+  enhancer_regions_ts=region_in_enhancer[[ts]][gene %in% ts_sel_genes][order(dNME_max_pair,decreasing=T)]
   enhancer_regions_ts$GO_terms=unlist(lapply(enhancer_regions_ts$gene,function(x) paste(select_top_GO_out$tissue_all_merged[FDR<=0.1&FC>=1.5][grepl(x,genes)]$Term,collapse = ';')))
   enhancer_regions_ts$GO_ID=unlist(lapply(enhancer_regions_ts$gene,function(x) paste(gsub('GO:','',select_top_GO_out$tissue_all_merged[FDR<=0.1&FC>=1.5][grepl(x,genes)]$`GO.ID`),collapse = ';')))
-  enhancer_regions_all[[ts]]=enhancer_regions_ts
+  region_in_enhancer[[ts]]=enhancer_regions_ts
   write.csv(enhancer_regions_ts,paste0(gene_example_dir,ts,'.csv'),row.names = F)
 }
-saveRDS(enhancer_regions_all,enhancer_region_fn)
+#EFP:before 2941, after 2140
 #This file contains all regions we analzyed and which motif is their binding site
 motif_locus_ken=readRDS(tissue_region_motif_all_regions_fn)
-enhancer_regions=readRDS(enhancer_region_fn)
+
 motif_enhancer_dNME=list()
 motif_enhancer_dMML=list()
-for(ts in names(enhancer_regions)){
-  enhancer_regions_ts=enhancer_regions[[ts]]
+for(ts in names(region_in_enhancer)){
+  enhancer_regions_ts=region_in_enhancer[[ts]]
   dMML_motif=motif_sig_Ken(ts,"dMML",motif_locus_ken,enhancer_regions_ts,dir_in_Ken=Ken_motif_folder)
   dNME_motif=motif_sig_Ken(ts,"dNME",motif_locus_ken,enhancer_regions_ts,dir_in_Ken=Ken_motif_folder)
  #motif_region relationship
@@ -58,13 +57,10 @@ for(ts in names(enhancer_regions)){
   enhancer_regions_ts$dMML_motif=dMML_motif$motif_locus_dt[match(enhancer_regions_ts$region,region)]$motif
   enhancer_regions_ts$dNME_motif=dNME_motif$motif_locus_dt[match(enhancer_regions_ts$region,region)]$motif
 
-  enhancer_regions[[ts]]=enhancer_regions_ts
+  region_in_enhancer[[ts]]=enhancer_regions_ts
   write.csv(enhancer_regions_ts,paste0(region_motif_dir,ts,'.csv'))
-  
-
-
 }
-saveRDS(enhancer_regions,enhancer_region_fn)
+saveRDS(region_in_enhancer,enhancer_region_fn)
 
 #create pubMed searching queue based on tissue
 #This needs to be run in Windows environment
@@ -136,12 +132,12 @@ for(ts in tissue_sel){
   
  
 }
+#Identical chack passed in clean run
+saveRDS(enhancer_regions_motif_dNME_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all2.rds'))
+saveRDS(enhancer_regions_motif_dMML_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all2.rds'))
 
-saveRDS(enhancer_regions_motif_dNME_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all.rds'))
-saveRDS(enhancer_regions_motif_dMML_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all.rds'))
-
-enhancer_regions_motif_dNME_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all.rds'))
-enhancer_regions_motif_dMML_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all.rds'))
+enhancer_regions_motif_dNME_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all2.rds'))
+enhancer_regions_motif_dMML_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all2.rds'))
 
 enhancer_regions_motif_dNME_all_dNME=do.call(rbind,enhancer_regions_motif_dNME_all)
 enhancer_regions_motif_dNME_all_dNME=enhancer_regions_motif_dNME_all_dNME[region_type=='NME only',list(tissue,dNME_motif,cluster,gene,dNME_max_pair,dNME_cor,dMML_max_pair,dMML_cor,UC_max_time,PMID)]

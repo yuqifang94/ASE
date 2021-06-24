@@ -1,5 +1,4 @@
 # file locations ----------------------------------------------------------
-
 #global pval cutoff file names
 pval_cutoff=0.1 #Onuchic use 0.1
 gff_in_file='../downstream/input/human_analysis/gff_in.rds'
@@ -63,4 +62,5 @@ tissue_region_motif_all_regions_fn="../downstream/output/mouse_analysis/motif_an
 #This is from Ken via slack
 mouse_motif_dir='../downstream/output/mouse_analysis/motif_analysis/'
 Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
-region_motif_dir=paste0(mouse_motif_dir,'motif_analysis/region_motif/')
+region_motif_dir=paste0(mouse_motif_dir,'region_motif/')
+cancer_input_dir='../downstream/input/mouse_analysis/cancer_SNP/'

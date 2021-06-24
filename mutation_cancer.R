@@ -8,11 +8,15 @@ variant_human=readRDS(variant_HetCpG_meta_file)
 subsetByOverlaps(variant_human,pan_mutation_single)#No overlap
 
 #From https://cancer.sanger.ac.uk/cosmic/download
-pan_mutation_coding=fread('../downstream/input/CosmicMutantExport.tsv.gz')
+#See scripted download starting with
+#echo "email@example.com:mycosmicpassword" | base64
+
+
+pan_mutation_coding=fread(paste0(cancer_input_dir,'CosmicMutantExport.tsv.gz'))
 pan_mutation_coding=pan_mutation_coding[,list(`HGNC ID`,HGVSG,`Primary site`,`Primary histology`,`Genome-wide screen`,
                                               GENOMIC_MUTATION_ID,GRCh,`Mutation genome position`,`Mutation Description`,
                                               `FATHMM score`,`FATHMM prediction`)]
-pan_mutation_noncoding=fread('../downstream/input/CosmicNCV.tsv.gz')
+pan_mutation_noncoding=fread(paste0(cancer_input_dir,'CosmicNCV.tsv.gz'))
 pan_mutation_noncoding=pan_mutation_noncoding[,list(HGVSG,`Primary site`,`Primary histology`,
                           GENOMIC_MUTATION_ID,GRCh,`genome position`,`Mutation somatic status`,
                           `FATHMM_MKL_NON_CODING_SCORE`)]

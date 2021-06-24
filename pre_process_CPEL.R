@@ -351,7 +351,6 @@ UC_in_MDS_comp_UC=fastDoCall('cbind',
                                read.agnostic.mouse.uc(paste(compliment_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=10))
 
 UC_in_MDS_comp=cbind(UC_in_MDS_comp,UC_in_MDS_comp_UC)
-saveRDS(UC_in_MDS_comp,'../downstream/output/UC_in_MDS_comp.rds')#This is temporary, delete afterwards
 #Filter based on N first to save space
 DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
 gff_in_DNase=import.gff3(mouse_DNase_control_gff_file)
@@ -361,10 +360,10 @@ UC_in_analyzed_MDS_UC=fastDoCall('cbind',
                                  mclapply(dir(compliment_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
                                    read.agnostic.mouse.uc(paste(DNase_conrol_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_DNase)},mc.cores=10))
 UC_in_analyzed_MDS=cbind(UC_in_analyzed_MDS,UC_in_analyzed_MDS_UC)
-saveRDS(UC_in_analyzed_MDS,'../downstream/output/UC_in_analyzed_MDS.rds')#This is temporary, delete afterwards
 UC_in_MDS_all=rbind(UC_in_MDS_comp,UC_in_analyzed_MDS)
 saveRDS(UC_in_MDS_all,UC_in_MDS_all_file)
 
+# UC for mouse MDS comparison with P0---------------------------------------------
 
 # MDS for DNase only regions ----------------------------------------------
 
