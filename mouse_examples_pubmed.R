@@ -70,5 +70,36 @@ for(ts in tissue_sel){
  
 }
 #Identical chack passed in clean run
-saveRDS(enhancer_regions_motif_dNME_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all2.rds'))
-saveRDS(enhancer_regions_motif_dMML_all,paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all2.rds'))
+saveRDS(enhancer_regions_motif_dNME_all,enhancer_motif_all_dNME_fn)
+saveRDS(enhancer_regions_motif_dMML_all,enhancer_motif_all_dMML_fn)
+enhancer_regions_motif_dNME_all=readRDS(enhancer_motif_all_dNME_fn)
+enhancer_regions_motif_dMML_all=readRDS(enhancer_motif_all_dMML_fn)
+#creating merged csv file #Supplmentary data
+enhancer_regions_motif_dNME_all_dNME=do.call(rbind,enhancer_regions_motif_dNME_all)
+enhancer_regions_motif_dNME_all_dNME=enhancer_regions_motif_dNME_all_dNME[region_type=='NME only',list(tissue,dNME_motif,cluster,gene,dNME_max_pair,dNME_cor,dMML_max_pair,dMML_cor,UC_max_time,PMID)]
+colnames(enhancer_regions_motif_dNME_all_dNME)=c('Tissue','Motif','Cluster','Gene','dNME','dNME-UC correlation','dMML','dMML-UC correlation','Stage','PMID')
+enhancer_regions_motif_dMML_all_dMML=do.call(rbind,enhancer_regions_motif_dMML_all)
+enhancer_regions_motif_dMML_all_dMML=enhancer_regions_motif_dMML_all_dMML[region_type=='MML only',list(tissue,dMML_motif,cluster,gene,dNME_max_pair,dNME_cor,dMML_max_pair,dMML_cor,UC_max_time,PMID)]
+colnames(enhancer_regions_motif_dMML_all_dMML)=c('Tissue','Motif','Cluster','Gene','dNME','dNME-UC correlation','dMML','dMML-UC correlation','Stage','PMID')
+write.csv(enhancer_regions_motif_dNME_all_dNME,paste0(mouse_motif_dir,'merged_motif_dNME.csv',row.names = F)
+write.csv(enhancer_regions_motif_dMML_all_dMML,paste0(mouse_motif_dir,'merged_motif_dMML.csv',row.names = F)
+# Reformat motif from Ken -------------------------------------------------
+
+dMML_motifs=data.table()
+for(fn in dir(Ken_motif_folder,pattern='dMML')){
+  ts=gsub('_.*','',fn)
+  csv_in=fread(paste0(Ken_motif_folder,fn))
+  csv_in$tissue=ts
+  csv_in$motif=gsub('.*_','',csv_in$motif)
+  dMML_motifs=rbind(dMML_motifs,csv_in[,list(tissue,motif,human_high_NME,residual,log_OR_dMML,normalized_log_OR_dMML,FDR_dMML)])
+}
+write.csv(dMML_motifs,paste0(mouse_motif_dir,'Ken_dMML_all.csv')
+dNME_motifs=data.table()
+for(fn in dir(Ken_motif_folder,pattern='dNME')){
+  ts=gsub('_.*','',fn)
+  csv_in=fread(paste0(dir_Ken,fn))
+  csv_in$tissue=ts
+  csv_in$motif=gsub('.*_','',csv_in$motif)
+  dNME_motifs=rbind(dNME_motifs,csv_in[,list(tissue,motif,human_high_NME,residual,log_OR_dNME,normalized_log_OR_dNME,FDR_dNME)])
+}
+write.csv(dNME_motifs,paste0(mouse_motif_dir,'Ken_dNME_all.csv')

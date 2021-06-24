@@ -50,6 +50,7 @@ pan_mutation_gr_19=unlist(pan_mutation_gr_19)
 saveRDS(pan_mutation_gr_19,cosmic_pan_mutation_fn_hg19)
 human_variant=readRDS(variant_HetCpG_meta_file)
 #Subset with passenger mutation
+
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
 saveRDS(human_pan,'../downstream/output/human_pan.rds')
 human_pan=readRDS('../downstream/output/human_analysis/cancer_analysis/human_pan.rds')
