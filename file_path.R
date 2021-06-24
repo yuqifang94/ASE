@@ -63,4 +63,6 @@ tissue_region_motif_all_regions_fn="../downstream/output/mouse_analysis/motif_an
 mouse_motif_dir='../downstream/output/mouse_analysis/motif_analysis/'
 Ken_motif_folder='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
 region_motif_dir=paste0(mouse_motif_dir,'region_motif/')
-cancer_input_dir='../downstream/input/mouse_analysis/cancer_SNP/'
+cancer_input_dir='../downstream/input/human_analysis/cancer_SNP/'
+cosmic_pan_mutation_fn='../downstream/input/human_analysis/pan_cancer_mutation_coding_non_coding_COSMIC.rds'
+cosmic_pan_mutation_fn_hg19='../downstream/input/human_analysis/pan_cancer_mutation_coding_non_coding_COSMIC_hg19.rds'

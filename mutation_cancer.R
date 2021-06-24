@@ -11,7 +11,7 @@ subsetByOverlaps(variant_human,pan_mutation_single)#No overlap
 #See scripted download starting with
 #echo "email@example.com:mycosmicpassword" | base64
 
-
+#Get all coding mutation
 pan_mutation_coding=fread(paste0(cancer_input_dir,'CosmicMutantExport.tsv.gz'))
 pan_mutation_coding=pan_mutation_coding[,list(`HGNC ID`,HGVSG,`Primary site`,`Primary histology`,`Genome-wide screen`,
                                               GENOMIC_MUTATION_ID,GRCh,`Mutation genome position`,`Mutation Description`,
@@ -20,6 +20,7 @@ pan_mutation_noncoding=fread(paste0(cancer_input_dir,'CosmicNCV.tsv.gz'))
 pan_mutation_noncoding=pan_mutation_noncoding[,list(HGVSG,`Primary site`,`Primary histology`,
                           GENOMIC_MUTATION_ID,GRCh,`genome position`,`Mutation somatic status`,
                           `FATHMM_MKL_NON_CODING_SCORE`)]
+                        
 pan_mutation_noncoding$`HGNC ID`="Non-coding"
 pan_mutation_noncoding$`Genome-wide screen`="Non-coding"
 pan_mutation_noncoding$`Mutation genome position`=pan_mutation_noncoding$`genome position`
@@ -32,22 +33,23 @@ pan_mutation_noncoding$`FATHMM_MKL_NON_CODING_SCORE`=NULL
 pan_mutation_noncoding$`FATHMM prediction`="Not Functional"
 pan_mutation_noncoding[`FATHMM score`>=0.7]$`FATHMM prediction`="Functional"
 pan_mutation=rbind(pan_mutation_coding,pan_mutation_noncoding)
-pan_mutation=readRDS('../downstream/input/pan_cancer_mutation_coding_non_coding.rds')
-pan_mutation=pan_mutation[!is.na(`Mutation genome position`)& `Mutation genome position`!=""& !is.na(`FATHMM score`)]#60763076/65719644
+pan_mutation=saveRDS(pan_mutation,cosmic_pan_mutation_fn)
+pan_mutation=pan_mutation[!is.na(`Mutation genome position`)& `Mutation genome position`!=""& !is.na(`FATHMM score`)]#61985249/67034479
 pan_mutation_gr=GRanges(seqnames = sub(":.*", "", pan_mutation$`Mutation genome position`), 
                         IRanges(start = as.numeric(sub("-.*","", sub(".*:", "", pan_mutation$`Mutation genome position`))), 
                                 end = as.numeric(sub(".*-", "",pan_mutation$`Mutation genome position`))), strand = "*")
 mcols(pan_mutation_gr)=pan_mutation
-saveRDS(pan_mutation_gr,'../downstream/input/pan_cancer_mutation_coding_non_coding_gr.rds')
-pan_mutation_gr=readRDS('../downstream/input/human_analysis/cancer_SNP/pan_cancer_mutation_coding_non_coding_gr.rds')
+saveRDS(pan_mutation_gr,cosmic_pan_mutation_fn)
 rm(pan_mutation_coding)
 rm(pan_mutation_noncoding)
+#https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz
 ch = import.chain('../downstream/input/human_analysis/liftOver/hg38ToHg19.over.chain')
 seqlevelsStyle(pan_mutation_gr) = "UCSC"  # necessary
 pan_mutation_gr_19 = liftOver(pan_mutation_gr, ch)
 pan_mutation_gr_19=unlist(pan_mutation_gr_19)
-saveRDS(pan_mutation_gr_19,'../downstream/input/pan_cancer_mutation_coding_non_coding_gr19.rds')
+saveRDS(pan_mutation_gr_19,cosmic_pan_mutation_fn_hg19)
 human_variant=readRDS(variant_HetCpG_meta_file)
+#Subset with passenger mutation
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
 saveRDS(human_pan,'../downstream/output/human_pan.rds')
 human_pan=readRDS('../downstream/output/human_analysis/cancer_analysis/human_pan.rds')
