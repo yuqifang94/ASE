@@ -364,22 +364,32 @@ UC_in_MDS_all=rbind(UC_in_MDS_comp,UC_in_analyzed_MDS)
 saveRDS(UC_in_MDS_all,UC_in_MDS_all_file)
 
 # UC for mouse MDS comparison with P0---------------------------------------------
+gff_in_compliment=import.gff3(mouse_compliment_gff_file)
+gff_in_compliment=paste0(seqnames(gff_in_compliment),':',start(gff_in_compliment),'-',end(gff_in_compliment))
+UC_in_MDS_comp_P0=data.table(region=gff_in_compliment)
+compliment_MDS_dir_P0='../downstream/data/UC_MDS_day0/'
+UC_in_MDS_comp_P0_UC=fastDoCall('cbind',
+                             mclapply(dir(compliment_MDS_dir_P0,pattern = '.*uc.bedGraph'),function(x){
+                               read.agnostic.mouse.uc(paste(compliment_MDS_dir_P0,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=10))
 
-# MDS for DNase only regions ----------------------------------------------
-
+UC_in_MDS_comp_P0=cbind(UC_in_MDS_comp_P0,UC_in_MDS_comp_P0_UC)
+saveRDS(UC_in_MDS_comp_P0,'../downstream/output/mouse_analysis/UC_in_MDS_comp_P0.rds')
+#Note old and new run have different names before and after -vs-
+#Fixing this issue
 DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
 gff_in_DNase=import.gff3(mouse_DNase_control_gff_file)
 gff_in_DNase=paste0(seqnames(gff_in_DNase),':',start(gff_in_DNase),'-',end(gff_in_DNase))
-UC_in_analyzed_MDS=data.table(region=gff_in_DNase)
-UC_in_analyzed_MDS_UC=fastDoCall('cbind',
-                                 mclapply(dir(DNase_conrol_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
+UC_in_analyzed_MDS_P0=data.table(region=gff_in_DNase)
+UC_in_analyzed_MDS_P0_UC=fastDoCall('cbind',
+                                 mclapply(dir(compliment_MDS_dir_P0,pattern = '.*uc.bedGraph'),function(x){
                                    read.agnostic.mouse.uc(paste(DNase_conrol_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_DNase)},mc.cores=10))
-UC_in_analyzed_MDS=cbind(UC_in_analyzed_MDS,UC_in_analyzed_MDS_UC)
-saveRDS(UC_in_analyzed_MDS,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_control_PRC.rds')
-DNase_mm10=readRDS(DNase_mm10_file)
-DNase_mm10=convert_GR(DNase_mm10,dir='DT')
-UC_in_analyzed_MDS_DNase=UC_in_analyzed_MDS[region%in% DNase_mm10$region]
-saveRDS(UC_in_analyzed_MDS_DNase,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_only.rds')
+UC_in_analyzed_MDS_P0=cbind(UC_in_analyzed_MDS_P0,UC_in_analyzed_MDS_P0_UC)
+UC_in_MDS_all_P0=rbind(UC_in_MDS_comp_P0,UC_in_analyzed_MDS_P0)
+saveRDS(UC_in_MDS_all_P0,'../dowstream/output/mouse_analysis/UC_in_MDS_all_P0.rds')
+UC_in_MDS_all=readRDS(UC_in_MDS_all_file)
+
+saveRDS(UC_in_MDS_all,UC_in_MDS_all_P0_file)
+
 # created merged object for all UC, dMML and dNME ----------------------------------------
 
 mml <- readRDS(MML_matrix_file)
