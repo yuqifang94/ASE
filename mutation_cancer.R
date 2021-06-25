@@ -55,6 +55,10 @@ pan_mutation_gr_19_passenger=pan_mutation_gr_19[pan_mutation_gr_19$`FATHMM score
 #Find overlap with passenger mutation
 olap_passenger=findOverlaps(human_variant,pan_mutation_gr_19_passenger)
 human_variant_passenger=human_variant[queryHits(olap_passenger)]
+#Check genomic context
+genomic_features=readRDS(genomic_features_file)
+
+#Find proportion
 library(stringr)
 human_variant_passenger$cancer_mutation=
         str_sub(pan_mutation_gr_19_passenger$HGVSG[subjectHits(olap_passenger)],-3,-1)
@@ -72,9 +76,8 @@ binom.test(sum(human_variant_passenger_sm_dNME$altNME>human_variant_passenger_sm
           length(human_variant_passenger_sm_dNME),sum(human_variant$altNME>human_variant$refNME)/length(human_variant)
 )
 
-#Check genomic context
-genomic_features=readRDS(genomic_features_file)
-123
+
+
 
 #Archive
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
