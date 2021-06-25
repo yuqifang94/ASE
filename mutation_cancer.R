@@ -48,9 +48,33 @@ seqlevelsStyle(pan_mutation_gr) = "UCSC"  # necessary
 pan_mutation_gr_19 = liftOver(pan_mutation_gr, ch)
 pan_mutation_gr_19=unlist(pan_mutation_gr_19)
 saveRDS(pan_mutation_gr_19,cosmic_pan_mutation_fn_hg19)
+pan_mutation_gr_19=readRDS(cosmic_pan_mutation_fn_hg19)
 human_variant=readRDS(variant_HetCpG_meta_file)
 #Subset with passenger mutation
+pan_mutation_gr_19_passenger=pan_mutation_gr_19[pan_mutation_gr_19$`FATHMM score`<=0.5]
+#Find overlap with passenger mutation
+olap_passenger=findOverlaps(human_variant,pan_mutation_gr_19_passenger)
+human_variant_passenger=human_variant[queryHits(olap_passenger)]
+library(stringr)
+human_variant_passenger$cancer_mutation=
+        str_sub(pan_mutation_gr_19_passenger$HGVSG[subjectHits(olap_passenger)],-3,-1)
+human_variant_passenger$human_mutation=paste0(human_variant_passenger$REF,">",human_variant_passenger$ALT)
+same_mutation_idx=apply(data.frame(cancer_mutation=human_variant_passenger$cancer_mutation,
+                                human_mutation=human_variant_passenger$human_mutation),1,
+                                function(x) x[1]==x[2])
+human_variant_passenger_sm=human_variant_passenger[same_mutation_idx]#2205133/2252133 regions
+human_variant_passenger_sm_dNME=human_variant_passenger_sm[human_variant_passenger_sm$dNME_pval<=pval_cutoff]#13045
+sum(human_variant_passenger_sm_dNME$altNME>human_variant_passenger_sm_dNME$refNME)/length(human_variant_passenger_sm_dNME)#0.6139
+#reference
+human_variant_dNME=human_variant[human_variant$dNME_pval<=pval_cutoff]
+sum(human_variant$altNME>human_variant$refNME)/length(human_variant)#0.506
+binom.test(sum(human_variant_passenger_sm_dNME$altNME>human_variant_passenger_sm_dNME$refNME),
+          length(human_variant_passenger_sm_dNME),sum(human_variant$altNME>human_variant$refNME)/length(human_variant)
+)
 
+#Check genomic context
+genomic_features=readRDS(genomic_features_file)
+#Archive
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
 saveRDS(human_pan,'../downstream/output/human_pan.rds')
 human_pan=readRDS('../downstream/output/human_analysis/cancer_analysis/human_pan.rds')

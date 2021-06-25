@@ -1497,3 +1497,19 @@ ggplot(csv_out[states%in%c("enhancers","promoters")],aes(x=UC_max_time_diff,colo
 # #gata4 in heart
 # factor_in_GATA4=factor_in[grepl("GATA",factor_in$metadata)]
 # factor_in_GATA4_gr=makeGRangesFromDataFrame(factor_in_GATA4)
+#pre_process_CPEL
+# MDS for DNase only regions ----------------------------------------------
+
+DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
+gff_in_DNase=import.gff3(mouse_DNase_control_gff_file)
+gff_in_DNase=paste0(seqnames(gff_in_DNase),':',start(gff_in_DNase),'-',end(gff_in_DNase))
+UC_in_analyzed_MDS=data.table(region=gff_in_DNase)
+UC_in_analyzed_MDS_UC=fastDoCall('cbind',
+                                 mclapply(dir(DNase_conrol_MDS_dir,pattern = '.*uc.bedGraph'),function(x){
+                                   read.agnostic.mouse.uc(paste(DNase_conrol_MDS_dir,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_DNase)},mc.cores=10))
+UC_in_analyzed_MDS=cbind(UC_in_analyzed_MDS,UC_in_analyzed_MDS_UC)
+saveRDS(UC_in_analyzed_MDS,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_control_PRC.rds')
+DNase_mm10=readRDS(DNase_mm10_file)
+DNase_mm10=convert_GR(DNase_mm10,dir='DT')
+UC_in_analyzed_MDS_DNase=UC_in_analyzed_MDS[region%in% DNase_mm10$region]
+saveRDS(UC_in_analyzed_MDS_DNase,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_only.rds')
