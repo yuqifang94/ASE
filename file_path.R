@@ -70,3 +70,4 @@ cosmic_pan_mutation_fn_hg19='../downstream/input/human_analysis/pan_cancer_mutat
 motif_locus_bed_dir='../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/'
 enhancer_motif_all_dNME_fn=paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all2.rds')
 enhancer_motif_all_dMML_fn=paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all2.rds')
+GWAS_prep_dir='../downstream/output/mouse_analysis/GWAS_prep/
