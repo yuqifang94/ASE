@@ -1513,3 +1513,141 @@ DNase_mm10=readRDS(DNase_mm10_file)
 DNase_mm10=convert_GR(DNase_mm10,dir='DT')
 UC_in_analyzed_MDS_DNase=UC_in_analyzed_MDS[region%in% DNase_mm10$region]
 saveRDS(UC_in_analyzed_MDS_DNase,'../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_DNase_only.rds')
+############From mouse_ChIP_seq_overlap.R
+# #Liver
+# #Embyro
+# factor_in_liver=fread('../downstream/input/mouse_analysis/motif_analysis/chipatlas/mm10_embyro_liver.bed',skip = 1,sep='\t')
+# colnames(factor_in_liver)=c('seqnames','start','end','metadata','log10qval','not_used','start2','end2','color')
+# factor_in_liver=factor_in_liver[,list(seqnames,start,end,metadata,log10qval)]
+# factor_in_liver$metadata=gsub('%20','_',factor_in_liver$metadata)
+# factor_in_liver$metadata=gsub('%3','_',factor_in_liver$metadata)
+# forebrain_ken_dNME=fread(paste0(Ken_motif_folder,'liver_OR_residual_dNME.csv'))
+# forebrain_ken_dMML = fread(paste0(Ken_motif_folder,'liver_OR_residual_dMML.csv'))
+# factor_in_liver_dNME=factor_in_liver[grepl(paste(gsub('.*_','',liver_ken_dNME$motif),collapse = "|"),factor_in_liver$metadata,ignore.case=T)]
+# factor_in_liver_dMML=factor_in_liver[grepl(paste(gsub('.*_','',liver_ken_dMML$motif),collapse = "|"),factor_in_liver$metadata,ignore.case=T)]
+# 
+# for(motif in gsub('.*_','',liver_ken_dNME$motif)){
+#   motif_ChIP=factor_in_liver_dNME[grepl(motif,metadata,ignore.case = T)]
+#   if(nrow(motif_ChIP)>0){
+#     write.table(motif_ChIP,
+#                 paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/mm10_liver_embyro_dNME_ChiPatlas_',gsub('::','_',motif),'.bed'),
+#                 col.names = F,row.names = F,quote=F)
+#   }
+#   
+# }
+# for(motif in gsub('.*_','',liver_ken_dMML$motif)){
+#   motif_ChIP=factor_in_liver_dMML[grepl(motif,metadata,ignore.case = T)]
+#   if(nrow(motif_ChIP)>0){
+#     write.table(motif_ChIP,
+#                 paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dMML/mm10_liver_embyro_dMML_ChiPatlas_',gsub('::','_',motif),'.bed'),
+#                 col.names = F,row.names = F,quote=F)
+#   }
+#   
+# }
+# #Adult
+# factor_in_liver=fread('../downstream/input/mouse_analysis/motif_analysis/chipatlas/mm10_liver.bed',skip = 1,sep='\t')
+# colnames(factor_in_liver)=c('seqnames','start','end','metadata','log10qval','not_used','start2','end2','color')
+# factor_in_liver=factor_in_liver[,list(seqnames,start,end,metadata,log10qval)]
+# factor_in_liver$metadata=gsub('%20','_',factor_in_liver$metadata)
+# factor_in_liver$metadata=gsub('%3','_',factor_in_liver$metadata)
+# liver_ken_dNME=fread('../downstream/input/mouse_analysis/motif_analysis/Ken_motif_result_20210406/liver_OR_residual_dNME.csv')
+# liver_ken_dMML = fread('../downstream/input/mouse_analysis/motif_analysis/Ken_motif_result_20210406/liver_OR_residual_dMML.csv')
+# factor_in_liver_dNME=factor_in_liver[grepl(paste(gsub('.*_','',liver_ken_dNME$motif),collapse = "|"),factor_in_liver$metadata,ignore.case=T)]
+# factor_in_liver_dMML=factor_in_liver[grepl(paste(gsub('.*_','',liver_ken_dMML$motif),collapse = "|"),factor_in_liver$metadata,ignore.case=T)]
+# 
+# for(motif in gsub('.*_','',liver_ken_dNME$motif)){
+#   motif_ChIP=factor_in_liver_dNME[grepl(motif,metadata,ignore.case = T)]
+#   if(nrow(motif_ChIP)>0){
+#     write.table(motif_ChIP,
+#                 paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/mm10_liver_adult_dNME_ChiPatlas_',gsub('::','_',motif),'.bed'),
+#                 col.names = F,row.names = F,quote=F)
+#   }
+#   
+# }
+# for(motif in gsub('.*_','',liver_ken_dMML$motif)){
+#   motif_ChIP=factor_in_liver_dMML[grepl(motif,metadata,ignore.case = T)]
+#   if(nrow(motif_ChIP)>0){
+#     write.table(motif_ChIP,
+#                 paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dMML/mm10_forebrain_adult_dMML_ChiPatlas_',gsub('::','_',motif),'.bed'),
+#                 col.names = F,row.names = F,quote=F)
+#   }
+#   
+# }
+# archived ----------------------------------------------------------------
+
+
+
+liver_regions=fread('../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/motif_gene_liver_dNME.csv')
+olap=findOverlaps(convert_GR(liver_regions$region),GRanges(seqname=factor_in_liver_dNME$seqnames,IRanges(start=factor_in_liver_dNME$start,end=factor_in_liver_dNME$end)))
+
+write.csv(liver_regions[queryHits(olap)],'../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/motif_gene_liver_dNME_ChiP.csv')
+
+liver_regions=fread('../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/motif_gene_liver_dMML.csv')
+olap=findOverlaps(convert_GR(liver_regions$region),GRanges(seqname=factor_in_liver_dMML$seqnames,IRanges(start=factor_in_liver_dMML$start,end=factor_in_liver_dMML$end)))
+
+write.csv(liver_regions[queryHits(olap)],'../downstream/output/mouse_analysis/motif_analysis/enhancer_gene_motif/motif_gene_liver_dMML_ChiP.csv')
+
+
+#Subset the motif
+#Ken motif
+heart_Ken_binding_site=readRDS('../downstream/input/mouse_analysis/motif_analysis/Ken_motif_binding_site/tissue_region_motif_all.rds')
+heart_enhancer_GO_motif=
+
+olap_motif=findOverlaps(convert_GR(region_in_enhancer_GO$heart$region),factor_in_GATA4_gr)
+
+unique(region_in_enhancer$heart[queryHits(olap_motif)])[order(dNME_max_pair,decreasing = T)]
+unique(region_in_enhancer_GO$heart[queryHits(olap_motif)][grepl("heart|cardi|aort|ventricu|vascula|muscle|actin",GO_result),
+                                   list(region,cluster,dNME_max_pair,dNME_max_time,UC_max_pair,dMML_max_pair,gene),with=T])[order(dNME_max_pair,decreasing=T)]
+
+
+
+
+#Examples for correlation
+both_example = data.frame(value=as.numeric(UC_merge$heart["chr4:97739493-97739742",!grepl("max",colnames(UC_merge$heart))]),
+                          stage_stat=colnames(UC_merge$heart["chr4:97739493-97739742",!grepl("max",colnames(UC_merge$heart))]))
+
+both_example$stat=gsub('-.*','',both_example$stage_stat)
+both_example$stage=sub('dMML-|dNME-|UC-','',both_example$stage_stat)
+selected_stages=paste0("E",10:15,".5-E",11:16,'.5')
+ggplot(both_example[both_example$stage%in%selected_stages,],aes(x=stage,y=value,group=stat,color=stat))+geom_line()+geom_point()
+
+dNME_only_example = data.frame(value=as.numeric(UC_merge$heart["chr10:80117344-80117593",!grepl("max",colnames(UC_merge$heart))]),
+                               stage_stat=colnames(UC_merge$heart["chr10:80117344-80117593",!grepl("max",colnames(UC_merge$heart))]))
+
+dNME_only_example$stat=gsub('-.*','',dNME_only_example$stage_stat)
+dNME_only_example$stage=sub('dMML-|dNME-|UC-','',dNME_only_example$stage_stat)
+selected_stages=paste0("E",10:15,".5-E",11:16,'.5')
+ggplot(dNME_only_example[dNME_only_example$stage%in%selected_stages,],aes(x=stage,y=value,group=stat,color=stat))+geom_line()+geom_point()
+
+dMML_only_example = data.frame(value=as.numeric(UC_merge$heart["chr10:62313679-62313928",!grepl("max",colnames(UC_merge$heart))]),
+                               stage_stat=colnames(UC_merge$heart["chr10:62313679-62313928",!grepl("max",colnames(UC_merge$heart))]))
+
+dMML_only_example$stat=gsub('-.*','',dMML_only_example$stage_stat)
+dMML_only_example$stage=sub('dMML-|dNME-|UC-','',dMML_only_example$stage_stat)
+selected_stages=paste0("E",10:15,".5-E",11:16,'.5')
+ggplot(dMML_only_example[dMML_only_example$stage%in%selected_stages,],aes(x=stage,y=value,group=stat,color=stat))+geom_line()+geom_point()
+
+
+neither_example = data.frame(value=as.numeric(UC_merge$heart["chr1:151764174-151764423",!grepl("max",colnames(UC_merge$heart))]),
+                             stage_stat=colnames(UC_merge$heart["chr1:151764174-151764423",!grepl("max",colnames(UC_merge$heart))]))
+
+neither_example$stat=gsub('-.*','',neither_example$stage_stat)
+neither_example$stage=sub('dMML-|dNME-|UC-','',neither_example$stage_stat)
+selected_stages=paste0("E",10:15,".5-E",11:16,'.5')
+ggplot(neither_example[neither_example$stage%in%selected_stages,],aes(x=stage,y=value,group=stat,color=stat))+geom_line()+geom_point()
+#IGV examples
+
+neuro_motif_ChIP=fread('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/mm10_forebrain_adult_selected_dNME_ChiPatlas.bed')
+forebrain_motif=fread('../downstream/output/mouse_analysis/motif_analysis/region_motif/forebrain_dNME_Pubmed_annotated_region_only.csv')
+olap=findOverlaps(convert_GR(forebrain_motif$region),makeGRangesFromDataFrame(neuro_motif_ChIP,seqnames.field = "V1",start.field = "V2",end.field = "V3"))
+forebrain_motif=forebrain_motif[unique(queryHits(olap))][order(dNME_max_UC_pair,decreasing = T)]
+write.csv(forebrain_motif,'../downstream/output/mouse_analysis/motif_analysis/region_motif/forebrain_dNME_Pubmed_annotated_region_only_ChIp_olap.csv')
+
+heart_motif_ChIP=fread('../downstream/input/mouse_analysis/motif_analysis/chipatlas/mm10_heart_GATA4.bed',skip = 1,sep='\t')
+heart_motif_ChIP=fread('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/mm10_heart_embyro_selected_dNME_ChiPatlas.bed',sep=' ')
+heart_motif=fread('../downstream/output/mouse_analysis/motif_analysis/region_motif/heart_motif_region_only.csv')
+olap=findOverlaps(convert_GR(heart_motif$region),makeGRangesFromDataFrame(heart_motif_ChIP,seqnames.field = "V1",start.field = "V2",end.field = "V3"))
+heart_motif=heart_motif[unique(queryHits(olap))][order(dNME_max_UC_pair,decreasing = T)]
+write.csv(heart_motif,'../downstream/output/mouse_analysis/motif_analysis/region_motif/heart_dNME_Pubmed_annotated_region_only_ChIp_olap2.csv')
+############From mouse_ChIP_seq_overlap.R###########end############
+
