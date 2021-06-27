@@ -2725,7 +2725,7 @@ ChIP_assignment<-function(region_in,factor_in,stat_in="dNME"){
   }else(region_in_factor="No ChIP overlap")
   return(region_in_factor)
 }
-factor_olap<-function(tissue,factor_in,Ken_motif_folder,stage="embyro"){
+factor_olap<-function(tissue,factor_in,Ken_motif_folder,motif_locus_bed_dir=motif_locus_bed_dir,stage="embyro"){
   Ken_dNME=fread(paste0(Ken_motif_folder,tissue,'_OR_residual_dNME.csv'))
   Ken_dMML=fread(paste0(Ken_motif_folder,tissue,'_OR_residual_dMML.csv'))
   factor_in_dNME=factor_in[grepl(paste(gsub('.*_','',Ken_dNME$motif),collapse = "|"),factor_in$metadata,ignore.case=T)]
@@ -2735,7 +2735,7 @@ factor_olap<-function(tissue,factor_in,Ken_motif_folder,stage="embyro"){
     motif_ChIP=factor_in_dNME[grepl(motif,metadata,ignore.case = T)]
     if(nrow(motif_ChIP)>0){
       write.table(motif_ChIP,
-                  paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dNME/',tissue,'/mm10_',tissue,'_',stage,'_dNME_ChiPatlas_',gsub('::','_',motif),'.bed'),
+                  paste0(motif_locus_bed_dir,'dNME/',tissue,'/mm10_',tissue,'_',stage,'_dNME_ChiPatlas_',gsub('::','_',motif),'.bed'),
                   col.names = F,row.names = F,quote=F)
     }
     
@@ -2744,7 +2744,7 @@ factor_olap<-function(tissue,factor_in,Ken_motif_folder,stage="embyro"){
     motif_ChIP=factor_in_dMML[grepl(motif,metadata,ignore.case = T)]
     if(nrow(motif_ChIP)>0){
       write.table(motif_ChIP,
-                  paste0('../downstream/output/mouse_analysis/motif_analysis/motif_locus_bed/dMML/',tissue,'/mm10_',tissue,'_',stage,'_dMML_ChiPatlas_',gsub('::','_',motif),'.bed'),
+                  paste0(motif_locus_bed_dir,'dMML/',tissue,'/mm10_',tissue,'_',stage,'_dMML_ChiPatlas_',gsub('::','_',motif),'.bed'),
                   col.names = F,row.names = F,quote=F)
     }
     
