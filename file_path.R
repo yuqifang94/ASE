@@ -74,3 +74,4 @@ GWAS_prep_dir='../downstream/output/mouse_analysis/GWAS_prep/'
 chip_atlas_dir='../downstream/input/mouse_analysis/motif_analysis/chipatlas/'
 ChiP_motif_dir=paste0(mouse_motif_dir,'motif_Chip_rds/')
 scRNA_dir="../downstream/input/human_analysis/NME_expression_var/scRNA/"
+NME_MAV_human_out_dir='../downstream/output/human_analysis/NME_MAV/'

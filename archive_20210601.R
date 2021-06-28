@@ -1732,4 +1732,8 @@ by=list(region,motif_ChIP)]$motif_in_ChIP
 # fisher.test(matrix(c(NME_VMR,NME_nonVMR,VMR_nonNME,nonVMR_nonNME),nrow=2))
 # 
 # write(unique(NME_in_brain_enc_highNME[NME_in_brain_enc_highNME%in%vmr_enc$gene]),'../downstream/output/VMR_NME.txt')
-
+#Hypervariance for expression entropy pre-processing
+GR_merge=readRDS(GR_merge_file)
+#Only use merged data for H1
+GR_merge=GR_merge[!(GR_merge$Sample%in%c("rep1 - H1","rep2 - H1"))]
+genomic_features=readRDS(genomic_features_file)

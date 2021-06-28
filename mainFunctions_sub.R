@@ -1045,7 +1045,7 @@ OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA,stat_in="NME"){
   return(data.table(OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2],SNP=SNP))
 }
 
-dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cutoff,dir='../downstream/output/graphs/Figure3/'){
+dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cutoff,dir){
   
   #informME_in_dist=informME_in_dist[-which(informME_in_dist$dMML_pval<=cutoff)]
   
