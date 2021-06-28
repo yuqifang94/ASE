@@ -54,7 +54,8 @@ ChIP_olap_heart_embyro_all=ChIP_olap(factor_olap_heart_embyro_all$factor_in_dNME
                                 enhancer_regions_motif_dNME_all$heart,enhancer_regions_motif_dMML_all$heart)
 saveRDS(ChIP_olap_heart_embyro_all$dNME_region,paste0(ChiP_motif_dir,'enhancer_regions_heart_embyro_all_consistent_dNME.rds'))
 saveRDS(ChIP_olap_heart_embyro_all$dMML_region,paste0(ChiP_motif_dir,'enhancer_regions_heart_embyro_all_consistent_dMML.rds'))
-
+#Example filtering
+ChIP_olap_heart_embyro_all$dNME_region[!is.na(predict_in_ChIP)&predict_in_ChIP!=""&region_type=='NME only']
 #Forebrain embyro all
 factor_olap_forebrain_embyro_all=factor_olap('forebrain',factor_in_embyro,Ken_motif_folder,motif_locus_bed_dir=motif_locus_bed_dir,stage="embyro_all")
 ChIP_olap_forebrain_embyro_all=ChIP_olap(factor_olap_forebrain_embyro_all$factor_in_dNME,factor_olap_forebrain_embyro_all$factor_in_dMML,
@@ -85,30 +86,3 @@ saveRDS(ChIP_olap_forebrain_adult$dNME_region,paste0(ChiP_motif_dir,'enhancer_re
 saveRDS(ChIP_olap_forebrain_adult$dMML_region,paste0(ChiP_motif_dir,'enhancer_regions_forebrain_adult_consistent_dMML.rds'))
 
 
-# Find examples by looking at overlap between motif and ChIP data -----------
-enhancer_regions_motif_dNME_all=readRDS(enhancer_motif_all_dNME_fn)
-enhancer_regions_motif_dMML_all=readRDS(enhancer_motif_all_dMML_fn)
-#Heart 
-factor_in_embyro_heart_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_embyro_heart_dNME.rds')))
-factor_in_heart_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_heart_dNME.rds')))
-heart_dNME_pubmed=enhancer_regions_motif_dNME_all$heart
-heart_dNME_pubmed=heart_dNME_pubmed[,list(region,tissue,cluster,gene,UC_max_time,region_type,PMID,dNME_max_pair,dMML_max_pair,UC_max_pair,dMML_motif,dNME_motif)]
-olap=findOverlaps(convert_GR(heart_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_embyro_heart_dNME))
-heart_dNME_pubmed_motif=heart_dNME_pubmed[queryHits(olap)][order(dNME_max_pair,decreasing=T)]
-
-olap=findOverlaps(convert_GR(heart_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_heart_dNME))
-heart_dNME_pubmed_motif=heart_dNME_pubmed[queryHits(olap)][order(dNME_max_pair,decreasing=T)]
-#Forebrain
-factor_in_embyro_forebrain_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_embyro_forebrain_dNME.rds')))
-factor_in_forebrain_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_adult_forebrain_dNME.rds')))
-forebrain_dNME_pubmed=enhancer_regions_motif_dNME_all$forebrain
-forebrain_dNME_pubmed=forebrain_dNME_pubmed[,list(region,tissue,cluster,gene,UC_max_time,region_type,PMID,dNME_max_pair,dMML_max_pair,UC_max_pair,dMML_motif,dNME_motif)]
-olap=findOverlaps(convert_GR(forebrain_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_embyro_forebrain_dNME))
-forebrain_dNME_pubmed_motif=forebrain_dNME_pubmed[queryHits(olap)]
-forebrain_dNME_pubmed_motif$motif_ChIP=factor_in_embyro_forebrain_dNME[subjectHits(olap)]$metadata
-forebrain_dNME_pubmed_motif$motif_in_ChIP=forebrain_dNME_pubmed_motif[,list(motif_in_ChIP=grepl(gsub(';','|',dNME_motif),motif_ChIP,ignore.case = T)),by=list(region,motif_ChIP)]$motif_in_ChIP
-
-olap=findOverlaps(convert_GR(forebrain_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_forebrain_dNME))
-forebrain_dNME_pubmed_motif=forebrain_dNME_pubmed[queryHits(olap)]
-forebrain_dNME_pubmed_motif$motif_ChIP=factor_in_forebrain_dNME[subjectHits(olap)]$metadata
-forebrain_dNME_pubmed_motif$motif_in_ChIP=forebrain_dNME_pubmed_motif[,list(motif_in_ChIP=grepl(gsub(';','|',dNME_motif),motif_ChIP,ignore.case = T)),by=list(region,motif_ChIP)]$motif_in_ChIP

@@ -1649,5 +1649,87 @@ heart_motif=fread('../downstream/output/mouse_analysis/motif_analysis/region_mot
 olap=findOverlaps(convert_GR(heart_motif$region),makeGRangesFromDataFrame(heart_motif_ChIP,seqnames.field = "V1",start.field = "V2",end.field = "V3"))
 heart_motif=heart_motif[unique(queryHits(olap))][order(dNME_max_UC_pair,decreasing = T)]
 write.csv(heart_motif,'../downstream/output/mouse_analysis/motif_analysis/region_motif/heart_dNME_Pubmed_annotated_region_only_ChIp_olap2.csv')
+
+# Find examples by looking at overlap between motif and ChIP data -----------
+enhancer_regions_motif_dNME_all=readRDS(enhancer_motif_all_dNME_fn)
+enhancer_regions_motif_dMML_all=readRDS(enhancer_motif_all_dMML_fn)
+#Heart 
+factor_in_embyro_heart_dNME=readRDS(paste0(ChiP_motif_dir,'ChIP_olap_heart_embyro_heat_all.rds'))
+factor_in_embyro_heart_dNME=factor_in_embyro_heart_dNME$dNME_region
+factor_in_heart_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'ChIP_olap_heart_adult_heart_all.rds')))
+heart_dNME_pubmed=enhancer_regions_motif_dNME_all$heart
+heart_dNME_pubmed=heart_dNME_pubmed[,list(region,tissue,cluster,gene,UC_max_time,region_type,PMID,dNME_max_pair,dMML_max_pair,UC_max_pair,dMML_motif,dNME_motif)]
+olap=findOverlaps(convert_GR(heart_dNME_pubmed$region),convert_GR(factor_in_embyro_heart_dNME$region))
+heart_dNME_pubmed_motif=heart_dNME_pubmed[queryHits(olap)][order(dNME_max_pair,decreasing=T)]
+
+olap=findOverlaps(convert_GR(heart_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_heart_dNME))
+heart_dNME_pubmed_motif=heart_dNME_pubmed[queryHits(olap)][order(dNME_max_pair,decreasing=T)]
+#Forebrain
+factor_in_embyro_forebrain_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_embyro_forebrain_dNME.rds')))
+factor_in_forebrain_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_adult_forebrain_dNME.rds')))
+forebrain_dNME_pubmed=enhancer_regions_motif_dNME_all$forebrain
+forebrain_dNME_pubmed=forebrain_dNME_pubmed[,list(region,tissue,cluster,gene,UC_max_time,region_type,PMID,dNME_max_pair,dMML_max_pair,UC_max_pair,dMML_motif,dNME_motif)]
+olap=findOverlaps(convert_GR(forebrain_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_embyro_forebrain_dNME))
+forebrain_dNME_pubmed_motif=forebrain_dNME_pubmed[queryHits(olap)]
+forebrain_dNME_pubmed_motif$motif_ChIP=factor_in_embyro_forebrain_dNME[subjectHits(olap)]$metadata
+forebrain_dNME_pubmed_motif$motif_in_ChIP=forebrain_dNME_pubmed_motif[,list(motif_in_ChIP=grepl(gsub(';','|',dNME_motif),motif_ChIP,ignore.case = T)),
+by=list(region,motif_ChIP)]$motif_in_ChIP
+
+olap=findOverlaps(convert_GR(forebrain_dNME_pubmed$region),makeGRangesFromDataFrame(factor_in_forebrain_dNME))
+forebrain_dNME_pubmed_motif=forebrain_dNME_pubmed[queryHits(olap)]
+forebrain_dNME_pubmed_motif$motif_ChIP=factor_in_forebrain_dNME[subjectHits(olap)]$metadata
+forebrain_dNME_pubmed_motif$motif_in_ChIP=forebrain_dNME_pubmed_motif[,list(motif_in_ChIP=grepl(gsub(';','|',dNME_motif),motif_ChIP,ignore.case = T)),
+by=list(region,motif_ChIP)]$motif_in_ChIP
+
 ############From mouse_ChIP_seq_overlap.R###########end############
+#NME_MAV#########################Start######################
+
+# # NME vs VMR currently not in use--------------------------------------------------------------
+# NME_in=readRDS(NME_agnostic_file)
+# #Brain
+# load("../downstream/input/vmrs_hg19_brain.rda")
+# vmr_HC2=vmrs_hg19$HC2
+# vmr_HC1=vmrs_hg19$HC1
+# names(vmr_HC2)=NULL
+# names(vmr_HC1)=NULL
+# #Do HC2
+# vmr=do.call(c,vmr_HC2)
+# saveRDS(vmr,'../downstream/output/vmr_HC2.rds')
+# vmr=readRDS('../downstream/output/vmr_HC2.rds')
+# NME_in_brain=NME_in[NME_in$Sample%in%c('Brain_Hippocampus_middle_paired - 149','Brain_Hippocampus_middle_paired - 150')]
+# OR_quant=data.frame()
+# for(percent in unique(NME_in_brain$quant_score)){
+#   OR=OR_VMR(NME_in_brain,vmr,percent,NME_quant='quant_score')
+#   OR_quant=rbind(OR_quant,data.frame(quant=percent,OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.in[1],upperCI=OR$conf.in[2]))
+#   
+# }
+# write.csv(OR_quant,'../downstream/output/brain_VMR.csv')
+# 
+# #chromHMM state get enhancer
+# ah = AnnotationHub()
+# ENCODE_name=ENCODE_to_sample(unique(NME_in_brain$Sample))
+# ah_num=names(query(ah, c("chromhmmSegmentations", unique(ENCODE_name$ENCODE))))
+# chromHMM=ah[[ah_num]]
+# chromHMM_enc=chromHMM[chromHMM$abbr%in%c("7_Enh","6_EnhG")]
+# NME_in_brain_enc=subsetByOverlaps(NME_in_brain,chromHMM_enc)
+# vmr_enc=subsetByOverlaps(vmr,chromHMM_enc)
+# #Find nearest genes
+# genomic_features=readRDS(genomic_features_file)
+# genomic_features=genomic_features$TSS
+# NME_in_brain_enc=dist_calc(NME_in_brain_enc,genomic_features)
+# vmr_enc=dist_calc(vmr_enc,genomic_features)
+# #Find overlap between nearest genes
+# NME_in_brain_enc_highNME=NME_in_brain_enc[NME_in_brain_enc$NME>=quantile(NME_in_brain$NME,prob=0.99)]#0.87 cutoff
+# NME_in_brain_enc_highNME=as.data.table(mcols(NME_in_brain_enc_highNME))
+# NME_in_brain_enc_highNME=NME_in_brain_enc_highNME[,list(NME=mean(NME),dist=mean(abs(dist))),by=list(gene)]
+# NME_in_brain_enc_highNME=NME_in_brain_enc_highNME[order(NME,decreasing = T)]$gene
+# bg=unique(c(vmr_enc$gene,NME_in_brain_enc$gene))
+# NME_VMR=sum((bg %in%NME_in_brain_enc_highNME)&(bg %in%vmr_enc$gene))
+# NME_nonVMR=sum((bg %in%NME_in_brain_enc_highNME)&!(bg %in%vmr_enc$gene))
+# VMR_nonNME=sum(!(bg %in%NME_in_brain_enc_highNME)&(bg %in%vmr_enc$gene))
+# nonVMR_nonNME=sum(!(bg %in%NME_in_brain_enc_highNME)&!(bg %in%vmr_enc$gene))
+# 
+# fisher.test(matrix(c(NME_VMR,NME_nonVMR,VMR_nonNME,nonVMR_nonNME),nrow=2))
+# 
+# write(unique(NME_in_brain_enc_highNME[NME_in_brain_enc_highNME%in%vmr_enc$gene]),'../downstream/output/VMR_NME.txt')
 
