@@ -1053,7 +1053,7 @@ dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cut
   informME_in_dist=informME_in_dist[!is.na(exp_stat)]
   plot_informME_dat=informME_in_dist[,list(score=score,stat_in=stat_in,dist=dist,exp_stat=exp_stat,gene=gene,
                                            quant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=c(0,0.25,0.5,0.75),na.rm=T)),
-                                           hypervarquant=ecdf(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100),
+                                           hypervarquant=findInterval(exp_stat,quantile(unique(data.table(gene=gene,exp_stat=exp_stat))$exp_stat,prob=seq(0.01,1,0.01),na.rm=T))/100),
                                      #scorequant001=findInterval(exp_stat,quantile(score,prob=c(0.01,1,0.01),na.rm=T))/100
                                      by=list(Sample)]
   rm(informME_in_dist)
