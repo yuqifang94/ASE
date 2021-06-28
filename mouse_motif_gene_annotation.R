@@ -27,7 +27,7 @@ region_in_enhancer=lapply(region_in_enhancer,function(x){
   
 })
 
-# #Mouse gene example
+
 GO_out_all=readRDS(GO_01_enhancer_fn)
 
 tissue_sel=names(region_in_enhancer)

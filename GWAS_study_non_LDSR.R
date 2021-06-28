@@ -44,9 +44,9 @@ write.csv(variant_HetCpG_meta,'../downstream/output/human_analysis/GWAS_traits_d
 
 
 # Use allele-agnostic data to get GWAS percent ----------------------------
-NME_in=readRDS('../downstream/output/human_analysis/CPEL_outputs/allele_agnostic_hg19_DNase_NME_homogeneous_excluding_dMML.rds')
-DNase_hg19=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp.rds')
-control_hg19=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_control.rds')
+NME_in=readRDS(NME_agnostic_DNase_file)
+DNase_hg19=readRDS(DNase_hg19_file)
+control_hg19=readRDS(control_hg19_file)
  variant_trait=readRDS('../downstream/input/human_analysis/variant_traits.rds')
  NME_in$DNase=NA
  
@@ -108,7 +108,7 @@ control_hg19=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_contro
   
    
 },mc.cores=20)
- 
+ saveRDS(trait_NME_out_ts,'../downstream/output/human_analysis/GWAS/trait_NME_out_tissue.rds')
  trait_NME_out_ts=readRDS('../downstream/output/human_analysis/GWAS/trait_NME_out_tissue.rds')
  trait_NME_out_ts=do.call(rbind,trait_NME_out_ts)
  write.csv(trait_NME_out_ts[!is.infinite(OR_lowNME )&!is.infinite(OR_highNME)],'../downstream/output/human_analysis/GWAS/trait_enrich_tissue.csv')
@@ -116,7 +116,6 @@ control_hg19=readRDS('../downstream/input/human_analysis/DNase_hg19_250bp_contro
  trait_NME_out_gm=do.call(rbind,trait_NME_out_gm)
  write.csv(trait_NME_out_gm[!is.infinite(OR_lowNME )&!is.infinite(OR_highNME)],'../downstream/output/human_analysis/GWAS/trait_enrich_germlayer.csv')
 # SNP analysis ------------------------------------------------------------
-
 
  library(SNPlocs.Hsapiens.dbSNP144.GRCh37)
  snps <- SNPlocs.Hsapiens.dbSNP144.GRCh37

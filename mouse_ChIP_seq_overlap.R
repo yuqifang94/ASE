@@ -30,7 +30,7 @@ factor_in_heart_embyro=factor_in_heart_embyro[,list(seqnames,start,end,metadata,
 factor_olap_heart_embyro=factor_olap('heart',factor_in_heart_embyro,Ken_motif_folder,motif_locus_bed_dir=motif_locus_bed_dir,stage="embyro_heart")
 ChIP_olap_heart_embyro=ChIP_olap(factor_olap_heart_embyro$factor_in_dNME,factor_olap_heart_embyro$factor_in_dMML,
                                  enhancer_regions_motif_dNME_all$heart,enhancer_regions_motif_dMML_all$heart)
-saveRDS(ChIP_olap_heart_embyro,paste0(ChiP_motif_dir,'ChIP_olap_heart_embyro_heat_all.rds'))
+saveRDS(ChIP_olap_heart_embyro,paste0(ChiP_motif_dir,'ChIP_olap_heart_embyro_heart_all.rds'))
 
 
 #Adult heart
@@ -41,7 +41,7 @@ factor_in_heart=factor_in_heart[,list(seqnames,start,end,metadata,log10qval)]
 factor_olap_heart_adult=factor_olap('heart',factor_in_heart,Ken_motif_folder,motif_locus_bed_dir=motif_locus_bed_dir,stage="adult")
 ChIP_olap_heart_adult=ChIP_olap(factor_olap_heart_adult$factor_in_dNME,factor_olap_heart_adult$factor_in_dMML,
                                  enhancer_regions_motif_dNME_all$heart,enhancer_regions_motif_dMML_all$heart)
-saveRDS(ChIP_olap_heart_adult$dNME_region,paste0(ChiP_motif_dir,'enhancer_regions_heart_adult_consistent_dNME.rds'))
+saveRDS(ChIP_olap_heart_adult,paste0(ChiP_motif_dir,'ChIP_olap_heart_adult_heart_all.rds'))
 
 #embyro all:
 factor_in_embyro=fread(paste0(chip_atlas_dir,'mm10_embyro_all_TF.bed'),skip = 1,sep='\t')
@@ -86,8 +86,8 @@ saveRDS(ChIP_olap_forebrain_adult$dMML_region,paste0(ChiP_motif_dir,'enhancer_re
 
 
 # Find examples by looking at overlap between motif and ChIP data -----------
-enhancer_regions_motif_dNME_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dNME_all.rds'))
-enhancer_regions_motif_dMML_all=readRDS(paste0(mouse_motif_dir,'enhancer_regions_motif_dMML_all.rds'))
+enhancer_regions_motif_dNME_all=readRDS(enhancer_motif_all_dNME_fn)
+enhancer_regions_motif_dMML_all=readRDS(enhancer_motif_all_dMML_fn)
 #Heart 
 factor_in_embyro_heart_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_embyro_heart_dNME.rds')))
 factor_in_heart_dNME=readRDS(paste0(paste0(ChiP_motif_dir,'factor_in_heart_dNME.rds')))

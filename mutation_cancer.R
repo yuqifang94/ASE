@@ -76,6 +76,9 @@ binom.test(sum(human_variant_passenger_sm_dNME$altNME>human_variant_passenger_sm
           length(human_variant_passenger_sm_dNME),sum(human_variant$altNME>human_variant$refNME)/length(human_variant)
 )
 
+#ICGC database-----------------------------------------------------------------------------------
+#vcf file: https://dcc.icgc.org/api/v1/download?fn=/current/Summary/simple_somatic_mutation.aggregated.vcf.gz
+#Downloaded 20210628 release 28
 
 
 
