@@ -1737,3 +1737,4 @@ GR_merge=readRDS(GR_merge_file)
 #Only use merged data for H1
 GR_merge=GR_merge[!(GR_merge$Sample%in%c("rep1 - H1","rep2 - H1"))]
 genomic_features=readRDS(genomic_features_file)
+test
