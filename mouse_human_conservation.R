@@ -8,13 +8,23 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
 
 # MAV vs NME -------------------------------------------------
 NME_in_dt=readRDS(NME_mouse_MAV_fn)
-NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]
-#enhancer regions
+NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)&!is.na(NME)]
+NME_in_dt$Sample=NME_in_dt$stage
+NME_in_dt$score=NME_in_dt$NME
+dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="hyper_var",dir=figure_path)
+dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="var",dir=figure_path)
+dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="mean",dir=figure_path)
+
+
+
+#enhancer regions MAV vs NME
 enhancer=readRDS(bin_enhancer_rds)
 olap_enhancer=findOverlaps(convert_GR(NME_in_dt$region),enhancer)
 NME_in_dt_enc=NME_in_dt[queryHits(olap_enhancer)]
-NME_in_dt_enc$gene_enc=enhancer[subjectHits(olap_enhancer)]$`Target Gene `
-dir='../downstream/data/Mouse_C1/'
+NME_in_dt_enc$gene_enc=enhancer[subjectHits(olap_enhancer)]$`Target Gene`
+NME_in_dt_enc$hyper_var_enc=-100
+NME_in_dt_enc$var=-100
+NME_in_dt_enc$mean=-100
 for(st in unique(NME_in_dt_enc$stage)){
   tt1=proc.time()[[3]]
   if(file.exists(paste0(dir_scRNA_mouse,gsub('E|limb\\.|\\.all','',st),'.rds'))){
@@ -31,51 +41,13 @@ for(st in unique(NME_in_dt_enc$stage)){
   cat('Finish processing ',sub('E','',st),'in: ',proc.time()[[3]]-tt1,'\n')
   
 }
+saveRDS(NME_in_dt_enc,NME_mouse_MAV_enhancer_fn)
 NME_in_dt_enc_median_NME=NME_in_dt_enc[,list(NME=median(NME)),by=list(gene_enc,stage,hyper_var)]
 NME_in_dt_enc_median_NME[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][order(cor,decreasing=T)]
 
 NME_in_dt_enc[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][!is.na(cor)][order(cor,decreasing=T)]
 cat(NME_in_dt_enc[gene_enc%in%names(table(NME_in_dt_enc_median_NME$gene_enc))[table(NME_in_dt_enc_median_NME$gene_enc)>=5],list(cor=cor(NME,hyper_var)),by=list(gene_enc)][cor>0.5]$gene_enc,sep='\n')
 
-MML_in=readRDS('../downstream/input/mouse_analysis/MML_agnostic_mouse_all_merged.rds')
-MML_in=convert_GR(MML_in[MML_in$tissue=="limb"&MML_in$N>1],direction="DT")
-MML_in$region_sample=paste0(MML_in$region,'_',MML_in$Sample)
-NME_in_dt$region_sample=paste0(NME_in_dt$region,'_',NME_in_dt$Sample)
-NME_in_dt$MML=MML_in[match(NME_in_dt$region_sample,region_sample)]$MML
-rm(MML_in)
-# matrix and quantile normalization ---------------------------------------
-#No need quantile normalization since we calculate correlation for each sample it for each sample
-# hyper_var_dc=matrix_conv(NME_in_dt,"hyper_var")
-# NME_dc=matrix_conv(NME_in_dt,"NME")
-# NME_dc=NME_dc[rowSums(is.na(NME_dc))==0,]
-# hyper_var_dc=hyper_var_dc[rowSums(is.na(hyper_var_dc))==0,]
-# rn=intersect(rownames(NME_dc),rownames(hyper_var_dc))
-# NME_dc=NME_dc[rn,]
-# hyper_var_dc=hyper_var_dc[rn,]
-# #Test quantile normalization
-# hyper_var_dc_nm=normalize.quantiles(hyper_var_dc)
-# rownames(hyper_var_dc_nm)=rownames(hyper_var_dc)
-# colnames(hyper_var_dc_nm)=colnames(hyper_var_dc)
-# #After quantile normalization, check plot
-# hyper_var_dc_nm_dt=data.table(region=rownames(hyper_var_dc_nm))
-# hyper_var_dc_nm_dt=cbind(hyper_var_dc_nm_dt,as.data.table(hyper_var_dc_nm))
-# hyper_var_dc_nm_dt=melt.data.table(hyper_var_dc_nm_dt,id.vars="region",variable.name = "stage",value.name = "hyper_var")
-# #After
-# ggplot(hyper_var_dc_nm_dt,aes(x=hyper_var,color=stage))+geom_density(size=1)+theme(legend.position = "bottom")
-# #Before
-# ggplot(NME_in_dt,aes(x=hyper_var,color=stage))+geom_density(size=1)+theme(legend.position = "bottom")
-# ggplot(NME_in_dt,aes(x=NME,color=stage))+geom_density(size=1)+theme(legend.position = "bottom")
-# #assign to orignal values
-# NME_in_dt$hyper_var=NULL
-# NME_in_dt$hyper_var=hyper_var_dc_nm_dt[match(paste0(NME_in_dt$region,NME_in_dt$stage),paste0(region,stage))]$hyper_var
-# NME_in_dt=NME_in_dt[!is.na(hyper_var)]
-# saveRDS(NME_in_dt,'../downstream/output/NME_in_dt_limb_ENCODE_C1_nrom.rds')
-# NME_in_dt=readRDS('../downstream/output/NME_in_dt_limb_ENCODE_C1_nrom.rds')
-
-dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="hyper_var",dir='../downstream/output/graphs/FigureS13/')
-dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="var",dir='../downstream/output/graphs/FigureS13/')
-dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="mean",dir='../downstream/output/graphs/FigureS13/')
-dist_plot_run(NME_in_dt,theme_glob,ylab="MML",stat_in="mean",dir='../downstream/output/graphs/FigureS13/')
 # motif preprocessing for Ken ----------------------------------------------------------
 #See mouse_motif_processing.R
 # add information to Ken's list -------------------------------------------

@@ -80,3 +80,4 @@ NME_in_CG_fn='../downstream/input/mouse_analysis/human_conservation/NME_matrix_N
 NME_mouse_MAV_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed.rds'
 Ken_motif_out_dir='../downstream/output/human_analysis/Ken_motif_pre_process/'
 dir_scRNA_mouse='../downstream/input/mouse_analysis/Mouse_C1/'
+NME_mouse_MAV_enhancer_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed_enhancer.rds'
