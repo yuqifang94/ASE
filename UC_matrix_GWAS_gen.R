@@ -40,3 +40,42 @@ for(ts in names(region_catogrization)){
   
 }
 saveRDS(regions_analyzed_MML,paste0(GWAS_prep_dir,'region_analyzed_01_select_MML.rds'))
+
+#prepare for NME only ones
+region_catogrization=readRDS(tissue_out_filtered_fn)
+regions_analyzed_NME=regions_analyzed
+mcols(regions_analyzed_NME)=NULL
+for(ts in names(region_catogrization)){
+  mcols(regions_analyzed_NME)[,ts]=0
+  mcols(regions_analyzed_NME)[convert_GR(regions_analyzed_NME,direction='DT')$region %in% 
+                              region_catogrization[[ts]][region_type =='NME only']$region,ts]=1
+  
+  
+}
+saveRDS(regions_analyzed_NME,paste0(GWAS_prep_dir,'region_analyzed_01_select_NME_only.rds'))
+
+#prepare for MML driven ones
+
+regions_analyzed_MML=regions_analyzed
+mcols(regions_analyzed_MML)=NULL
+for(ts in names(region_catogrization)){
+  mcols(regions_analyzed_MML)[,ts]=0
+  mcols(regions_analyzed_MML)[convert_GR(regions_analyzed_MML,direction='DT')$region %in% 
+                              region_catogrization[[ts]][region_type =='MML only']$region,ts]=1
+  
+  
+}
+saveRDS(regions_analyzed_MML,paste0(GWAS_prep_dir,'region_analyzed_01_select_MML_only.rds'))
+
+#prepare for Both driven ones
+
+regions_analyzed_Both=regions_analyzed
+mcols(regions_analyzed_Both)=NULL
+for(ts in names(region_catogrization)){
+  mcols(regions_analyzed_Both)[,ts]=0
+  mcols(regions_analyzed_Both)[convert_GR(regions_analyzed_Both,direction='DT')$region %in% 
+                              region_catogrization[[ts]][region_type =='Both']$region,ts]=1
+  
+  
+}
+saveRDS(regions_analyzed_Both,paste0(GWAS_prep_dir,'region_analyzed_01_select_Both.rds'))
