@@ -471,7 +471,7 @@ saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
 #Read in mouse NME and scRNA
 NME_in=readRDS(NME_matrix_file)
 #From JASON
-dir_scRNA='../downstream/input/mouse_analysis/Mouse_C1/'
+
 mcols(NME_in)=mcols(NME_in)[,grepl('limb',colnames(mcols(NME_in)))]
 
 gtf <- fread('../downstream/input/mouse_analysis/grcm38.gtf',data.table = F)
@@ -490,8 +490,8 @@ NME_in_dt$var=-100
 NME_in_dt$mean=-100
 for(st in unique(NME_in_dt$stage)){
   tt1=proc.time()[[3]]
-  if(file.exists(paste0(dir_scRNA,gsub('E|limb\\.|\\.all','',st),'.rds'))){
-    scRNA_in=readRDS(paste0(dir_scRNA,gsub('E|limb\\.|\\.all','',st),'.rds'))
+  if(file.exists(paste0(dir_scRNA_mouse,gsub('E|limb\\.|\\.all','',st),'.rds'))){
+    scRNA_in=readRDS(paste0(dir_scRNA_mouse,gsub('E|limb\\.|\\.all','',st),'.rds'))
     scRNA_in=scRNA_in[rownames(scRNA_in)%in% unique(c(NME_in_dt[(stage==st)]$gene)),]
     if(nrow(scRNA_in)>0){
       #Add hypervar to TSS 

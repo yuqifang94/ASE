@@ -7,22 +7,22 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.text.y=element_text(size=16))+theme_classic()
 
 # MAV vs NME -------------------------------------------------
-NME_in_dt=readRDS('../downstream/output/mouse_analysis/NME_MAV/NME_in_limb_ENOCD3_imputed.rds')
+NME_in_dt=readRDS(NME_mouse_MAV_fn)
 NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]
 #enhancer regions
-enhancer=readRDS('../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds')
+enhancer=readRDS(bin_enhancer_rds)
 olap_enhancer=findOverlaps(convert_GR(NME_in_dt$region),enhancer)
 NME_in_dt_enc=NME_in_dt[queryHits(olap_enhancer)]
 NME_in_dt_enc$gene_enc=enhancer[subjectHits(olap_enhancer)]$`Target Gene `
 dir='../downstream/data/Mouse_C1/'
 for(st in unique(NME_in_dt_enc$stage)){
   tt1=proc.time()[[3]]
-  if(file.exists(paste0(dir,sub('E','',st),'.rds'))){
-    scRNA_in=readRDS(paste0(dir,sub('E','',st),'.rds'))
+  if(file.exists(paste0(dir_scRNA_mouse,gsub('E|limb\\.|\\.all','',st),'.rds'))){
+    scRNA_in=readRDS(paste0(dir_scRNA_mouse,gsub('E|limb\\.|\\.all','',st),'.rds'))
     scRNA_in=scRNA_in[rownames(scRNA_in)%in% unique(c(NME_in_dt[(stage==st)]$gene)),]
     if(nrow(scRNA_in)>0){
       #Add hypervar to TSS 
-      NME_in_dt_enc[(stage==st)]$hyper_var=scRNA_in[NME_in_dt_enc[(stage==st)]$gene_enc,"hypervar_logvar"]
+      NME_in_dt_enc[(stage==st)]$hyper_var_enc=scRNA_in[NME_in_dt_enc[(stage==st)]$gene_enc,"hypervar_logvar"]
       NME_in_dt_enc[(stage==st)]$var=scRNA_in[NME_in_dt_enc[(stage==st)]$gene,"var"]
       NME_in_dt_enc[(stage==st)]$mean=scRNA_in[NME_in_dt_enc[(stage==st)]$gene,"mean"]
       
