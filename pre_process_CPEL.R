@@ -467,28 +467,31 @@ saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
 
 
 
-# TBC ---------------------------------------------------------------------
+
 #Read in mouse NME and scRNA
-NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged.rds')
-dir='../downstream/data/Mouse_C1/'
-NME_in=NME_in[NME_in$tissue=="limb"&NME_in$N>=2]
-gtf <- fread('../downstream/input/grcm38.gtf',data.table = F)
+NME_in=readRDS(NME_matrix_file)
+#From JASON
+dir_scRNA='../downstream/input/mouse_analysis/Mouse_C1/'
+mcols(NME_in)=mcols(NME_in)[,grepl('limb',colnames(mcols(NME_in)))]
+
+gtf <- fread('../downstream/input/mouse_analysis/grcm38.gtf',data.table = F)
 gtf <- gtf[gtf[,3]=='gene',]
 gn <- sub('".*','',sub('.*gene_name "','',gtf[,9]))
 genes <- GRanges(seqnames=gtf[,1],IRanges(start=gtf[,4],end=gtf[,5]),strand = gtf[,7])
 genes$gene_name <- gn
 NME_in=dist_calc(NME_in,genes)
 #Percent gene covered?
-length(unique(NME_in[abs(NME_in$dist)<=3000]$gene))/length(genes[seqnames(genes)!="chrM"])#85%
-NME_in_dt=as.data.table(mcols(NME_in))
-NME_in_dt$region=paste0(seqnames(NME_in),':',start(NME_in),'-',end(NME_in))
+length(unique(NME_in[abs(NME_in$dist)<=3000]$gene))/length(genes[seqnames(genes)!="chrM"])#96%
+NME_in_dt=convert_GR(NME_in,dir='DT')
+NME_in_dt=melt.data.table(NME_in_dt,id.var=c('dist','gene','region'),value.name='NME',variable.name='stage')
+
 NME_in_dt$hyper_var=-100
 NME_in_dt$var=-100
 NME_in_dt$mean=-100
-for(st in unique(NME_in$stage)){
+for(st in unique(NME_in_dt$stage)){
   tt1=proc.time()[[3]]
-  if(file.exists(paste0(dir,sub('E','',st),'.rds'))){
-    scRNA_in=readRDS(paste0(dir,sub('E','',st),'.rds'))
+  if(file.exists(paste0(dir_scRNA,gsub('E|limb\\.|\\.all','',st),'.rds'))){
+    scRNA_in=readRDS(paste0(dir_scRNA,gsub('E|limb\\.|\\.all','',st),'.rds'))
     scRNA_in=scRNA_in[rownames(scRNA_in)%in% unique(c(NME_in_dt[(stage==st)]$gene)),]
     if(nrow(scRNA_in)>0){
       #Add hypervar to TSS 
@@ -501,7 +504,7 @@ for(st in unique(NME_in$stage)){
   cat('Finish processing ',sub('E','',st),'in: ',proc.time()[[3]]-tt1,'\n')
   
 }
-saveRDS(NME_in_dt,'../downstream/output/NME_in_limb_ENOCD3_imputed.rds')
+saveRDS(NME_in_dt,NME_mouse_MAV_fn)
 
 
 

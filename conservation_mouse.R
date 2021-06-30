@@ -6,37 +6,6 @@ theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.text.x=element_text(size=16),
                  axis.text.y=element_text(size=16))+theme_classic()
 
-# Repeat NME vs CpG density analysis --------------------------------------
-#Get CpG location for mm10
-CpG_mm10=getCpgSitesmm10()
-NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged.rds')
-NME_in=NME_in[!grepl('-P0-',NME_in$Sample)]
-NME_in=NME_in[NME_in$N>=2]
-dnase<- readRDS('../downstream/input/mm10_DNase.rds')
-NME_in=subsetByOverlaps(NME_in,dnase,type='equal')
-NME_in_gr=unique(granges(NME_in))
-gr_seq=getSeq(Mmusculus,NME_in_gr,as.character=T)
-NME_in_gr$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
-olap=findOverlaps(NME_in,NME_in_gr,type='equal')
-NME_in$CG_exp=NME_in_gr$CGcont_exp[subjectHits(olap)]               
-NME_in$CpG_number=countOverlaps(NME_in,CpG_mm10)
-saveRDS(NME_in,'../downstream/input/NME_agnostic_mouse_all_merged_DNase_CpG.rds')
-NME_in=readRDS('../downstream/input/NME_agnostic_mouse_all_merged_DNase_CpG.rds')
-NME_in=NME_in[NME_in$CpG_number>0]
-NME_in$density=NME_in$CpG_number/NME_in$CG_exp
-NME_in$density_quant=findInterval(NME_in$density,seq(0,1,0.1))
-#NME_in$density_quant[NME_in$density_quant==6]=5#11th quantile is the maximum number, move to 10th
-quant_conv=c(paste0(seq(0,0.9,0.1),'-',seq(0.1,1,0.1)),'>1')
-NME_in$density_quant=factor(quant_conv[NME_in$density_quant],levels=quant_conv)
-
-pdf('../downstream/output/graphs/FigureS12/CpG_density_NME_boxplot_CG_exp_mouse.pdf',width=3.5,height=3.5)#Totally having 69530406 points
-ggplot(as.data.frame(mcols(NME_in)),aes(x=density_quant, y=NME))+
-  ylim(c(0,1))+geom_boxplot(outlier.shape = NA)+theme_glob+xlab("CpG density")+
-  ylab("NME")+theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
-dev.off() 
-cor.test(NME_in$density,NME_in$NME)
-
-
 # MAV vs NME -------------------------------------------------
 NME_in_dt=readRDS('../downstream/output/mouse_analysis/NME_MAV/NME_in_limb_ENOCD3_imputed.rds')
 NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)]

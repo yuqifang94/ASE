@@ -79,9 +79,38 @@ binom.test(sum(human_variant_passenger_sm_dNME$altNME>human_variant_passenger_sm
 #ICGC database-----------------------------------------------------------------------------------
 #vcf file: https://dcc.icgc.org/api/v1/download?fn=/current/Summary/simple_somatic_mutation.aggregated.vcf.gz
 #Downloaded 20210628 release 28
+# ##reference=GRCh37
+mutation_ICGC=fread('../downstream/input/human_analysis/cancer_SNP/ICGC_mutaions.vcf',skip=13,header=TRUE)
+colnames(mutation_ICGC)[1]='CHROM'
+mutation_ICGC=mutation_ICGC[,list("CHROM","POS",'REF','ALT','INFO')]
+mutation_ICGC$region=paste0('chr',mutation_ICGC$CHROM,':',mutation_ICGC$POS,'-',mutation_ICGC$POS)
+human_variant=readRDS(variant_HetCpG_meta_file)
+human_variant=convert_GR(human_variant,direction="DT")
+human_variant_ICGC=human_variant[human_variant$region%in%mutation_ICGC$region]
 
+ICGC_match=match(human_variant_ICGC$region,mutation_ICGC$region)
+human_variant_ICGC$cancer_mutation=paste0(mutation_ICGC[ICGC_match]$REF,'>',mutation_ICGC[ICGC_match]$ALT)
+human_variant_ICGC$human_mutation=paste0(human_variant_ICGC$REF,">",human_variant_ICGC$ALT)
+same_mutation_idx=apply(data.frame(cancer_mutation=human_variant_ICGC$cancer_mutation,
+                                human_mutation=human_variant_ICGC$human_mutation),1,
+                                function(x) x[1]==x[2])
 
+human_variant_ICGC_sm=human_variant_ICGC[same_mutation_idx]#2113933/2155929 regions
+saveRDS(human_variant_ICGC_sm,ICGC_mutation_fn)
+human_variant_ICGC_sm_dNME=human_variant_ICGC_sm[dNME_pval<=pval_cutoff]
+sum(human_variant_ICGC_sm_dNME$altNME>human_variant_ICGC_sm_dNME$refNME)/nrow(human_variant_ICGC_sm_dNME)#0.549
+human_variant_dNME=human_variant[dNME_pval<=pval_cutoff]
+sum(human_variant_dNME$altNME>human_variant_dNME$refNME)/nrow(human_variant_dNME)#0.545
+genomic_features=readRDS(genomic_features_file)
+TSS_dis_ICGC_dNME_sm=dist_calc(convert_GR(human_variant_ICGC_sm_dNME$region),genomic_features$TSS)
+TSS_dis_ICGC_dNME_sm=convert_GR(TSS_dis_ICGC_dNME_sm,direction='DT')
+TSS_ICGC_dNME_sm_match=match(human_variant_ICGC_sm_dNME$region,TSS_dis_ICGC_dNME_sm$region)
+human_variant_ICGC_sm_dNME$TSS_dist=TSS_dis_ICGC_dNME_sm$dist[TSS_ICGC_dNME_sm_match]#Median 9039
 
+TSS_dis_dNME=dist_calc(convert_GR(human_variant_dNME$region),genomic_features$TSS)
+TSS_dis_dNME=convert_GR(TSS_dis_dNME,direction='DT')
+TSS_dNME_match=match(human_variant_dNME$region,TSS_dis_dNME$region)
+human_variant_dNME$TSS_dist=TSS_dis_dNME$dist[TSS_dNME_match]#Median 8981
 #Archive
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
 saveRDS(human_pan,'../downstream/output/human_pan.rds')

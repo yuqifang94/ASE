@@ -319,6 +319,6 @@ density_mouse_calc<-function(gr_in,stat_name="NME"){
 pdf(paste0(figure_path,'mouse_NME_density_boxplot.pdf'),width=3.5,height=3.5)
 density_mouse_calc(nme,stat_name="NME")
 dev.off()
-pdf(paste0(figure_path,'mouse_MMLE_density_boxplot.pdf'),width=3.5,height=3.5)
-density_mouse_calc(nme,stat_name="NME")
+pdf(paste0(figure_path,'mouse_MML_density_boxplot.pdf'),width=3.5,height=3.5)
+density_mouse_calc(nme,stat_name="MML")
 dev.off()

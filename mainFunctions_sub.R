@@ -2686,6 +2686,7 @@ add_repeats<-function(region_in,repeats_in){
   return(region_in)
 }
 getCpgSitesmm10 <- function(chrsOfInterest=paste("chr",1:19,sep="")){
+  #1:19 exclude the sex chromosome
   # Obtain all CpG sites
   cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),with=2)))
   # Set genome and seqlengths

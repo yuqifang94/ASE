@@ -75,3 +75,7 @@ chip_atlas_dir='../downstream/input/mouse_analysis/motif_analysis/chipatlas/'
 ChiP_motif_dir=paste0(mouse_motif_dir,'motif_Chip_rds/')
 scRNA_dir="../downstream/input/human_analysis/NME_expression_var/scRNA/"
 NME_MAV_human_out_dir='../downstream/output/human_analysis/NME_MAV/'
+ICGC_mutation_fn='../downstream/input/human_analysis/human_variant_passenger_sm.rds'
+NME_in_CG_fn='../downstream/input/mouse_analysis/human_conservation/NME_matrix_N2_CG.rds'
+NME_mouse_MAV_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed.rds'
+Ken_motif_out_dir='../downstream/output/human_analysis/Ken_motif_pre_process/'
