@@ -41,8 +41,6 @@ plot_two_samples<-function(region_plot,genome,gene_in,stage_1,stage_2,tissue,bam
 }
 
 # dNME examples -----------------------------------------------------------
-mml=readRDS('../downstream/input/mouse_analysis/CPEL_outputs/')
-nme=readRDS('../downstream/input/mouse_analysis/CPEL_outputs/')
 #heart
 #Region: chr13:43131840-43132089, edn1
 plot_two_samples("chr13:43131840-43132089",genome,"Edn1","E14.5","E15.5","heart",CG_mm10=CG_mm10)
