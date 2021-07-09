@@ -13,7 +13,8 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.text.x=element_text(size=16),
                                  axis.text.y=element_text(size=16))
 
-
+#588188 used for clustering
+#
 cluster_assignment(dir_cluster_in_01,dir_out_cluster01,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn,figure_path=figure_path)
 #Merge into data table
 #Filtered result

@@ -322,3 +322,7 @@ dev.off()
 pdf(paste0(figure_path,'mouse_MML_density_boxplot.pdf'),width=3.5,height=3.5)
 density_mouse_calc(nme,stat_name="MML")
 dev.off()
+
+NME_dt=convert_GR(nme,direction='DT')
+NME_dt_mt=melt.data.table(NME_dt,id.vars=c('region','density_quant','density','CGcont_exp','CG_mm10'),value.name = "NME",variable.name='Sample')
+cor.test(NME_dt_mt$NME,NME_dt_mt$density,method='pearson')
