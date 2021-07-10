@@ -81,3 +81,5 @@ NME_mouse_MAV_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed
 Ken_motif_out_dir='../downstream/output/mouse_analysis/mouse_motif_Ken/'
 dir_scRNA_mouse='../downstream/input/mouse_analysis/Mouse_C1/'
 NME_mouse_MAV_enhancer_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed_enhancer.rds'
+compliment_MDS_dir_P0='../downstream/data/UC_MDS_day0/'
+DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
