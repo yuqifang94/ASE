@@ -371,7 +371,7 @@ UC_in_MDS_comp_P0=data.table(region=gff_in_compliment)
 UC_in_MDS_comp_P0_UC=fastDoCall('cbind',
                              mclapply(dir(compliment_MDS_dir_P0,pattern = '.*uc.bedGraph'),function(x){
                                read.agnostic.mouse.uc(paste(compliment_MDS_dir_P0,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=10))
-
+UC_in_MDS_comp_P0_UC=cbind(gff_in_compliment,UC_in_MDS_comp_P0_UC)
 UC_in_MDS_comp_P0=rbind(UC_in_MDS_comp_P0,UC_in_MDS_comp_P0_UC)
 saveRDS(UC_in_MDS_comp_P0,'../downstream/output/mouse_analysis/UC_in_MDS_comp_P0.rds')
 #Note old and new run have different names before and after -vs-
@@ -396,7 +396,9 @@ UC_in_analyzed_MDS_P0=cbind(UC_in_analyzed_MDS_P0,UC_in_analyzed_MDS_P0_UC)
 UC_in_MDS_all_P0=rbind(UC_in_MDS_comp_P0,UC_in_analyzed_MDS_P0)
 
 saveRDS(UC_in_MDS_all_P0,UC_in_MDS_all_P0_file)
-
+UC_in_all=readRDS(UC_in_MDS_all_file)
+UC_in_MDS_all_P0_all=cbind(UC_in_MDS_all_P0,UC_in_all)
+saveRDS(UC_in_MDS_all_P0_all, UC_in_MDS_all_P0_all_file)
 # created merged object for all UC, dMML and dNME ----------------------------------------
 
 mml <- readRDS(MML_matrix_file)

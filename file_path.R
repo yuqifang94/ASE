@@ -41,6 +41,7 @@ mouse_compliment_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_
 UC_in_matrix_ls_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions.rds'
 UC_in_MDS_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions.rds'
 UC_in_MDS_all_P0_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions_P0.rds'
+UC_in_MDS_all_P0_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions_all_P0.rds'
 mouse_enhancer_bin='../downstream/output/mouse_analysis/enhancers/bin_enhancer.rds'
 dir_cluster_in_01='../downstream/input/mouse_analysis/clustering/tissue_specific/uc_01/'
 UC_merge_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions.rds'
