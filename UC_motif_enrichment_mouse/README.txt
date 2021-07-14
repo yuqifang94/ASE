@@ -1,0 +1,1 @@
+This fold contains the code for performing the differential motif enrichment analysis of genomic regions where UC is driven by NME and regions where UC is driven by MML in different mouse develemental tissues.
