@@ -1,0 +1,44 @@
+library(RColorBrewer)
+library(pheatmap)
+
+cut <- as.numeric(commandArgs(trailingOnly = T))
+for (seed in 1:10) {
+  d <- readRDS('/home-4/zji4@jhu.edu/scratch/andy_ASE/data/proc/fulluc.rds')
+  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+  
+  aid <- sapply(names(d),function(i) {
+    names(which(rowSums(d[[i]] > cut) > 0))
+  })  
+  
+  d <- sapply(names(d),function(i) {
+    sid <- setdiff(aid[[i]],unlist(aid[names(aid)!=i]))
+    i <- d[[i]]
+    i <- i[sid,]
+    i <- i[,colnames(i) %in% timeorder]
+    scalematrix <- function(data) {
+      cm <- rowMeans(data)
+      csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
+      (data - cm) / csd
+    }
+    i <- scalematrix(i)
+    i <- i[complete.cases(i),]
+    set.seed(seed)
+    clu <- kmeans(i,10,iter.max = 10000)$cluster
+    n <- names(clu)
+    clum <- rowsum(i,clu)/as.vector(table(clu))
+    maxp <- apply(clum,1,function(i) {
+      i[i < 0] <- 0
+      i <- i-min(i)
+      i <- i/max(i)
+      sum(i*c(1:length(i)))/sum(i)
+    })
+    clu <- rank(maxp)[clu]
+    names(clu) <- n
+    clu
+  })
+  saveRDS(d,file=paste0('/home-4/zji4@jhu.edu/scratch/andy_ASE/cluster/res/uc_',cut,'_',seed,'.rds'))
+}
+
+
+
+
