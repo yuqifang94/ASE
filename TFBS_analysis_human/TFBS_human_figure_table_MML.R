@@ -45,11 +45,13 @@ ht <- Heatmap(data_median_com_filter_sd, name = "MML",
 							row_labels = row_labels,
 							show_column_names = TRUE,
 							column_names_rot = 90,
-              row_title_gp = gpar(fontsize = 30), row_names_gp = gpar(fontsize = 4),
-							column_title_gp = gpar(fontsize = 30), column_names_gp = gpar(fontsize = 6)
+              row_title_gp = gpar(fontsize = 40), row_names_gp = gpar(fontsize = 6),
+							column_title_gp = gpar(fontsize = 40), column_names_gp = gpar(fontsize = 8),
+							heatmap_legend_param = list(title_gp = gpar(fontsize = 30), labels_gp = gpar(fontsize = 24),
+							legend_height = unit(3, 'in'), grid_width = unit(0.5, 'in'))
 )
 
-pdf("motif_MML_heatmap_median_human_DNase_control_agnostic.pdf", width=20, height=30, family='ArialMT', useDingbats=FALSE)
+pdf("motif_MML_heatmap_median_human_DNase_control_agnostic.pdf", width=20, height=40, family='ArialMT', useDingbats=FALSE)
 draw(ht)
 dev.off()
 
