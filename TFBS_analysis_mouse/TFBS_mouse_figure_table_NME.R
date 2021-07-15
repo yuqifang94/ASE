@@ -47,9 +47,12 @@ names(cols_tissue) <- unique(tissue_group)
 
 column_bar1 <-  HeatmapAnnotation(tissue = tissue_group[region_group == "non-regulatory"],
 col = list(tissue = cols_tissue),
-show_annotation_name = FALSE)
+show_annotation_name = FALSE,
+annotation_legend_param = list(tissue = list(title_gp = gpar(fontsize = 30), labels_gp = gpar(fontsize = 20),
+grid_height = unit(0.5, 'in'), grid_width = unit(0.5, 'in')))
+)
 
-ht1 <- Heatmap(data_median_com_filter_sd[,region_group == "non-regulatory"], name = "scaled-value", top_annotation = column_bar1,
+ht1 <- Heatmap(data_median_com_filter_sd[,region_group == "non-regulatory"], name = "NME", top_annotation = column_bar1,
 							cluster_rows = FALSE,
 							cluster_columns = FALSE,
 							column_split = factor(tissue_group[region_group == "non-regulatory"]),
@@ -58,14 +61,19 @@ ht1 <- Heatmap(data_median_com_filter_sd[,region_group == "non-regulatory"], nam
 							show_column_names=TRUE,
 							column_names_rot = 90,
 							column_title = "non-regulatory",
-              row_title_gp = gpar(fontsize = 30), row_names_gp = gpar(fontsize = 4),
-							column_title_gp = gpar(fontsize = 30), column_names_gp = gpar(fontsize = 6)
+              row_title_gp = gpar(fontsize = 40), row_names_gp = gpar(fontsize = 6),
+							column_title_gp = gpar(fontsize = 40), column_names_gp = gpar(fontsize = 8),
+							heatmap_legend_param = list(title_gp = gpar(fontsize = 30), labels_gp = gpar(fontsize = 24),
+							legend_height = unit(3, 'in'), grid_width = unit(0.5, 'in'))
 )
 
 column_bar2 <-  HeatmapAnnotation(tissue = tissue_group[region_group == "regulatory"],
-col = list(tissue = cols_tissue))
+col = list(tissue = cols_tissue),
+annotation_legend_param = list(tissue = list(title_gp = gpar(fontsize = 30), labels_gp = gpar(fontsize = 24),
+grid_height = unit(0.5, 'in'), grid_width = unit(0.5, 'in')))
+)
 
-ht2 <- Heatmap(data_median_com_filter_sd[, region_group == "regulatory"], name = "scaled-value", top_annotation = column_bar2,
+ht2 <- Heatmap(data_median_com_filter_sd[, region_group == "regulatory"], name = "NME", top_annotation = column_bar2,
 							cluster_rows = FALSE,
 							cluster_columns = FALSE,
 							column_split = factor(tissue_group[region_group == "regulatory"]),
@@ -74,12 +82,14 @@ ht2 <- Heatmap(data_median_com_filter_sd[, region_group == "regulatory"], name =
 							show_column_names=TRUE,
 							column_names_rot = 90,
 							column_title = "regulatory",
-              row_title_gp = gpar(fontsize = 30), row_names_gp = gpar(fontsize = 4),
-							column_title_gp = gpar(fontsize = 30), column_names_gp = gpar(fontsize = 6)
+              row_title_gp = gpar(fontsize = 40), row_names_gp = gpar(fontsize = 6),
+							column_title_gp = gpar(fontsize = 40), column_names_gp = gpar(fontsize = 8),
+							heatmap_legend_param = list(title_gp = gpar(fontsize = 30), labels_gp = gpar(fontsize = 24),
+							legend_height = unit(3, 'in'), grid_width = unit(0.5, 'in'))
 )
 
-pdf("motif_NME_heatmap_median_mouse_DNase_control.pdf", width=20, height=30, family='ArialMT', useDingbats=FALSE)
-draw(ht1+ht2, ht_gap = unit(1, "cm"), column_title_gp = gpar(fontsize = 30))
+pdf("motif_NME_heatmap_median_mouse_DNase_control.pdf", width=24, height=44, family='ArialMT', useDingbats=FALSE)
+draw(ht1+ht2, ht_gap = unit(1, "cm"), column_title_gp = gpar(fontsize = 40))
 dev.off()
 
 ##perform differential test between motif sites at non-regulatory DNA and regulatory DNA regions for each motif
