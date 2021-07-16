@@ -15,7 +15,7 @@ gg_color_hue <- function(n) {
 
 color_2 <- gg_color_hue(2)
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_motif_analysis_new")
+setwd("../downstream/output/mouse_analysis/UC_motif_enrichment")
 
 region_type <- c("dMML", "dNME")
 input_dir <- "all_region"
