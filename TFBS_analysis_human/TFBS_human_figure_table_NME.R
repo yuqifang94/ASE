@@ -7,7 +7,7 @@ library(patchwork)
 library(ggsignif)
 library(matrixStats)
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/human_TFBS_analysis")
+setwd("../downstream/output/human_analysis/TFBS_analysis")
 
 ##read in NME data
 data_median_com_DNase <- readRDS("human_motif_DNase_median.rds")
