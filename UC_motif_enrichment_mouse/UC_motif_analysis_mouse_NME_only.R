@@ -78,9 +78,9 @@ enrich_motif <- function(
 }
 
 ##load motif site database
-motif_lib_mm10 <- readRDS("/dcl02/hongkai/data/wzhou14/sc_immune/motif_mapping/jaspar_motif/map_mouse/motif_JASPAR_mm10.rds")
+motif_lib_mm10 <- readRDS("../downstream/input/mouse_analysis/motif_analysis/motif_JASPAR_mm10.rds")
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_motif_analysis_new_all")
+setwd("../downstream/output/mouse_analysis/UC_motif_enrichment")
 
 ##sub region type: "NME only", "Both", "Neither", "MML only"
 cluster_gr_anno <- readRDS(file="tissue_region_enhancer_gr.rds")
