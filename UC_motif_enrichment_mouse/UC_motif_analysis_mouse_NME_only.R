@@ -83,8 +83,8 @@ motif_lib_mm10 <- readRDS("../downstream/input/mouse_analysis/motif_analysis/mot
 setwd("../downstream/output/mouse_analysis/UC_motif_enrichment")
 
 ##sub region type: "NME only", "Both", "Neither", "MML only"
-cluster_gr_anno <- readRDS(file="tissue_region_enhancer_gr.rds")
-cluster_gr_control <- readRDS(file="tissue_region_control_enhancer_gr.rds")
+cluster_gr_anno <- readRDS(file="../downstream/input/mouse_analysis/tissue_region_enhancer_gr.rds")
+cluster_gr_control <- readRDS(file="../downstream/input/mouse_analysis/tissue_region_control_enhancer_gr.rds")
 
 tissue_name <- names(cluster_gr_anno)
 
