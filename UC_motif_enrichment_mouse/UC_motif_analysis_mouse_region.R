@@ -4,10 +4,10 @@ library(glue)
 library(GenomicRanges)
 options(scipen=999)
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_motif_analysis_new_all")
+setwd("../downstream/input/mouse_analysis")
 
 ##read in all regions and retain enhancer regions
-data_list <- readRDS("/dcl02/hongkai/data/wzhou14/Andy_lab/share/tissue_out_N17_kmeans_10run_filtered_all_region.rds")
+data_list <- readRDS("../downstream/input/mouse_analysis/tissue_out_N17_kmeans_10run_filtered_all_region.rds")
 tissue_name <- names(data_list)
 
 cluster_data <- lapply(data_list, function(x){
