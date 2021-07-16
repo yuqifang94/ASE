@@ -13,7 +13,7 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_TFBS_analysis")
+setwd("../downstream/output/mouse_analysis/TFBS_analysis")
 
 ##read in NME data
 data_median_com_DNase <- readRDS("mouse_motif_DNase_median.rds")
