@@ -5,7 +5,7 @@ library(data.table)
 library(exomeCopy)
 options(scipen=999)
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_DNase")
+setwd("../downstream/input/mouse_analysis")
 
 ##obtain regulaotry DNA regions from mouse DNase-seq peak data
 metadata <- readRDS("/dcl02/hongkai/data/wzhou14/ENCODE_data/metadata/match_RNA_DNase_mm10.rds")
