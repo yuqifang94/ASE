@@ -2,7 +2,7 @@ library(GenomicRanges)
 library(data.table)
 options(scipen=999)
 
-setwd("../downstream/output/human_analysis/TFBS_analysis")
+setwd("../downstream/input/human_analysis")
 
 ##read in DNase regions (i.e., regulatory DNA regions)
 ##DNase regions were obtained from https://github.com/WeiqiangZhou/BIRD-data/releases/download/v3.0/BIRD_data_ENCODE.zip and resize to 250bp for each region.
