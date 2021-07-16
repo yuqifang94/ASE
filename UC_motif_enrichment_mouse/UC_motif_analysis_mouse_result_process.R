@@ -6,7 +6,7 @@ library(ggplot2)
 library(patchwork)
 library(data.table)
 
-setwd("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_motif_analysis_new_all")
+setwd("../downstream/output/mouse_analysis/UC_motif_enrichment")
 
 region_type <- c("dMML", "dNME")
 input_dir <- "enhancer_region"
@@ -94,7 +94,7 @@ motif_residual <- lapply(names(result_type[[1]]), function(i){
 names(motif_residual) <- names(result_type[[1]])
 
 ##compare with motifs that prefer high NME in human
-motif_human_high_NME <- fread("/dcl02/hongkai/data/wzhou14/Andy_lab/yuqi_project/mouse_DNase/motif_prefer_high_NME_human.txt",header=FALSE) %>% as.data.frame()
+motif_human_high_NME <- fread("../downstream/input/mouse_analysis/motif_prefer_high_NME_human.txt",header=FALSE) %>% as.data.frame()
 
 ##generate tables
 sapply(names(motif_residual), function(x){
