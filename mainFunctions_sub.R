@@ -2454,10 +2454,11 @@ GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR
         #   gene_sig$cluster=unique(x$GO_out_cluster_all$cluster)
         #   return(gene_sig)
         # }
-        return(GO_sig[,list(GO.ID,Term,Annotated,Significant,Expected,FC,p_cond,FDR,genes)])
+        #return(GO_sig[,list(GO.ID,Term,Annotated,Significant,Expected,FC,p_cond,FDR,genes)])
+        return(GO_sig[,list(GO.ID,cluster,FDR,genes)])
         }
       }))
-      write.csv(gene_sig_ts,paste0(out_dir,ts,'_',GO_type,'.csv'),row.names=F)
+      write.xlsx(gene_sig_ts,paste0(out_dir,GO_type,'.xlsx'),row.names=F,sheet=ts)
       
     }
     #   if(!is.null(gene_sig_ts)&length(gene_sig_ts)>0){
