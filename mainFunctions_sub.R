@@ -2460,11 +2460,12 @@ GO_sheets<-function(GO_result,enc_type,dNME_cor=dNME_cor,dMML_cor=dMML_cor,FeDMR
         #   return(gene_sig)
         # }
         #return(GO_sig[,list(GO.ID,Term,Annotated,Significant,Expected,FC,p_cond,FDR,genes)])
-        return(GO_sig[,list(GO.ID,cluster,FDR,genes)])
+        return(GO_sig[,list(GO.ID,Term,cluster,FDR,genes)])
         }
       }))
-      write.xlsx(gene_sig_ts,paste0(out_dir,GO_type,'.xlsx'),row.names=F,sheet=ts)
-      
+      if(nrow(gene_sig_ts)>0&length(gene_sig_ts)>0&!is.null(gene_sig_ts)){
+      write.xlsx(gene_sig_ts,paste0(out_dir,GO_type,'.xlsx'),row.names=F,sheet=ts,append=T)
+      }
     }
     #   if(!is.null(gene_sig_ts)&length(gene_sig_ts)>0){
     #   gene_sig_ts$tissue=ts

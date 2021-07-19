@@ -74,6 +74,7 @@ cgs <- lapply(chrs, function(x) start(matchPattern("CG", Mmusculus[[x]])))
 cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges(cgs[[x]], width = 1)))) #use first location
 GO_out_all=readRDS(paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
 GO_sheets(GO_out_all,"enhancer",dMML_cor=dMML_cor,dNME_cor=dNME_cor,mm10_CpG=cpgr,FDR_cutoff = 0.2,out_dir=paste0(GO_01_dir,'GO_sheets/'))
+enc_type="promoter"
 GO_out_all=readRDS(paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
 GO_sheets(GO_out_all,"promoter",dMML_cor=dMML_cor,dNME_cor=dNME_cor,mm10_CpG=cpgr,FDR_cutoff = 0.2,out_dir=paste0(GO_01_dir,'GO_sheets/'))
 
