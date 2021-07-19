@@ -103,7 +103,7 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
     variant_SNP_tri=rbind(variant_SNP_tri,variant_SNP_tri_OR)
   }
   #get HetCpG
-  variant_SNP_tri$CpG_change=factor(variant_SNP_tri$CpG_change,levels=c('Gain CG','No CG change'))
+  variant_SNP_tri$CpG_change=factor(variant_SNP_tri$CpG_change,levels=c('Lose CG','No CG change'))
   variant_SNP_tri=variant_SNP_tri[order(OR,decreasing=F)]
  
   variant_SNP_tri$SNP=gsub('->','\u2794',variant_SNP_tri$SNP)
@@ -116,10 +116,9 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
     geom_errorbar(aes(ymin=log(lowerCI), ymax=log(upperCI)), width=.4,position=position_dodge(.9),size=0.25)+ggtitle(gsub('->',' \u2794 ',sn))+#ylim(c(0,max(variant_SNP_tri$upperCI)*1.5))+
     theme_glob+theme(legend.position = "bottom",legend.title = element_blank())+
      ylim(c(-1.5,1.5))+
-
-     scale_fill_manual(values=c("No CG change"="grey","Gain CG"="light blue"))+
-     geom_text(data=variant_SNP_tri[OR>1],aes(label=significant,y=log(upperCI)*1),vjust =sig_v,hjust=sig_h_pos)+
-     geom_text(data=variant_SNP_tri[OR<1],aes(label=significant,y=log(lowerCI)*1),vjust =sig_v,hjust=sig_h_neg)+
+     scale_fill_manual(values=c("No CG change"="grey","Lose CG"="light blue"))+
+     #geom_text(data=variant_SNP_tri[OR>1],aes(label=significant,y=log(upperCI)*1),vjust =sig_v,hjust=sig_h_pos)+
+     #geom_text(data=variant_SNP_tri[OR<1],aes(label=significant,y=log(lowerCI)*1),vjust =sig_v,hjust=sig_h_neg)+
      coord_flip()
    
 
