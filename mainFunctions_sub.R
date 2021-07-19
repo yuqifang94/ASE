@@ -1,4 +1,5 @@
 # Dependencies in use -----------------------------------------------------
+#ml java/13.0.2
 #Need R/3.6.1, gcc/5.5.0, and atlas
 #clean run: remove: rm -r /home-net/home-4/yfang27@jhu.edu/R/x86_64-pc-linux-gnu-library/3.6/gcc/5.5/*
 #rm -r /scratch/users/yfang27@jhu.edu/yfang/temp_all/*
@@ -8,7 +9,11 @@ if (!requireNamespace("ggfortify", quietly = TRUE))
 {
   install.packages("glue")
   BiocManager::install("ggfortify")}
-library(ggfortify)
+if (!requireNamespace("xlsx", quietly = TRUE))
+{
+  install.packages("xlsx")
+ }  
+library(xlsx)
 if (!requireNamespace("shiny", quietly = TRUE))
 {install.packages("htmltools")
   BiocManager::install("shiny")}
