@@ -126,12 +126,14 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
    variant_SNP_tri=data.table()
 
 }
+saveRDS(SNP_het,'../downstream/output/human_analysis/CpG_density/SNP_het.rds')
 saveRDS(variant_SNP_tri_out,'../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out.rds')
 #Getting png files with mono-spaced font in windows setting, use the variant_SNP_tri_out
 variant_SNP_tri_out=readRDS('../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out.rds')
 library(extrafont)
 loadfonts()
-png('../downstream/output/human_analysis/CpG_densityvariant_OR_tri3_two_cat_greater_CG_bg_rev_hg19.png',
+SNP_het=readRDS('../downstream/output/human_analysis/CpG_density/SNP_het.rds')
+png('../downstream/output/human_analysis/CpG_density/variant_OR_tri3_two_cat_greater_CG_bg_rev_hg19.png',
     width=7,height=7,units='in',res=1080, family = 'Consolas')
 #SNP_het=SNP_het[c("C>G", names(SNP_het)[names(SNP_het)!="C>G"])]
 ggarrange(plotlist=SNP_het, nrow=2,ncol=2,common.legend = T,legend="bottom",label.x = 'Odds ratio')
@@ -159,7 +161,7 @@ cor.test(GR_merge_dt[dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$dNME_relativ
 GR_merge_dt$CpG_stat="No difference"
 GR_merge_dt[CpGdiff!=0]$CpG_stat="With CpG difference"
 GR_merge_dt$CpG_stat=factor(GR_merge_dt$CpG_stat,levels = c("With CpG difference","No difference"))
-#Alwasy using allele with more CG minus alleles with less CG
+#Always using allele with more CG minus alleles with less CG
 GR_merge_dt$dNME_relative_more_less=GR_merge_dt$dNME_relative
 GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative_more_less=GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative*sign(GR_merge_dt[GR_merge_dt$CpGdiff!=0]$CpGdiff)
 #Test for if "With CpG difference" is significantly smaller thant "No difference"
