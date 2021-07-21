@@ -39,6 +39,7 @@ saveRDS(tissue_out_filtered,tissue_out_filtered_fn)
 tissue_out_filtered=readRDS(tissue_out_filtered_fn)
 region_type_count=lapply(tissue_out_filtered,function(x) table(x$region_type))
 region_type_count=do.call(rbind,region_type_count)
+apply(apply(region_type_count,1,function(x) x/sum(x)),1,range)
 t.test(region_type_count[,'NME only'],region_type_count[,'MML only'],alternative='greater')
 plot_correlation(tissue_out_filtered,pdf_fn=paste0(dir_out_rds_correlation,'correlation_main.pdf'))
 #enhancer
