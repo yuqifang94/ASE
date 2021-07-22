@@ -7,7 +7,7 @@
 
 # get all file location ---------------------------------------------------
 source('file_path.R')
-source('dependencies.R')
+#source('dependencies.R')
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
