@@ -114,3 +114,4 @@ library(gplots)
              filename=paste0(figure_path,'All_region_70_cluster/clustering_all_regions_01_C',i,'.jpeg'),
              annotation_col = colann, gaps_col = cumsum(rle(colann[,2])$lengths), annotation_colors = list(tissue=c1,time=c4))
   }
+  
