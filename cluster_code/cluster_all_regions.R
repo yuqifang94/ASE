@@ -71,7 +71,8 @@ library(gplots)
   #GO analysis
   #Background
   bg=convert_GR(names(clu))
-  bg=subsetByOverlaps(enhancer,bg)$`Target Gene`
+  enhancer=readRDS(bin_enhancer_rds)
+  bg=enhancer$`Target Gene`
   cluster_GO=list()
   for(i in 1:70){
   clu_i_GR= convert_GR(names(clu[clu==i]))
@@ -80,7 +81,7 @@ library(gplots)
   cluster_GO[[i]]=GO_run(unique(enhancer_clu_i$`Target Gene`),bg,cluster=i)
   }
   saveRDS(cluster_GO,'../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
-
+  cluster_GO=readRDS('../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
 #Plotting
   mat_out=UC_in_matrix_ls_red_ft[names(clu),]
   
