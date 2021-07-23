@@ -1,6 +1,7 @@
 source('mainFunctions_sub.R')
 cut <- 0.1
 UC_in_matrix_ls=readRDS(UC_in_matrix_ls_file)
+
 # $EFP
 # [1] 5008585
 # $forebrain
@@ -15,14 +16,11 @@ UC_in_matrix_ls=readRDS(UC_in_matrix_ls_file)
 # [1] 4995202
 # $midbrain
 # [1] 5004404
-for (seed in 1:10) {
-  cat('Processing:',seed,'\n')
-  d <- lapply(UC_in_matrix_ls,convert_GR,direction='matrix')
-  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
-  
-  aid <- sapply(names(d),function(i) {
+d <- lapply(UC_in_matrix_ls,convert_GR,direction='matrix')
+aid <- sapply(names(d),function(i) {
     names(which(rowSums(d[[i]] > cut) > 0))
   })  
+  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 #   $EFP
 # [1] 951833
 # $forebrain
@@ -37,7 +35,9 @@ for (seed in 1:10) {
 # [1] 1111038
 # $midbrain
 # [1] 1129165
-  d <- sapply(names(d),function(i) {
+for (seed in 1:10) {
+  cat('Processing:',seed,'\n')
+  cluster_d <- sapply(names(d),function(i) {
     #This is for one and only one
     #sid <- setdiff(aid[[i]],unlist(aid[names(aid)!=i]))
     sid=aid[[i]]
@@ -63,7 +63,7 @@ for (seed in 1:10) {
   })
   dir_uc=paste0(dir_cluster_in,'uc_',sub('\\.','',as.character(cut)),'/')
     ifelse(!dir.exists(file.path(dir_uc)), dir.create(file.path(dir_uc)), FALSE)
-  saveRDS(d,file=paste0(dir_uc,cut,'_',seed,'.rds'))
+  saveRDS(cluster_d,file=paste0(dir_uc,cut,'_',seed,'.rds'))
 }
 
 
