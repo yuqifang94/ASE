@@ -51,37 +51,32 @@ library(gplots)
 
   #clu=readRDS(cluster_region_out_fn)
   set.seed(123)
-  clu <- kmeans(UC_in_matrix_ls_red_ft,70,iter.max = 10000)$cluster
-
-
-  
-
-
-  #This is reorder clu to the order of maximum UC in column
-
-  saveRDS(clu,paste0('../downstream/output/mouse_analysis/clustering/UC_cluster_all_time_',123,'.rds'))
+  clu <- kmeans(scalematrix(UC_in_matrix_ls_red_ft),70,iter.max = 10000)$cluster
+#This is reorder clu to the order of maximum UC in column
+clu=order_clu(UC_in_matrix_ls_red_ft,clu)
+    saveRDS(clu,paste0('../downstream/output/mouse_analysis/clustering/UC_cluster_all_time_',123,'.rds'))
   
   #Local run
   UC_in_matrix_ls_red_ft=readRDS('../downstream/output/mouse_analysis/clustering/UC_in_matrix_ls_red_ft.rds')
   clu=readRDS(paste0('../downstream/output/mouse_analysis/clustering/UC_cluster_all_time_',123,'.rds'))
-  clu=order_clu(UC_in_matrix_ls_red_ft,clu)
+  
   #sub_sample=sample(1:length(clu),round(length(clu)/100))
   #clu=sort(clu[sub_sample])
   clu=sort(clu)
   #GO analysis
   #Background
-  bg=convert_GR(names(clu))
-  enhancer=readRDS(bin_enhancer_rds)
-  bg=enhancer$`Target Gene`
-  cluster_GO=list()
-  for(i in 1:70){
-  clu_i_GR= convert_GR(names(clu[clu==i]))
-  enhancer_clu_i=subsetByOverlaps(enhancer,clu_i_GR)
-  
-  cluster_GO[[i]]=GO_run(unique(enhancer_clu_i$`Target Gene`),bg,cluster=i)
-  }
-  saveRDS(cluster_GO,'../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
-  cluster_GO=readRDS('../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
+  # bg=convert_GR(names(clu))
+  # enhancer=readRDS(bin_enhancer_rds)
+  # bg=enhancer$`Target Gene`
+  # cluster_GO=list()
+  # for(i in 1:70){
+  # clu_i_GR= convert_GR(names(clu[clu==i]))
+  # enhancer_clu_i=subsetByOverlaps(enhancer,clu_i_GR)
+  # 
+  # cluster_GO[[i]]=GO_run(unique(enhancer_clu_i$`Target Gene`),bg,cluster=i)
+  # }
+  # saveRDS(cluster_GO,'../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
+  # cluster_GO=readRDS('../downstream/output/mouse_analysis/GO_analysis/cluster_all_regions_GO.rds')
 #Plotting
   mat_out=UC_in_matrix_ls_red_ft[names(clu),]
   
@@ -102,13 +97,13 @@ library(gplots)
   #remove row with all NA 
   mat_out_sc=scalematrix(mat_out)
  # jpeg(paste0(figure_path,'clustering_all_regions_01.jpg'))
-  pheatmap(mat_out_sc,cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
+  pheatmap(mat_out_sc,cluster_rows = F,annotation_row = rowann_out,cluster_cols = T,
            annotation_col = colann,show_colnames = F,show_rownames = F,
            gaps_col = cumsum(rle(colann[,2])$lengths),
            annotation_colors = list(tissue=c1,cluster=c2,time=c4
                                     #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)
            ),
-           filename=paste0(figure_path,'clustering_all_regions_01.jpeg'))
+           filename=paste0(figure_path,'clustering_all_regions_01_hc.jpeg'))
  # dev.off()
   for(i in 1:70){
     pheatmap(mat_out_sc[names(clu[clu==i]),],cluster_rows=F,cluster_cols=F,show_rownames = F,
