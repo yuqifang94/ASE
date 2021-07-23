@@ -16,6 +16,7 @@ UC_in_matrix_ls=readRDS(UC_in_matrix_ls_file)
 # $midbrain
 # [1] 5004404
 for (seed in 1:10) {
+  cat('Processing:',seed,'\n')
   d <- lapply(UC_in_matrix_ls,convert_GR,direction='matrix')
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
   
@@ -60,7 +61,9 @@ for (seed in 1:10) {
     names(clu) <- n
     clu
   })
-  saveRDS(d,file=paste0(dir_cluster_in,'uc_',cut,'_',seed,'.rds'))
+  dir_uc=paste0(dir_cluster_in,'uc_',sub('\\.','',as.character(cut)),'/')
+    ifelse(!dir.exists(file.path(dir_uc)), dir.create(file.path(dir_uc)), FALSE)
+  saveRDS(d,file=paste0(dir_uc,cut,'_',seed,'.rds'))
 }
 
 
