@@ -11,6 +11,7 @@ for (seed in 1:10) {
   })  
   
   d <- sapply(names(d),function(i) {
+    #This is for one and only one
     sid <- setdiff(aid[[i]],unlist(aid[names(aid)!=i]))
     i <- d[[i]]
     i <- i[sid,]
