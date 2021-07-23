@@ -1,6 +1,6 @@
 source('mainFunctions_sub.R')
 cut <- 0.1
-UC_in_matrix_ls=readRDS(UC_in_matrix_ls_file)
+d=readRDS(UC_in_matrix_cluster_file)
 
 # $EFP
 # [1] 5008585
@@ -16,7 +16,6 @@ UC_in_matrix_ls=readRDS(UC_in_matrix_ls_file)
 # [1] 4995202
 # $midbrain
 # [1] 5004404
-d <- lapply(UC_in_matrix_ls,convert_GR,direction='matrix')
 aid <- sapply(names(d),function(i) {
     names(which(rowSums(d[[i]] > cut) > 0))
   })  

@@ -39,6 +39,7 @@ CG_density_mouse='../downstream/output/mouse_analysis/CpG_density_NME/region_CG_
 mouse_DNase_control_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_DNase_control.gff'
 mouse_compliment_gff_file='../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff'
 UC_in_matrix_ls_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions.rds'
+UC_in_matrix_cluster_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_matrix_ls_N2_all_regions_clu.rds'
 UC_in_MDS_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions.rds'
 UC_in_MDS_all_P0_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions_P0.rds'
 UC_in_MDS_all_P0_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions_all_P0.rds'

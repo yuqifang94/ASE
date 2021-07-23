@@ -1,6 +1,5 @@
-suppressMessages(library(GenomicRanges))
-
-d <- readRDS('/home-4/zji4@jhu.edu/scratch/andy_ASE/data/raw/UC_agnostic_mouse_matrix_dedup_N2_all_non_MDS.rds')
+source('mainFunctions_sub.R')
+d <- readRDS(UC_in_matrix_ls_file)
 
 d <- sapply(d,function(gr) {
   grv <- paste0(as.character(seqnames(gr)),':',start(gr),'-',end(gr))
@@ -15,6 +14,6 @@ for (i in 1:length(d)) colnames(d[[i]]) <- sub('-all','',sub(paste0(names(d)[i],
 k <- table(unlist(sapply(d,rownames)))
 id <- names(k)[k==length(d)]
 d <- sapply(d,function(i) i[id,],simplify = F)
-saveRDS(d,file='/home-4/zji4@jhu.edu/scratch/andy_ASE/data/proc/fulluc.rds')
+saveRDS(d,file=UC_in_matrix_cluster_file)
 
 
