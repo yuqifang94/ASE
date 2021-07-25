@@ -90,7 +90,7 @@ download = True
 # Force return from the server in JSON format
 HEADERS = {'accept': 'application/json'}
 
-os.system("mkdir -p raw_ATAC/")
+os.system("mkdir -p ../../downstream/data/raw_ATAC/")
 
 for accession in accessions:
     # accession = accession.rstrip()
@@ -117,7 +117,7 @@ for accession in accessions:
         output_prefix = "_".join([age,related_dataset['biosample_ontology']['term_name'],str(bio_rep[0]),"ATAC",related_dataset['files'][ind_file]['output_type']])
         url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
         print(url)
-	output_filename = "raw_ATAC/" + output_prefix + ".bigWig"
+	output_filename = "../../downstream/data/raw_ATAC/" + output_prefix + ".bigWig"
         print(output_filename)
 	subprocess.check_call(['curl',
                                '-RL',

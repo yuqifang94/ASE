@@ -1,21 +1,21 @@
 #!/usr/bin/env python2.7
-import requests, json
+import requests
+import json
 import subprocess
 import os
 
-fullname2short = {"embryonic facial prominence":"CF",
-		  "forebrain":"FB",
-		  "heart":"HT",
-		  "hindbrain":"HB",
-		  "intestine":"IT",
-		  "kidney":"KD",
-		  "limb":"LM",
-		  "liver":"LV",
-		  "lung":"LG",
-		  "midbrain":"MB",
+fullname2short = {"embryonic facial prominence":"EFP",
+		  "forebrain":"forebrain",
+		  "heart":"heart",
+		  "hindbrain":"hindbrain",
+		  "intestine":"intestine",
+		  "kidney":"kidney",
+		  "limb":"limb",
+		  "liver":"liver",
+		  "lung":"lung",
+		  "midbrain":"midbrain",
 		  "neural tube":"NT",
-		  "stomach":"ST"}
-
+		  "stomach":"stomach"}
 
 # Force return from the server in JSON format
 HEADERS = {'accept': 'application/json'}
@@ -96,7 +96,7 @@ all_datasets = {"E10_5":['ENCSR349UOB',#CF
                       'ENCSR022KAT']#MB
 }
 
-os.system("mkdir -p raw_ChIP/")
+os.system("mkdir -p ../../downstream/data/mouse_ChIP/")
 
 for age in all_datasets.iterkeys():
     for accession in all_datasets[age]:
@@ -122,8 +122,8 @@ for age in all_datasets.iterkeys():
             if 'target' in related_dataset.keys():
 	    
             	mark = related_dataset['target']['label']
-	    else:
-		mark='Control'
+            else:
+                mark='Control'
             #if not (mark == "H3K27ac"):
             if (mark == "Control"):
                 continue            
@@ -135,25 +135,24 @@ for age in all_datasets.iterkeys():
                 #if related_dataset['files'][ind_file]['file_format'] != 'fastq':
                 #print(len(related_dataset['files']))
 		#print(related_dataset['files'][ind_file]['file_format'])
-		if related_dataset['files'][ind_file]['file_format'] != 'bed':
-		    #print('Not bed')
+                if related_dataset['files'][ind_file]['file_format'] != 'bed':
                     continue
                 if related_dataset['files'][ind_file]['output_type'] != 'replicated peaks':
                     print('Not rep peak')
-		    continue
+                    continue
                 if related_dataset['files'][ind_file]['assembly'] != "mm10":
                     print('not mm10')
-		    continue
+                    continue
                 bio_rep = related_dataset['files'][ind_file]['biological_replicates']
-		if len(bio_rep)==1:
-		    continue
-                output_prefix = "_".join([age,related_dataset['biosample_ontology']['term_name'],mark])
+                if len(bio_rep)==1:
+                    continue
+                output_prefix = "_".join([age,short_name,mark,bio_rep])
                 #if len(bio_rep)!=1:
                 #print output_prefix
                 # Download
                 url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
                 print(url)
-		output_filename = "raw_ChIP/" + output_prefix  + ".bed.gz"
+                output_filename = "../../downstream/data/mouse_ChIP/" + output_prefix  + ".bed.gz"
                 subprocess.check_call(['curl',
                                        '-RL',
                                        url,
