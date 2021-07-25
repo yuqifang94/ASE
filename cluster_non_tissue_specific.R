@@ -1,39 +1,41 @@
 source('mainFunctions_sub.R')
 cut <- 0.1
 d=readRDS(UC_in_matrix_cluster_file)
-
+# lapply(d,nrow)
 # $EFP
-# [1] 5008585
+# [1] 4876367
 # $forebrain
-# [1] 5005549
+# [1] 4876367
 # $heart
-# [1] 5006020
+# [1] 4876367
 # $hindbrain
-# [1] 5006806
+# [1] 4876367
 # $limb
-# [1] 5006777
+# [1] 4876367
+
 # $liver
-# [1] 4995202
+# [1] 4876367
 # $midbrain
-# [1] 5004404
+# [1] 4876367
 aid <- sapply(names(d),function(i) {
     names(which(rowSums(d[[i]] > cut) > 0))
   })  
-  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
-#   $EFP
-# [1] 951833
+#lapply(aid,length)
+# $EFP
+# [1] 935740
 # $forebrain
-# [1] 1184078
+# [1] 1165702
 # $heart
-# [1] 1007666
+# [1] 994001
 # $hindbrain
-# [1] 1149669
+# [1] 1132357
 # $limb
-# [1] 988370
+# [1] 970433
 # $liver
-# [1] 1111038
+# [1] 1093959
 # $midbrain
-# [1] 1129165
+# [1] 1113027
+timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 for (seed in 1:10) {
   cat('Processing:',seed,'\n')
   cluster_d <- sapply(names(d),function(i) {
@@ -41,7 +43,6 @@ for (seed in 1:10) {
     #sid <- setdiff(aid[[i]],unlist(aid[names(aid)!=i]))
     sid=aid[[i]]
     i <- d[[i]]
-    colnames(i)=sub('-all','',sub('.*?-','',colnames(i)))
     i <- i[sid,]
     i <- i[,colnames(i) %in% timeorder]
     i <- scalematrix(i)
