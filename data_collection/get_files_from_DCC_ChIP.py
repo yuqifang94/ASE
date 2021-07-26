@@ -158,10 +158,6 @@ for age in all_datasets.iterkeys():
                     url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
                     print(url)
                     output_filename = output_dir+ output_prefix  + ".bam"
-                    subprocess.check_call(['curl',
-                                            '--keepalive-time 2 ',
-                                            '-RL',
-                                            url,
-                                            "-o",
-                                            output_filename
-                    ])
+                    cmd_dl='curl --keepalive-time 2 -RL ' + url+" -o "+  output_filename
+                    
+                    subprocess.check_call(cmd_dl)
