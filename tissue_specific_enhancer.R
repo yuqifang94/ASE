@@ -50,6 +50,10 @@ for(fn in dir(RNA_mouse_dir,pattern='.tsv')){
 #    head(RNA_out$gene_id_no_version)
   RNA_out$gene_name=gene_id_conv[match(RNA_out$gene_id,gene_id_conv$ensembl_gene_id_version),'external_gene_name']
   saveRDS(RNA_out,RNA_mouse_out_rds)
-
-
+#Get coverage
+#in data collection folder
+#sbatch coverage_calc.sh ../../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed ../../downstream/data/mouse_ChIP/bam_files/E16_5_midbrain_H3K27ac_2.bam ../../downstream/data/mouse_ChIP/cov_files/E16_5_midbrain_H3K27ac_2.cov
+#for fn in ../../downstream/data/mouse_ChIP/bam_files/; do echo sbatch coverage_calc.sh ../../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed $fn $fn.cov; done
+#cp  ../../downstream/data/mouse_ChIP/bam_files/*.bam.cov ../../downstream/data/mouse_ChIP/cov_files/
+#rm  ../../downstream/data/mouse_ChIP/bam_files/*.bam.cov
 

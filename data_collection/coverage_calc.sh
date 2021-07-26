@@ -10,5 +10,5 @@ bed_in=$1
 bam_in=$2
 cov_out=$3
 
-
-bedtools coverage -f 1 -sorted -counts -a ${bed_in} -b ${bam_in} > ${cov_out}
+#bedtools coverage -sorted -counts -a ../../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed -b ../../downstream/data/mouse_ChIP/bam_files/E16_5_midbrain_H3K27ac_2.bam  > ../../downstream/data/mouse_ChIP/bam_files/E16_5_midbrain_H3K27ac_2.bam.cov
+bedtools coverage -sorted -counts -a ${bed_in} -b ${bam_in} > ${cov_out}
