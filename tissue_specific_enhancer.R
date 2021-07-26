@@ -34,8 +34,8 @@ for(fn in dir(RNA_mouse_dir,pattern='.tsv')){
 }
 #Convert enesembl id to gene name
    #use useCache = FALSE 
-  gene_id_conv_nonid=getBM(mart=ensembl,filters='ensembl_gene_id',attributes=attributes_BM,values=unique(RNA_out$gene_id_no_version),useCache = FALSE)
-  cat('Percent name have gene name:',sum(RNA_out$gene_id_no_version%in%gene_id_conv_nonid$ensembl_gene_id)/nrow(RNA_out),'\n')#0.0.6775687 
+#   gene_id_conv_nonid=getBM(mart=ensembl,filters='ensembl_gene_id',attributes=attributes_BM,values=unique(RNA_out$gene_id_no_version),useCache = FALSE)
+#   cat('Percent name have gene name:',sum(RNA_out$gene_id_no_version%in%gene_id_conv_nonid$ensembl_gene_id)/nrow(RNA_out),'\n')#0.0.6775687 
    
   #This is more accurate
    gene_id_conv=getBM(mart=ensembl,filters='ensembl_gene_id_version',attributes=attributes_BM,values=unique(RNA_out$gene_id),useCache = FALSE)
