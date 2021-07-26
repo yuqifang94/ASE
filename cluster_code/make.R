@@ -3,7 +3,8 @@ library(pheatmap)
 
 cut <- as.numeric(commandArgs(trailingOnly = T))
 for (seed in 1:10) {
-  d <- readRDS('/home-4/zji4@jhu.edu/scratch/andy_ASE/data/proc/fulluc.rds')
+  #see fulluc.R
+  d <- readRDS(UC_in_matrix_cluster_file)
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
   
   aid <- sapply(names(d),function(i) {

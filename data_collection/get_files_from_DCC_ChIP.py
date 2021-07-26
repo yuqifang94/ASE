@@ -95,8 +95,8 @@ all_datasets = {"E10_5":['ENCSR349UOB',#CF
                       'ENCSR803VSL',#HB
                       'ENCSR022KAT']#MB
 }
-
-os.system("mkdir -p ../../downstream/data/mouse_ChIP/")
+output_dir="../../downstream/data/mouse_ChIP/bam_files/"
+os.system("mkdir -p "+output_dir)
 
 for age in all_datasets.iterkeys():
     for accession in all_datasets[age]:
@@ -124,8 +124,10 @@ for age in all_datasets.iterkeys():
             	mark = related_dataset['target']['label']
             else:
                 mark='Control'
-            #if not (mark == "H3K27ac"):
-            if (mark == "Control"):
+            #only look for H3K27ac
+            if not (mark == "H3K27ac"):
+            #if (mark == "Control"):
+                print("Not H3K27ac")
                 continue            
 
             
@@ -134,29 +136,31 @@ for age in all_datasets.iterkeys():
             for ind_file in range(len(related_dataset['files'])):
                 #if related_dataset['files'][ind_file]['file_format'] != 'fastq':
                 #print(len(related_dataset['files']))
-		#print(related_dataset['files'][ind_file]['file_format'])
-                if related_dataset['files'][ind_file]['file_format'] != 'bed':
+                #print(related_dataset['files'][ind_file]['file_format'])
+                if related_dataset['files'][ind_file]['file_format'] != 'bam':
                     continue
-                if related_dataset['files'][ind_file]['output_type'] != 'replicated peaks':
-                    print('Not rep peak')
+                if related_dataset['files'][ind_file]['output_type'] != 'alignments':
+                    print('Not alignments')
                     continue
-                if related_dataset['files'][ind_file]['assembly'] != "mm10":
+                if  related_dataset['files'][ind_file]['assembly'].find('mm10') == -1:
                     print('not mm10')
                     continue
                 bio_rep = related_dataset['files'][ind_file]['biological_replicates']
-                if len(bio_rep)==1:
-                    continue
-                for ind_rep in range(len(bio_rep)):
-                    output_prefix = "_".join([age,short_name,mark,bio_rep])
+                #if len(bio_rep)!=1:
+                #    print('not single replicates')
+                #    continue
+                    
+                for rep_ind in range(len(bio_rep)):
+                    output_prefix = "_".join([age,short_name,mark,str(bio_rep[rep_ind])])
                     #if len(bio_rep)!=1:
                     #print output_prefix
                     # Download
                     url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
                     print(url)
-                    output_filename = "../../downstream/data/mouse_ChIP/" + output_prefix  + ".bed.gz"
+                    output_filename = output_dir+ output_prefix  + ".bam"
                     subprocess.check_call(['curl',
-                                        '-RL',
-                                        url,
-                                        "-o",
-                                        output_filename
+                                            '-RL',
+                                            url,
+                                            "-o",
+                                            output_filename
                     ])
