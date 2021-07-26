@@ -2,7 +2,7 @@ source('mainFunctions_sub.R')
 library(biomaRt)
 RNA_mouse_dir='../downstream/data/mouse_RNA_tsv/'
 RNA_mouse_out_rds='../downstream/output/mouse_analysis/tissue_specific_enhancer/RNA_out.rds'
-enhancer_Bin=readRDS(bin_enhancer_rds)
+
 #prepare ensembl conversion
 # ensembl <- useEnsembl(biomart = "ensembl",version=97)
 # searchDatasets(mart = ensembl, pattern = "mmusculus")#mmusculus_gene_ensembl
@@ -50,3 +50,6 @@ for(fn in dir(RNA_mouse_dir,pattern='.tsv')){
 #    head(RNA_out$gene_id_no_version)
   RNA_out$gene_name=gene_id_conv[match(RNA_out$gene_id,gene_id_conv$ensembl_gene_id_version),'external_gene_name']
   saveRDS(RNA_out,RNA_mouse_out_rds)
+
+
+

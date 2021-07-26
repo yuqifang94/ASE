@@ -5,3 +5,7 @@ bin_supp_gr=GRanges(seqnames=bin_supp$chrom,ranges=IRanges(start=bin_supp$start,
 mcols(bin_supp_gr)=bin_supp[,c(-1,-2,-3)]
 colnames(mcols(bin_supp_gr))=gsub('\\...*','',colnames(mcols(bin_supp_gr)))
 saveRDS(bin_supp_gr,bin_enhancer_rds)
+enhancer_Bin=readRDS(bin_enhancer_rds)
+#Generate bed files
+export(sort(enhancer_Bin),bin_enhancer_bed)
+
