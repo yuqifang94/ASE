@@ -10,7 +10,7 @@ ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl",ve
 searchFilters(mart = ensembl, pattern = ".*name")#external_gene_name
 #att=listAttributes(ensembl)
 attributes_BM=c('ensembl_gene_id','ensembl_gene_id_version','external_gene_name')
-gene_mm10_conv=getBM(mart=ensembl,filters=ensembl_gene_id_version,attributes=attributes_BM,values=)
+
 #Reading in RNA data
 
 name_conversion=data.table(RNA_tissue=c('embryonic facial prominence','neural tube'),paper_tissue=c("EFP",'NT'))
