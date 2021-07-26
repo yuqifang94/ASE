@@ -146,16 +146,17 @@ for age in all_datasets.iterkeys():
                 bio_rep = related_dataset['files'][ind_file]['biological_replicates']
                 if len(bio_rep)==1:
                     continue
-                output_prefix = "_".join([age,short_name,mark,bio_rep])
-                #if len(bio_rep)!=1:
-                #print output_prefix
-                # Download
-                url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
-                print(url)
-                output_filename = "../../downstream/data/mouse_ChIP/" + output_prefix  + ".bed.gz"
-                subprocess.check_call(['curl',
-                                       '-RL',
-                                       url,
-                                       "-o",
-                                       output_filename
-                ])
+                for ind_rep in range(len(bio_rep)):
+                    output_prefix = "_".join([age,short_name,mark,bio_rep])
+                    #if len(bio_rep)!=1:
+                    #print output_prefix
+                    # Download
+                    url = 'https://www.encodeproject.org'+related_dataset['files'][ind_file]['href']
+                    print(url)
+                    output_filename = "../../downstream/data/mouse_ChIP/" + output_prefix  + ".bed.gz"
+                    subprocess.check_call(['curl',
+                                        '-RL',
+                                        url,
+                                        "-o",
+                                        output_filename
+                    ])
