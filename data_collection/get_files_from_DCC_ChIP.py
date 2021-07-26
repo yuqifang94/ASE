@@ -159,5 +159,5 @@ for age in all_datasets.iterkeys():
                     print(url)
                     output_filename = output_dir+ output_prefix  + ".bam"
                     cmd_dl='curl --keepalive-time 2 -RL ' + url+" -o "+  output_filename
-                    
+                    print(cmd_dl)
                     subprocess.check_call(cmd_dl)
