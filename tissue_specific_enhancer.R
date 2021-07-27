@@ -56,4 +56,23 @@ for(fn in dir(RNA_mouse_dir,pattern='.tsv')){
 #for fn in ../../downstream/data/mouse_ChIP/bam_files/; do echo sbatch coverage_calc.sh ../../downstream/input/mouse_analysis/enhancer_selection/bin_enhancer.bed $fn $fn.cov; done
 #cp  ../../downstream/data/mouse_ChIP/bam_files/*.bam.cov ../../downstream/data/mouse_ChIP/cov_files/
 #rm  ../../downstream/data/mouse_ChIP/bam_files/*.bam.cov
-
+chip_cov_dir='../downstream/data/mouse_ChIP/cov_files/'
+chip_bam_dir='../downstream/data/mouse_ChIP/bam_files/'
+H3K27ac_output=GRanges()
+for (fn in dir(chip_cov_dir,pattern='.cov')){
+  coverage_sp=fread(paste0(chip_cov_dir,fn))
+  colnames(coverage_sp)=c('chr','start','end','name','V5','V6','coverage')
+  coverage_sp=makeGRangesFromDataFrame(coverage_sp[,c(1,2,3,7)],keep.extra.columns=T)
+  fn_bam=gsub('.cov','',fn)
+  chip_read_info=system(paste0('samtools flagstat -@24 ',chip_bam_dir,fn_bam),intern=T)
+  total_reads=as.numeric(gsub(' \\+.*','',chip_read_info[1]))
+  coverage_sp$peakLength=width(coverage_sp)
+  coverage_sp$RPKM=(coverage_sp$coverage)/(coverage_sp$peakLength/1000*total_reads/10^6)
+  fn_sp=unlist(strsplit(gsub('_5','.5',gsub('.bam.cov','',fn)),'_'))
+  coverage_sp$tissue=fn_sp[2]
+  coverage_sp$stage=fn_sp[1]
+  coverage_sp$marker=fn_sp[3]
+  coverage_sp$replicates=fn_sp[4]
+  coverage_sp$total_reads=total_reads
+  H3K27ac_output=c(H3K27ac_output,coverage_sp)
+}
