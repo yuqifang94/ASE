@@ -4,7 +4,6 @@
 #clean run: remove: rm -r /home-net/home-4/yfang27@jhu.edu/R/x86_64-pc-linux-gnu-library/3.6/gcc/5.5/*
 #rm -r /scratch/users/yfang27@jhu.edu/yfang/temp_all/*
 #plot 
-
 # get all file location ---------------------------------------------------
 source('file_path.R')
 source('dependencies.R')
