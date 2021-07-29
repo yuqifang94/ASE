@@ -117,19 +117,116 @@ H3K27ac_output_dt$sample_gene=paste0(H3K27ac_output_dt$sample,'-',H3K27ac_output
 RNA_out_sub$sample_gene=paste0(RNA_out_sub$tissue,'-',RNA_out_sub$stage,'-',RNA_out_sub$replicate,'-',RNA_out_sub$gene_name)
 H3K27ac_output_dt$FPKM=RNA_out_sub[match(H3K27ac_output_dt$sample_gene,sample_gene)]$FPKM
 H3K27ac_output_dt$log2FPKM=log2(H3K27ac_output_dt$FPKM)
-#Check zero standard deviation region
-H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman')),by=list(region,tissue)]
-H3K27ac_output_dt_cor_fn='../downstream/output/mouse_analysis/H3K27ac_output_dt_cor.rds'
-saveRDS(H3K27ac_output_dt_cor,H3K27ac_output_dt_cor_fn)
+#Check zero standard deviation region: they are zero expression regions in that tissue
+#92 sample in total
+H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='pearson'),std_log2RPKM=sd(log2RPKM),
+std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
+H3K27ac_output_dt_fn='../downstream/output/mouse_analysis/tissue_specific_enhancer/H3K27ac_output_dt.rds'
+saveRDS(H3K27ac_output_dt,H3K27ac_output_dt_fn)
+H3K27ac_output_dt_cor=H3K27ac_output_dt_cor[std_log2RPKM!=0&std_log2FPKM!=0]
 H3K27ac_output_dt_cor_dc=dcast.data.table(H3K27ac_output_dt_cor,region~tissue,value.var='cor')
+H3K27ac_output_dt_cor_dc_mt=as.matrix(H3K27ac_output_dt_cor_dc[,-1])
+rownames(H3K27ac_output_dt_cor_dc_mt)=H3K27ac_output_dt_cor_dc$region
 #Check if tissue-specific UC also has highest value
 H3K27ac_output_dt_cor_dc_rank=t(apply(H3K27ac_output_dt_cor_dc[,-1],1,function(x) rank(-x)))
 rownames(H3K27ac_output_dt_cor_dc_rank)=H3K27ac_output_dt_cor_dc$region
 ts_aid=readRDS(ts_aid_dt_fn)
+ts_aid_out=data.table()
 for(ts in names(ts_aid)){
     ts_aid_ts=ts_aid[[ts]]
     olap=findOverlaps(convert_GR(ts_aid_ts,direction="GR"),
     convert_GR(rownames(H3K27ac_output_dt_cor_dc_rank),direction="GR"))
     ts_aid_ts=ts_aid_ts[queryHits(olap)]
-    ts_aid_ts_dt=data.table(region=ts_aid_ts,rank=H3K27ac_output_dt_cor_dc_rank[subjectHits(olap),ts])
+    ts_aid_ts_dt=data.table(region=ts_aid_ts,
+                            rank_correlation=H3K27ac_output_dt_cor_dc_rank[subjectHits(olap),ts],
+                            enhancer_region=rownames(H3K27ac_output_dt_cor_dc_rank[subjectHits(olap),]),
+                            tissue=ts
+                            )
+    ts_aid_ts_dt$correlation=H3K27ac_output_dt_cor_dc_mt[ts_aid_ts_dt$enhancer_region,ts]
+    ts_aid_out=rbind(ts_aid_out,ts_aid_ts_dt)
+
 }
+ts_aid_out_fn='../downstream/output/mouse_analysis/tissue_specific_enhancer/tissue_specific_correlation_uc01.rds'
+saveRDS(ts_aid_out,ts_aid_out_fn)
+#Plotting
+#Show denisty of the background and each tissue
+ts_correaltion_all=H3K27ac_output_dt_cor[region%in%ts_aid_out$enhancer_region]
+pdf(paste0(figure_path,'correlation_all_enhancer.pdf'))
+ggplot(ts_correaltion_all,aes(x=cor))+geom_density(color="darkblue",fill="lightblue")
+dev.off()
+pdf(paste0(figure_path,'correlation_tissue_all.pdf'))
+    plot_dt=rbind(data.table(correlation=ts_aid_out$correlation,cor_type='tissue_specific_UC'),
+                  data.table(correlation=ts_correaltion_all$cor,cor_type='all_correlation'))
+
+ print(ggplot(plot_dt,aes(x=correlation,group=cor_type,color=cor_type))+geom_density()+ggtitle(ts))
+
+
+dev.off()
+t.test(plot_dt[cor_type=="tissue_specific_UC"]$correlation,plot_dt[cor_type=="all_correlation"]$correlation,alternative="greater")
+  pdf(paste0(figure_path,'correlation_tissue_enhancer.pdf'))
+
+for(ts in unique(ts_aid_out$tissue)){
+    plot_dt=rbind(data.table(correlation=ts_aid_out[tissue==ts]$correlation,cor_type='tissue_specific_UC'),
+                  data.table(correlation=ts_correaltion_all$cor,cor_type='all_correlation'))
+
+ print(ggplot(plot_dt,aes(x=correlation,group=cor_type,color=cor_type))+geom_density()+ggtitle(ts))
+
+
+}
+dev.off()
+pdf(paste0(figure_path,'correlation_tissue_rank_all.pdf'))
+   plot_dt=rbind(data.table(correlation=ts_aid_out$rank_correlation,cor_type='tissue_specific_UC'),
+                  data.table(correlation=as.numeric(H3K27ac_output_dt_cor_dc_rank),cor_type='all_correlation'))
+    plot_dt$correlation=factor(round(plot_dt$correlation),levels=as.character(1:7))#Round tiles
+    
+      print(ggplot(plot_dt,aes(x=correlation,group=cor_type,fill=cor_type))+geom_bar(aes(y = ..prop..),, position=position_dodge())+
+      ggtitle(ts)+xlab("correlation rank")+ylim(c(0,0.25)))
+      dev.off()
+  pdf(paste0(figure_path,'correlation_tissue_rank.pdf'))
+for(ts in unique(ts_aid_out$tissue)){
+    plot_dt=rbind(data.table(correlation=ts_aid_out[tissue==ts]$rank_correlation,cor_type='tissue_specific_UC'),
+                  data.table(correlation=as.numeric(H3K27ac_output_dt_cor_dc_rank),cor_type='all_correlation'))
+    plot_dt$correlation=factor(round(plot_dt$correlation),levels=as.character(1:7))#Round tiles
+    
+ print(ggplot(plot_dt,aes(x=correlation,group=cor_type,fill=cor_type))+geom_bar(aes(y = ..prop..),, position=position_dodge())+
+      ggtitle(ts)+xlab("correlation rank")+ylim(c(0,0.25)))
+
+
+}
+dev.off()
+
+#Sanity check with Bin's paper
+ H3K27ac_output_dt=readRDS(H3K27ac_output_dt_fn)
+ Bin_enhancer=readRDS(bin_enhancer_rds)
+ Bin_enhancer=convert_GR(Bin_enhancer,direction='DT')
+ H3K27ac_output_dt_cor_check=H3K27ac_output_dt[,list(cor_pearson=cor(log2RPKM,log2FPKM,method='pearson'),
+   cor_spearman=cor(log2RPKM,log2FPKM,method='spearman'),
+    std_log2RPKM=sd(log2RPKM),
+    std_log2FPKM=sd(log2FPKM)),by=list(region,replicates)]
+H3K27ac_output_dt_cor_check=H3K27ac_output_dt_cor_check[std_log2RPKM!=0&std_log2FPKM!=0]
+H3K27ac_output_dt_cor_check_rep1=H3K27ac_output_dt_cor_check[replicates==1]
+H3K27ac_output_dt_cor_check_rep1$SCC=Bin_enhancer[match(H3K27ac_output_dt_cor_check_rep1$region,region)]$SCC
+pdf(paste0(figure_path,'spearman_SCC_difference.pdf'))
+method_diff=abs(H3K27ac_output_dt_cor_check_rep1$cor_spearman-H3K27ac_output_dt_cor_check_rep1$SCC)
+hist(method_diff,xlab='difference',main=paste0("mean diff spearman:",round(mean(method_diff),digits=3)))
+
+dev.off()
+pdf(paste0(figure_path,'spearman_SCC_difference_percent.pdf'))
+method_diff=H3K27ac_output_dt_cor_check_rep1[,list(percent_diff=abs((cor_spearman-SCC)/SCC))]$percent_diff
+hist(method_diff,xlab='difference',main=paste0("mean diff spearman:",round(mean(method_diff),digits=3)))
+dev.off()
+pdf(paste0(figure_path,'pearson_SCC_difference.pdf'))
+method_diff=abs(H3K27ac_output_dt_cor_check_rep1$cor_pearson-H3K27ac_output_dt_cor_check_rep1$SCC)
+hist(method_diff,xlab='difference',main=paste0("mean diff spearman:",round(mean(method_diff),digits=3)))
+dev.off()
+pdf(paste0(figure_path,'pearson_SCC_difference_percent.pdf'))
+method_diff=H3K27ac_output_dt_cor_check_rep1[,list(percent_diff=abs((cor_pearson-SCC)/SCC))]$percent_diff
+hist(method_diff,xlab='difference',main=paste0("mean diff spearman:",round(mean(method_diff),digits=3)))
+dev.off()
+pdf(paste0(figure_path,'example_correlation.pdf'))
+example_dt=H3K27ac_output_dt[region=="chr1:6733000-6735000"&tissue=="EFP"]
+plot(example_dt$log2RPKM,example_dt$log2FPKM)
+dev.off()
+pdf(paste0(figure_path,'log2FPKM_dis.pdf'))
+hist(H3K27ac_output_dt$log2FPKM)
+dev.off()
