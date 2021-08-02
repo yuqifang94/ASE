@@ -123,7 +123,7 @@ H3K27ac_output_dt$log2FPKM=RNA_out_sub[match(H3K27ac_output_dt$sample_gene,sampl
 #92 sample in total
 
 
-H3K27ac_output_dt_fn='../downstream/output/mouse_analysis/tissue_specific_enhancer/H3K27ac_output_dt.rds'
+
 saveRDS(H3K27ac_output_dt,H3K27ac_output_dt_fn)
 pdf(paste0(figure_path,'H3K27ac_FPKM_dist.pdf'))
 hist(H3K27ac_output_dt$FPKM)
