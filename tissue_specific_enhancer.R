@@ -274,3 +274,22 @@ dev.off()
 H3K27ac_output_dt=readRDS(H3K27ac_output_dt_fn)
 
 tissue_out_filtered=readRDS(tissue_out_filtered_fn)
+
+#assign H3K27ac and expression information to tissue_out_filtered
+dc_mt<-function(dt_in,value_var){
+  dc_dat=dcast.data.table(dt_in,region~sample,value.var=value_var)
+  dc_dat_mt=as.matrix(dc_dat[,-1])
+  colnames(dc_dat_mt)=paste0(value_var,"_",colnames(dc_dat_mt))
+  rownames(dc_dat_mt)=dc_dat$region
+  return(dc_dat_mt)
+}
+exp_data=dc_mt(H3K27ac_output_dt,"log2FPKM")
+H3K27ac_data=dc_mt(H3K27ac_output_dt,"log2RPKM")
+colnames(H3K27ac_data)[-1]=paste0("H3K27ac_",colnames(H3K27ac_data)[-1])
+for(ts in names(tissue_out_filtered)){
+      region_in=tissue_out_filtered[[ts]]
+      olap=findOverlaps(convert_GR(region_in$region,direction='GR'),
+                        convert_GR(rownames(exp_data),direction="GR"))
+
+
+}
