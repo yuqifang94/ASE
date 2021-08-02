@@ -14,6 +14,23 @@ ts_aid_dt_fn='../downstream/output/mouse_analysis/tissue_specific_enhancer/ts_ai
 saveRDS(ts_aid,ts_aid_dt_fn)
 length(unique(unlist(aid)))
 length(unique(unlist(ts_aid)))
+aid_tb_count=table(unlist(aid))
+aid_tb_count_dt=data.table(region=aid_tb_count)
+colnames(aid_tb_count_dt)=c('region','n_tissue')
+pdf(paste0(figure_path,'n_tissue_pass_filter_ts.pdf'))
+for(ts in names(aid)){
+    aid_tb_count_dt_ts=data.table(count=table(aid_tb_count_dt[region %in% aid[[ts]]]$n_tissue))
+    colnames(aid_tb_count_dt_ts)=c('n_tissue','count')
+    aid_tb_count_dt_ts$prop=aid_tb_count_dt_ts$count/sum(aid_tb_count_dt_ts$count)
+    print(ggplot(aid_tb_count_dt_ts,aes(x=n_tissue,y=prop))+geom_bar(stat='identity', fill="steelblue")+
+    xlab('Number of tissue with regions having UC>=0.1')+ylab('Proportion of regions')+
+    geom_text(aes(label=round(prop,digits=2)),vjust=-1.6)+ggtitle(ts))
+
+
+
+}
+
+dev.off()
 aid_tb=table(table(unlist(aid)))
 #    1      2      3      4      5      6      7
 # 588189 281624 192486 202206 278883 324387 218109
