@@ -86,4 +86,5 @@ dir_scRNA_mouse='../downstream/input/mouse_analysis/Mouse_C1/'
 NME_mouse_MAV_enhancer_fn='../downstream/output/mouse_analysis/NME_in_limb_ENOCD3_imputed_enhancer.rds'
 compliment_MDS_dir_P0='../downstream/data/UC_MDS_day0/'
 DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
-H3K27ac_output_dt_fn='../downstream/output/mouse_analysis/tissue_specific_enhancer/H3K27ac_output_dt.rds'
+tissue_specific_out='../downstream/output/mouse_analysis/tissue_specific_enhancer/'
+H3K27ac_output_dt_fn=paste0(tissue_specific_out,'H3K27ac_output_dt.rds')

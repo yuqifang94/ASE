@@ -286,10 +286,18 @@ dc_mt<-function(dt_in,value_var){
 exp_data=dc_mt(H3K27ac_output_dt,"log2FPKM")
 H3K27ac_data=dc_mt(H3K27ac_output_dt,"log2RPKM")
 colnames(H3K27ac_data)[-1]=paste0("H3K27ac_",colnames(H3K27ac_data)[-1])
+tissue_out_exp_H3K27ac=list()
 for(ts in names(tissue_out_filtered)){
       region_in=tissue_out_filtered[[ts]]
       olap=findOverlaps(convert_GR(region_in$region,direction='GR'),
                         convert_GR(rownames(exp_data),direction="GR"))
-
-
+      region_out=region_in[queryHits(olap)]
+      region_out$enhancer_region=rownames(exp_data)[subjectHits(olap)]
+      region_out=cbind(region_out,exp_data[region_out$enhancer_region,])
+      region_out=cbind(region_out,H3K27ac_data[region_out$enhancer_region,])
+      tissue_out_exp_H3K27ac[[ts]]=region_out
 }
+
+tissue_out_exp_H3K27ac_fn=paste0(tissue_specific_out,'tissue_out_exp_H3K27ac.rds')
+saveRDS(tissue_out_exp_H3K27ac,tissue_out_exp_H3K27ac_fn)
+#Plot boxplot for each cluster
