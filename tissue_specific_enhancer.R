@@ -301,3 +301,62 @@ for(ts in names(tissue_out_filtered)){
 tissue_out_exp_H3K27ac_fn=paste0(tissue_specific_out,'tissue_out_exp_H3K27ac.rds')
 saveRDS(tissue_out_exp_H3K27ac,tissue_out_exp_H3K27ac_fn)
 #Plot boxplot for each cluster
+tissue_out_exp_H3K27ac=readRDS(tissue_out_exp_H3K27ac_fn)
+adj_timepoints=paste0("E",10:15,'.5-E',11:16,'.5')
+#calculate the difference between adjacent time points
+calc_diff_exp_H3K27ac<-function(dat_in){
+  ts=unique(dat_in$tissue)
+  for(dat_type in c("log2RPKM","log2FPKM")){
+      for (rep in c(1,2)){
+        for(adj_tp in adj_timepoints){
+          sample_n=paste0(dat_type,'_',ts,'-',unlist(strsplit(adj_tp,'-')),'-',rep)
+
+          #Make the difference
+          if(sum(sample_n %in% colnames(dat_in))==2){
+            
+            diff_name=paste0(dat_type,'-diff_',ts,'-',adj_tp,'-',rep)
+            dat_in_diff=abs(dat_in[,sample_n[1],with=F]-dat_in[,sample_n[2],with=F])
+            colnames(dat_in_diff)=diff_name
+            dat_in=cbind(dat_in_diff,dat_in)
+          }
+        }
+      }
+  }
+  return(dat_in)
+}
+tissue_out_exp_H3K27ac=lapply(tissue_out_exp_H3K27ac,calc_diff_exp_H3K27ac)
+#Print the boxplot of median difference
+pdf(paste0(figure_path,'difference_UC.pdf'))
+for(ts in names(tissue_out_exp_H3K27ac)){
+  for(dat_type in c("log2RPKM","log2FPKM")){
+     header_glob=paste0(dat_type,'-diff_',ts)
+    #Print global difference
+    plot_dt=melt.data.table(
+      tissue_out_exp_H3K27ac[[ts]][,grepl(
+          paste0(header_glob,'|cluster'),
+          colnames(tissue_out_exp_H3K27ac[[ts]])
+        ),with=F],
+        variable.name='Sample',value.name='Difference',id.vars='cluster'
+      )
+    #remove replicate information
+    plot_dt$Sample=gsub(paste0(header_glob,'-|-1|-2'),'',plot_dt$Sample)
+    plot_dt$Sample=factor(plot_dt$Sample,levels=sort(unique(plot_dt$Sample)))
+    header_glob=gsub('log2RPKM-diff','H3K27Ac',header_glob)
+    header_glob=gsub('log2FPKM-diff','RNA',header_glob)
+    print(ggplot(plot_dt,aes(x=Sample,y=Difference))+geom_boxplot(outlier.shape = NA)+
+    ggtitle(header_glob)+
+    ylim(c(0, 
+    max(plot_dt[,list(max_quant=quantile(Difference,prob=0.75,na.rm=T)),by=list(Sample)]$max_quant)*1.1)))
+    for(clu in 1:10){
+      print(ggplot(plot_dt[cluster==clu],aes(x=Sample,y=Difference))+geom_boxplot(outlier.shape = NA)+
+      ggtitle(paste0(header_glob,'-',clu))+
+      ylim(c(0, 
+      max(plot_dt[cluster==clu,list(max_quant=quantile(Difference,prob=0.75,na.rm=T)),by=list(Sample)]$max_quant)*1.1)))
+
+
+    }
+  }
+
+
+}
+dev.off()

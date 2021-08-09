@@ -45,12 +45,16 @@ UC_in_MDS_all_P0_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N
 UC_in_MDS_all_P0_all_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_MDS_N2_all_regions_all_P0.rds'
 
 dir_cluster_in='../downstream/output/mouse_analysis/clustering/tissue_specific/'
+dir_cluster_in_non_ts='../downstream/output/mouse_analysis/clustering/non_tissue_specific/'
 dir_cluster_in_01=paste0(dir_cluster_in,'uc_01/')
+dir_cluster_in_01_non_ts=paste0(dir_cluster_in_non_ts,'uc_01/')
 UC_merge_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions.rds'
 UC_merge_max_loc_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc.rds'
 UC_merge_max_loc_01_file='../downstream/output/mouse_analysis/CPEL_outputs/UC_merge_all_regions_max_loc_01.rds'
 dir_out_cluster01=paste0(dir_cluster_in,'UC_0_1/cluster_assigned/')
+dir_out_cluster01_non_ts=paste0(dir_cluster_in_non_ts,'UC_0_1/cluster_assigned/')
 cluster_01_region_out_fn=paste0(dir_out_cluster01,'cluster_all_region_assignment_filtered_0_1.rds')
+cluster_01_region_out_non_ts_fn=paste0(dir_out_cluster01,'cluster_all_region_assignment_filtered_non_ts_0_1.rds')
 dmml_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldmmlcor.rds'
 dnme_cor_file='../downstream/input/mouse_analysis/correlation_analysis/all_regions/fulldnmecor.rds'
 dir_out_rds_correlation='../downstream/output/mouse_analysis/correlation/UC_01/'

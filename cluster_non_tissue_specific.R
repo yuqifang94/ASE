@@ -61,7 +61,7 @@ for (seed in 1:10) {
     names(clu) <- n
     clu
   })
-  dir_uc=paste0(dir_cluster_in,'uc_',sub('\\.','',as.character(cut)),'/')
+  dir_uc=paste0(dir_cluster_in_non_ts,'uc_',sub('\\.','',as.character(cut)),'/')
     ifelse(!dir.exists(file.path(dir_uc)), dir.create(file.path(dir_uc)), FALSE)
   saveRDS(cluster_d,file=paste0(dir_uc,cut,'_',seed,'.rds'))
 }

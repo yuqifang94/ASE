@@ -1721,7 +1721,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   names(c4) <- sort(unique(colann[,1]))
   #remove row with all NA 
   
-  tiff(paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',gsub('.','',cutoffs),'.tiff'),width=5000,height=5000,res=500)
+  tiff(figure_name,width=5000,height=5000,res=500)
   pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
            annotation_col = colann,show_colnames = F,show_rownames = F,
            gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
