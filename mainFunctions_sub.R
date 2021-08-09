@@ -1300,20 +1300,22 @@ fisher_GO<-function(Significant,Annotated,bg_all,sig_all){
   
   
 }
-GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,DNase=TRUE){
+GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
+                         active_enc=F,enc_cor=NA){
   #ranking_stat = "dNME_maxUC" or "dMML_maxUC"
   GO_out_all=list()
-  csv_files=dir(dir_in,pattern="csv")
   cat("Processing:",ts,'\n')
   fn=paste0(ts,'.csv')
   #read in csv file for given tissue
   csv_in_ts=fread(paste0(dir_in,fn))
+  if(active_enc=F){
+    olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
+                      convert_GR(H3K27ac_output_dt_cor[tissue==ts]$region,direction='GR'))
+    csv_in_ts=csv_in_ts[queryHits(olap)]
+  }
   #Note some times Jason use dNME_maxJSD_rank
   csv_in_ts=csv_in_ts[order(dNME_max_UC_pair_adj,decreasing = T)]
-  if(DNase){
-    csv_in_ts=csv_in_ts[which(csv_in_ts$DNAase)]
-    print(csv_in_ts)
-    }
+
   # Getting enhancer
   print(enc_type)
   if(enc_type=="enhancer"){
@@ -1720,15 +1722,18 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
   names(c4) <- sort(unique(colann[,1]))
   #remove row with all NA 
-  
-  tiff(figure_name,width=5000,height=5000,res=500)
+
+  #jpeg(figure_name,width=500,height=500,res=50)
   pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
            annotation_col = colann,show_colnames = F,show_rownames = F,
-           gaps_row = row_gap,gaps_col = cumsum(rle(colann[,2])$lengths),
+           gaps_row = row_gap[-1],
+           gaps_col = cumsum(rle(colann[,2])$lengths),
            annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4
-                                    #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10)
-           ))
-  dev.off()
+                                    #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10))
+                                    ),
+           filename=figure_name
+  )
+  #dev.off()
   
 }
 

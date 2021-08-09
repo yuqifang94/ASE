@@ -208,9 +208,18 @@ for(ts in all_tissue){
 
 dev.off()
 #Processing correlation
-H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman'),std_log2RPKM=sd(log2RPKM),
-                      std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
+H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman'),
+                                              
+                                              std_log2RPKM=sd(log2RPKM),
+                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
 H3K27ac_output_dt_cor=H3K27ac_output_dt_cor[std_log2RPKM!=0&std_log2FPKM!=0]
+H3K27ac_output_dt_cor=H3K27ac_output_dt[region %in% H3K27ac_output_dt_cor$region,
+                                          list(cor=cor(log2RPKM,log2FPKM,method='spearman'),                                              
+                                              cor_p=cor.test(log2RPKM,log2FPKM,method='spearman')$p.value,
+                                              std_log2RPKM=sd(log2RPKM),
+                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
+
+
 H3K27ac_output_dt_cor_dc=dcast.data.table(H3K27ac_output_dt_cor,region~tissue,value.var='cor')
 H3K27ac_output_dt_cor_dc_mt=as.matrix(H3K27ac_output_dt_cor_dc[,-1])
 rownames(H3K27ac_output_dt_cor_dc_mt)=H3K27ac_output_dt_cor_dc$region
