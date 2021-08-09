@@ -1525,7 +1525,7 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 #Clustering assignment
-cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_path){
+cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_name){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
   cat('reading in clustering result\n')
   total_run=10

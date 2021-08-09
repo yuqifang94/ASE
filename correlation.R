@@ -66,6 +66,6 @@ DNAase=readRDS('../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp.r
 assign_regions(tissue_out_filtered,dir_out_cluster01,DNAase)
 
 #Plotting non-tissue-specific heatmap
-figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_non_ts',gsub('.','',cutoffs),'.tiff')
+figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_non_ts_01.tiff')
 cluster_assignment(dir_cluster_in_01_non_ts,dir_out_cluster01_non_ts,cutoffs=0.1,
         cluster_region_out_fn=cluster_01_region_out_non_ts_fn,figure_name=figure_name)
