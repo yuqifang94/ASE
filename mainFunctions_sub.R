@@ -1308,7 +1308,7 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
   fn=paste0(ts,'.csv')
   #read in csv file for given tissue
   csv_in_ts=fread(paste0(dir_in,fn))
-  if(active_enc=F){
+  if(active_enc){
     olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
                       convert_GR(H3K27ac_output_dt_cor[tissue==ts]$region,direction='GR'))
     csv_in_ts=csv_in_ts[queryHits(olap)]
