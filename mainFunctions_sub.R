@@ -1308,17 +1308,13 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
   fn=paste0(ts,'.csv')
   #read in csv file for given tissue
   csv_in_ts=fread(paste0(dir_in,fn))
-  if(active_enc){
-    olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
-                      convert_GR(enc_cor[tissue==ts&cor_FDR<=0.1]$region,direction='GR'))
-    csv_in_ts=csv_in_ts[queryHits(olap)]
-  }
+
   #Note some times Jason use dNME_maxJSD_rank
   csv_in_ts=csv_in_ts[order(dNME_max_UC_pair_adj,decreasing = T)]
 
   # Getting enhancer
   print(enc_type)
-  if(enc_type=="enhancer"){
+  if(enc_type=="enhancer"&(!active_enc)){
     enhancer=readRDS(bin_enhancer_rds)
     csv_in_gr=convert_GR(csv_in_ts$regions)
    
@@ -1330,6 +1326,13 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
     csv_in_ts=as.data.table(mcols(csv_in_gr))
 
   }else 
+    if(active_enc){
+      enc_cor_ts=enc_cor[tissue==ts&cor_FDR<=0.1]
+      olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
+                      convert_GR(enc_cor_ts$region,direction='GR'))
+      csv_in_ts=csv_in_ts[queryHits(olap)]
+      csv_in_ts$gene=enc_cor_ts[subjectHits(olap)]$target_gene
+  }else
     if(enc_type=="promoter"){
       csv_in_ts=csv_in_ts[abs(distance)<=2000]
       

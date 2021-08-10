@@ -18,13 +18,13 @@ H3K27ac_output_dt=readRDS(H3K27ac_output_dt_fn)
 H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman'),
                                               
                                               std_log2RPKM=sd(log2RPKM),
-                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
+                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue,target_gene)]
 H3K27ac_output_dt_cor=H3K27ac_output_dt_cor[std_log2RPKM!=0&std_log2FPKM!=0]
 H3K27ac_output_dt_cor=H3K27ac_output_dt[region %in% H3K27ac_output_dt_cor$region,
                                           list(cor=cor(log2RPKM,log2FPKM,method='spearman'),                                              
                                               cor_p=cor.test(log2RPKM,log2FPKM,method='spearman')$p.value,
                                               std_log2RPKM=sd(log2RPKM),
-                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
+                                              std_log2FPKM=sd(log2FPKM)),by=list(region,tissue,target_gene)]
 
 H3K27ac_output_dt_cor$cor_FDR=p.adjust(H3K27ac_output_dt_cor$cor_p,method='BH')
 # GO run for promoters, enhancers and different catogries -----------------
@@ -41,7 +41,7 @@ for(ts in tissue_all){
         bg=bg_promoter
         
     }
-    #e.g. EFP left 5634 for enhancer with high cor in ts
+    #e.g. EFP left 5634 (5628) for enhancer with high cor in ts
     GO_out_all[[region_type]][[ts]]=GO_run_tissue(ts,dir_out_cluster01_non_ts,enc_type=enc_type,region_type_sel=region_type,bg=bg, 
                                                   active_enc=T,enc_cor=H3K27ac_output_dt_cor)
     GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){
