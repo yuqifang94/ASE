@@ -1310,7 +1310,7 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
   csv_in_ts=fread(paste0(dir_in,fn))
   if(active_enc){
     olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
-                      convert_GR(H3K27ac_output_dt_cor[tissue==ts&cor_FDR<=0.1]$region,direction='GR'))
+                      convert_GR(enc_cor[tissue==ts&cor_FDR<=0.1]$region,direction='GR'))
     csv_in_ts=csv_in_ts[queryHits(olap)]
   }
   #Note some times Jason use dNME_maxJSD_rank
