@@ -279,6 +279,19 @@ pdf(paste0(figure_path,'correlation_tissue_rank_all.pdf'))
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
 dev.off()
 
+pdf(paste0(figure_path,'correlation_tissue_rank_1.pdf'))
+   plot_dt=data.table(correlation=ts_aid_out$rank_correlation,cor_type='tissue_specific_UC',tissue=ts_aid_out$tissue)
+    plot_dt$correlation=factor(round(plot_dt$correlation),levels=as.character(1:7))#Round tiles
+    plot_dt$tissue=factor(plot_dt$tissue,levels=unique(plot_dt$tissue))
+    plot_dt=plot_dt[,.N,by=list(tissue,correlation)]
+    plot_dt$region_type='tissue-specific'
+     plot_dt[grepl('-control',plot_dt$tissue)]$region_type='Non tissue-specific'
+    plot_dt[,prop_N:=N/sum(N),by=list(tissue)]
+      print(ggplot(plot_dt[correlation=='1'],aes(x=tissue,y=prop_N,fill=region_type))+geom_bar(stat="identity")+
+      ggtitle("")+xlab("")+ylim(c(0,0.3))+ylab("")+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+dev.off()
+
 #Assigning cluster to each region
 H3K27ac_output_dt=readRDS(H3K27ac_output_dt_fn)
 

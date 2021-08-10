@@ -26,7 +26,7 @@ H3K27ac_output_dt_cor=H3K27ac_output_dt[region %in% H3K27ac_output_dt_cor$region
                                               std_log2RPKM=sd(log2RPKM),
                                               std_log2FPKM=sd(log2FPKM)),by=list(region,tissue)]
 
-
+H3K27ac_output_dt_cor$FDR=p.adjust(H3K27ac_output_dt_cor$cor_p,method='BH')
 # GO run for promoters, enhancers and different catogries -----------------
 enc_type="enhancer"
 GO_out_all=list()
@@ -41,10 +41,7 @@ for(ts in tissue_all){
         bg=bg_promoter
         
     }
-   
-    cat("Processing:",ts,'\n')
-    fn=paste0(ts,'.csv')
-
+    #e.g. EFP 29991 left for enhancer with high cor in ts
     GO_out_all[[region_type]][[ts]]=GO_run_tissue(ts,dir_out_cluster01_non_ts,enc_type=enc_type,region_type_sel=region_type,bg=bg, 
                                                   active_enc=T,enc_cor=H3K27ac_output_dt_cor)
     GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){

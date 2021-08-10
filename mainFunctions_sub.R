@@ -1310,7 +1310,7 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
   csv_in_ts=fread(paste0(dir_in,fn))
   if(active_enc){
     olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
-                      convert_GR(H3K27ac_output_dt_cor[tissue==ts]$region,direction='GR'))
+                      convert_GR(H3K27ac_output_dt_cor[tissue==ts&cor_FDR<=0.1]$region,direction='GR'))
     csv_in_ts=csv_in_ts[queryHits(olap)]
   }
   #Note some times Jason use dNME_maxJSD_rank
@@ -1704,8 +1704,10 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
                            #dNMEJSDcor=dnme[[n]][rownames(mat)],
                            stringsAsFactors = F)
     }
+    #Note for non-tissue specific UC 01, add tissue name to mat
+    rownames(mat)=paste0(n,'-',rownames(mat))
     mat_out=rbind(mat_out,mat)
-    print(head(mat))
+    
     rownames(rowann) <- rownames(mat)
     rowann <- rowann[,ncol(rowann):1]
     rowann_out=rbind(rowann_out,rowann)
@@ -1723,17 +1725,21 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   names(c4) <- sort(unique(colann[,1]))
   #remove row with all NA 
 
-  #jpeg(figure_name,width=500,height=500,res=50)
-  pheatmap(scalematrix(mat_out),cluster_rows = F,annotation_row = rowann_out,cluster_cols = F,
+  sub_sp=sort(sample(1:nrow(mat_out),round(nrow(mat_out))))
+    mat_out_sc=scalematrix(mat_out)
+  jpeg(figure_name,width=2000,height=20000,res=200)
+  pheatmap(mat_out_sc,cluster_rows = F,
+           annotation_row = rowann_out[sub_sp,],
+           cluster_cols = F,
            annotation_col = colann,show_colnames = F,show_rownames = F,
-           gaps_row = row_gap[-1],
+           #gaps_row = row_gap[-1],
            gaps_col = cumsum(rle(colann[,2])$lengths),
-           annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4
+           annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4)
                                     #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10))
-                                    ),
-           filename=figure_name
+                                    
+           #filename=figure_name
   )
-  #dev.off()
+  dev.off()
   
 }
 
