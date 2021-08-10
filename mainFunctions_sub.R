@@ -1326,7 +1326,8 @@ GO_run_tissue<-function(ts,dir_in,enc_type,region_type_sel=NA,bg=NULL,
     csv_in_ts=as.data.table(mcols(csv_in_gr))
 
   }else 
-    if(active_enc){
+    if(enc_type=="enhancer"&active_enc){
+      cat("Analyzing active enhancer\n")
       enc_cor_ts=enc_cor[tissue==ts&cor_FDR<=0.1]
       olap=findOverlaps(convert_GR(csv_in_ts$regions,direction='GR'),
                       convert_GR(enc_cor_ts$region,direction='GR'))
