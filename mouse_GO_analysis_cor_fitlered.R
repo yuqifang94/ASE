@@ -55,27 +55,51 @@ for(ts in tissue_all){
 # UC_maxUC is wrong
 saveRDS(GO_out_all,paste0(GO_01_dir,'GO_out_enhancer_active_',cutoff_fn,'_',enc_type,'.rds'))
 
+#All enhancers regardless of activity
+GO_out_all[[region_type]]=list()
+for(ts in tissue_all){
+    if(enc_type=="enhancer"){
+    bg=bg_enhancer
+    }else 
+    if(enc_type=="promoter"){
+        bg=bg_promoter
+        
+    }
+    #e.g. EFP left 5634 (5628) for enhancer with high cor in ts
+    GO_out_all[[region_type]][[ts]]=GO_run_tissue(ts,dir_out_cluster01_non_ts,enc_type=enc_type,region_type_sel=region_type,bg=bg, 
+                                                  active_enc=F,enc_cor=NA)
+    GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){
+    return(list(GO_out_cluster_all=x$GO_out_cluster_all,
+                csv_in_ts_clu=cbind(x$csv_in_ts_clu,as.data.table(UC_merge[[ts]][x$csv_in_ts_clu$region,!grepl('max',colnames(UC_merge[[ts]]))]))))
+    
+    })
+    
+}
+#}
+# UC_maxUC is wrong
+saveRDS(GO_out_all,paste0(GO_01_dir,'GO_out_enhancer_non_active_',cutoff_fn,'_',enc_type,'.rds'))
 
 # Plot heatmaps -----------------------------------------------------------
 
 
-GO_out_all=readRDS(GO_01_enhancer_fn)
+GO_out_all_cor=readRDS(paste0(GO_01_dir,'GO_out_enhancer_active_',cutoff_fn,'_',enc_type,'.rds'))
+tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+#Plot all terms in a single plot
+for(region_type in names(GO_out_all_cor)){
+  plot_GO_heatmap_all(tissue_all,GO_out_all_cor[[region_type]],region_type=region_type,enc_type="enhancer_cor_filtered",ptcount=0,
+                        FDR_cutoff=0.2,
+                      dir_plot=GO_01_dir)
+  
+}
+GO_out_all=readRDS(paste0(GO_01_dir,'GO_out_enhancer_non_active_',cutoff_fn,'_',enc_type,'.rds'))
 tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
 #Plot all terms in a single plot
 for(region_type in names(GO_out_all)){
-  plot_GO_heatmap_all(tissue_all,GO_out_all[[region_type]],region_type=region_type,enc_type="enhancer",ptcount=0,FDR_cutoff=0.2,
+  plot_GO_heatmap_all(tissue_all,GO_out_all[[region_type]],region_type=region_type,enc_type="enhancer_non_ts",ptcount=0,
+                        FDR_cutoff=0.2,
                       dir_plot=GO_01_dir)
   
 }
-enc_type='promoter'
-cutoff_fn='01'
-GO_out_all=readRDS(GO_01_promoter_fn)
-for(region_type in names(GO_out_all)){
-  plot_GO_heatmap_all(tissue_all,GO_out_all[[region_type]],region_type=region_type,enc_type="promoter",ptcount=0,FDR_cutoff=0.2,
-                      dir_plot=GO_01_dir)
-  
-}
-
 
 # Write csv output --------------------------------------------------------
 
