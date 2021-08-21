@@ -34,8 +34,10 @@ suppressPackageStartupMessages({
   if (!requireNamespace("pander", quietly = TRUE))
   {install.packages("pander")}
   library(pander)
-  if (!requireNamespace("preprocessCore", quietly = TRUE))
-  {install.packages("preprocessCore")}
+ if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("preprocessCore")
   library(preprocessCore)
   if (!requireNamespace("rtracklayer", quietly = TRUE))
   {BiocManager::install("rtracklayer")}
