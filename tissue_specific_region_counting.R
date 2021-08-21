@@ -191,9 +191,15 @@ for(ts in names(aid_UC)){
     print(venn_out)
 }
 venn_out_prop=cbind(venn_out[,1],venn_out[,-1]/rowSums(venn_out[,-1]))
+cut=0.1
+aid_UC <- sapply(names(UC_in_only),function(i) {
+ names(which(rowSums(UC_in_only[[i]] > cut) > 0))
+  })  
 venn_out_all=list()
+
 #Try different cut of dNME and see overlap
 for(cut_dNME in seq(0.001,1,0.001)){
+    cat("Processing:",cut_dNME,'\n')
       aid_dNME <- sapply(names(dNME_in),function(i) {
 
         names(which(rowSums(dNME_in[[i]] > cut_dNME) > 0))
@@ -207,8 +213,11 @@ for(cut_dNME in seq(0.001,1,0.001)){
                                         UC_specific=length(UC_specific),
                                         dNME_specific=length(dNME_specific),
                                         shared=length(shared)))
-    venn_out_all[[as.character(dNME_cutoff)]]=venn_out
+    
 }
-
+venn_out_all[[as.character(cut_dNME)]]=venn_out
 
 }
+saveRDS(venn_out_all,'../downstream/output/mouse_analysis/dNME_UC_venn_out_all.rds')
+#Find region overlap example
+install_version("rJava", version = "0.9.12", repos = "http://cran.us.r-project.org")
