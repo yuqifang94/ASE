@@ -150,14 +150,20 @@ BiocManager::install("preprocessCore")
   library(MotifDb)
   #correlation
   
+  if (!requireNamespace("MASS", quietly = TRUE)){
+   install.packages("MASS")}
   library(MASS)
   
-})
+
 
 #Pubmed
-
-library(rentrez)
-library(easyPubMed)
+  if (!requireNamespace("rentrez", quietly = TRUE)){
+   install.packages("rentrez")}
+  library(rentrez)
+  if (!requireNamespace("easyPubMed", quietly = TRUE)){
+   install.packages("easyPubMed")}
+  library(easyPubMed)
+})
 # Not in use --------------------------------------------------------------
 # 
 # if (!requireNamespace("Repitools", quietly = TRUE))
