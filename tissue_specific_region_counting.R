@@ -220,4 +220,3 @@ venn_out_all[[as.character(cut_dNME)]]=venn_out
 }
 saveRDS(venn_out_all,'../downstream/output/mouse_analysis/dNME_UC_venn_out_all.rds')
 #Find region overlap example
-install_version("rJava", version = "0.9.12", repos = "http://cran.us.r-project.org")
