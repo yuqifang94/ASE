@@ -1531,7 +1531,7 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 #Clustering assignment
-cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_name){
+cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_name,UC_merge){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
   cat('reading in clustering result\n')
   total_run=10
@@ -1583,7 +1583,7 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   
   # Find regions belong to major cluster ------------------------------------
   cat('assigning minor cluster based on correlation\n')
-  UC_merge=readRDS(UC_merge_max_loc_file)
+
   cluster_region_out=list()
   for(ts in names(cluster_out)){
     cluster_out_ts=cluster_out[[ts]]
