@@ -1730,7 +1730,10 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
 
   sub_sp=sort(sample(1:nrow(mat_out),round(nrow(mat_out))))
     mat_out_sc=scalematrix(mat_out)
-  png(figure_name,width=2000,height=20000,res=200,type='cairo')
+  png(figure_name,
+      #width=2000,
+      #height=20000,
+      res=200,type='cairo')
   pheatmap(mat_out_sc,cluster_rows = F,
            annotation_row = rowann_out[sub_sp,],
            cluster_cols = F,
