@@ -1793,6 +1793,7 @@ cor_dt_preprocessing<-function(x,dMML_cor,dNME_cor,dmml_perm,dnme_perm,filtered=
     out_dt$enhancer=FALSE
     out_dt[queryHits(olap)]$enhancer=TRUE
   }
+  print(out_dt)
   out_dt$dMML_pval=pval_cor(out_dt$dMML_cor,dMML_perm_in$value)
   out_dt$dNME_pval=pval_cor(out_dt$dNME_cor,dNME_perm_in$value)
   out_dt$dMML_FDR=p.adjust(out_dt$dMML_pval,method='BH')

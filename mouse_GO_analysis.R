@@ -33,6 +33,7 @@ for(enc_type in c("enhancer","promoter")){
           bg=bg_promoter
           
         }
+     
       GO_out_all[[region_type]][[ts]]=GO_run_tissue(ts,dir_out_cluster01,enc_type=enc_type,region_type_sel=region_type,bg=bg,DNase=F)
       GO_out_all[[region_type]][[ts]]=lapply(GO_out_all[[region_type]][[ts]],function(x){
         return(list(GO_out_cluster_all=x$GO_out_cluster_all,
