@@ -1536,7 +1536,6 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   cat('reading in clustering result\n')
   total_run=10
   #Convert into df with major
-  cutoffs=0.1
   cluster_out=list()
   for(fn in c(paste0('uc_',cutoffs,'_',1:10,'.rds'))){
     cluster_in=readRDS(paste0(dir_in,fn))
