@@ -12,7 +12,7 @@ if(!dir.exists(cluster_assigned_dir)){dir.create(cluster_assigned_dir)}
   UC_merge=readRDS(UC_merge_max_loc_file)
 #Clustering
 
-figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',cutoff_char,'.tiff')
+figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',cutoff_char,'.png')
 cluster_assignment(cluster_dir_in,cluster_assigned_dir,cutoffs=cutoff,
             cluster_region_out_fn=paste0(cluster_assigned_dir,'cluster_assginment_filtered_',cutoff_char,'.rds'),figure_name=figure_name,UC_merge)
 

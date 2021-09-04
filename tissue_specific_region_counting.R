@@ -1039,5 +1039,5 @@ for(ts in names(tissue_out_filtered)){
 
 }
 summary_output$overlap_prop=summary_output$shared/(summary_output$shared+summary_output$stat_specific)
-saveRDS(summary_output,'../downstream/output/mouse_analysis/UC_dNME_olap/summary_output_ts.rds')
-saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_ts.rds')
+saveRDS(summary_output,'../downstream/output/mouse_analysis/UC_dNME_olap/summary_output_ts_only_UC.rds')
+saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_ts_only_UC.rds')
