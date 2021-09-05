@@ -252,71 +252,80 @@ saveRDS(venn_out_all_dMML,'../downstream/output/mouse_analysis/UC_dNME_olap/dMML
 
 #Fixing dNME and dMML cutoff, vary UC cutoff
 #Try different cut of dNME and see overlap
-cut_dNME=0.31875
-cut_dMML=0.134375
-aid_dMML <- sapply(names(dMML_in),function(i) {
+venn_out_all_UC_all=data.table()
+for(cut_dMML in seq(0,1,0.001)){
+    for(cut_dNME in seq(0,1,001)){
+        aid_dMML <- sapply(names(dMML_in),function(i) {
 
-        names(which(rowSums(dMML_in[[i]] > cut_dMML) > 0))
-})  
-aid_dNME <- sapply(names(dNME_in),function(i) {
+                names(which(rowSums(dMML_in[[i]] > cut_dMML) > 0))
+        })  
+        aid_dNME <- sapply(names(dNME_in),function(i) {
 
-        names(which(rowSums(dNME_in[[i]] > cut_dNME) > 0))
-})  
-set.seed(12345)
-venn_out_all_UC=list()
-venn_out_all_UC=mclapply(seq(0,1,0.001),function(cut_UC){
-    cat("Processing:",cut_UC,'\n')
-      aid_UC <- sapply(names(UC_in_only),function(i) {
+                names(which(rowSums(dNME_in[[i]] > cut_dNME) > 0))
+        })  
+        set.seed(12345)
+        venn_out_all_UC=list()
+        venn_out_all_UC=mclapply(seq(0,1,0.001),function(cut_UC){
+            cat("Processing:",cut_UC,'\n')
+            aid_UC <- sapply(names(UC_in_only),function(i) {
 
-        names(which(rowSums(UC_in_only[[i]] > cut_UC) > 0))
-    })  
-    venn_out=data.table()
-    
+                names(which(rowSums(UC_in_only[[i]] > cut_UC) > 0))
+            })  
+            venn_out=data.table()
+            
 
-    for(ts in names(aid_UC)){
+            for(ts in names(aid_UC)){
 
-    UC_specific_dMML=setdiff(aid_UC[[ts]],aid_dMML[[ts]])
-    shared_dMML=intersect(aid_UC[[ts]],aid_dMML[[ts]])
-    dMML_specific=setdiff(aid_dMML[[ts]],aid_UC[[ts]])
+            UC_specific_dMML=setdiff(aid_UC[[ts]],aid_dMML[[ts]])
+            shared_dMML=intersect(aid_UC[[ts]],aid_dMML[[ts]])
+            dMML_specific=setdiff(aid_dMML[[ts]],aid_UC[[ts]])
 
-    shared_dNME=intersect(aid_UC[[ts]],aid_dNME[[ts]])
-    dNME_specific=setdiff(aid_dNME[[ts]],aid_UC[[ts]])
-    UC_specific_dNME=setdiff(aid_UC[[ts]],aid_dNME[[ts]])
+            shared_dNME=intersect(aid_UC[[ts]],aid_dNME[[ts]])
+            dNME_specific=setdiff(aid_dNME[[ts]],aid_UC[[ts]])
+            UC_specific_dNME=setdiff(aid_UC[[ts]],aid_dNME[[ts]])
 
-    #Get random control for UC
-    aid_UC_random=sample(rownames(UC_in_only[[ts]]),length(aid_UC[[ts]]))
-    UC_specific_dMML_rand=setdiff(aid_UC_random,aid_dMML[[ts]])
-    shared_dMML_rand=intersect(aid_UC_random,aid_dMML[[ts]])
-    dMML_specific_rand=setdiff(aid_dMML[[ts]],aid_UC_random)
+            #Get random control for UC
+            aid_UC_random=sample(rownames(UC_in_only[[ts]]),length(aid_UC[[ts]]))
+            UC_specific_dMML_rand=setdiff(aid_UC_random,aid_dMML[[ts]])
+            shared_dMML_rand=intersect(aid_UC_random,aid_dMML[[ts]])
+            dMML_specific_rand=setdiff(aid_dMML[[ts]],aid_UC_random)
 
-    shared_dNME_rand=intersect(aid_UC_random,aid_dNME[[ts]])
-    dNME_specific_rand=setdiff(aid_dNME[[ts]],aid_UC_random)
-    UC_specific_dNME_rand=setdiff(aid_UC_random,aid_dNME[[ts]])
+            shared_dNME_rand=intersect(aid_UC_random,aid_dNME[[ts]])
+            dNME_specific_rand=setdiff(aid_dNME[[ts]],aid_UC_random)
+            UC_specific_dNME_rand=setdiff(aid_UC_random,aid_dNME[[ts]])
 
 
-    venn_out=rbind(venn_out,data.table(tissue=ts,
-                                        UC_specific_dMML=length(UC_specific_dMML),
-                                        shared_dMML=length(shared_dMML),
-                                        dMML_specific=length(dMML_specific),
-                                        shared_dNME=length(shared_dNME),
-                                        dNME_specific=length(dNME_specific),
-                                        UC_specific_dNME=length(UC_specific_dNME),
-                                        cutoff=cut_UC,
-                                        UC_specific_dMML_rand=length(UC_specific_dMML_rand),
-                                        shared_dMML_rand=length(shared_dMML_rand),
-                                        dMML_specific_rand=length(dMML_specific_rand),
-                                        shared_dNME_rand=length(shared_dNME_rand),
-                                        dNME_specific_rand=length(dNME_specific_rand),
-                                        UC_specific_dNME_rand=length(UC_specific_dNME_rand)
-                                    ))
+            venn_out=rbind(venn_out,data.table(tissue=ts,
+                                                UC_specific_dMML=length(UC_specific_dMML),
+                                                shared_dMML=length(shared_dMML),
+                                                dMML_specific=length(dMML_specific),
+                                                shared_dNME=length(shared_dNME),
+                                                dNME_specific=length(dNME_specific),
+                                                UC_specific_dNME=length(UC_specific_dNME),
+                                                cutoff=cut_UC,
+                                                UC_specific_dMML_rand=length(UC_specific_dMML_rand),
+                                                shared_dMML_rand=length(shared_dMML_rand),
+                                                dMML_specific_rand=length(dMML_specific_rand),
+                                                shared_dNME_rand=length(shared_dNME_rand),
+                                                dNME_specific_rand=length(dNME_specific_rand),
+                                                UC_specific_dNME_rand=length(UC_specific_dNME_rand)
+                                            ))
 
-    
+            
+        }
+        print(head(venn_out))
+        return(venn_out)
+        },mc.cores=20
+        )
+        venn_out_all_UC=do.call(rbind,venn_out_all_UC)
+        venn_out_all_UC$dNME_cutoff=dNME_cutoff
+        venn_out_all_UC$dMML_cutoff=dMML_cutoff
+       venn_out_all_UC_all=rbind(venn_out_all_UC_all,))
+         print(head(venn_out_all_UC_all))
+    }
 }
-print(head(venn_out))
-return(venn_out)
-},mc.cores=20
-)
-saveRDS(do.call(rbind,venn_out_all_UC),'../downstream/output/mouse_analysis/UC_dNME_olap/UC_var_venn_out_all.rds')
+
+saveRDS(venn_out_all_UC_all,'../downstream/output/mouse_analysis/UC_dNME_olap/UC_var_venn_out_all_dNME_dMML_cutoff.rds')
 
 #Combine dMML and dNME
 venn_out_all_dMML=readRDS('../downstream/output/mouse_analysis/UC_dNME_olap/dMML_UC_venn_out_all.rds')
@@ -972,72 +981,87 @@ saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_
 
 
 #One and only one overlap analysis
-cutoff_selection_only<-function(dat_in,ts,n_regions,diff_threshold=0.1,step=0.1){
-#Initialize key parameters
-    cutoff=0.6
-    diff=1
-    diff_log=data.table()
+cutoff_selection_only<-function(dat_in,ts,ts_only=T#,
+    #n_regions,
+    #diff_threshold=0.1,
+    #step=0.1
+    ){
+    #Initialize key parameters
+    #cutoff=0.6
+    #diff=1
+    #diff_log=data.table()
     #This is no longer linear try different threshold
-    while(abs(diff)>diff_threshold){
-        cutoff=cutoff+step*diff
-
+    #while(abs(diff)>diff_threshold){
+    
+    return(mclapply(seq(0,1,0.001),function(cutoff,ts) {
+        #cutoff=cutoff+step*diff
+        cat("Processing:",cutoff,'\n')
         aid <- sapply(names(dat_in),function(i) {
                     names(which(rowSums(dat_in[[i]] > cutoff) > 0))
                     })          
 
-        dat_region=setdiff(aid[[ts]],unlist(aid[names(aid)!=ts]))
-        diff=(length(dat_region)-n_regions)/n_regions
+        if(ts_only(return(setdiff(aid[[ts]],unlist(aid[names(aid)!=ts]))))
+        
+        #diff=(length(dat_region)-n_regions)/n_regions
         #diff >0: increase cut, replace low dNME to current cut
         
-        log_tb=data.table(cutoff=cutoff,diff=diff)
-        print(log_tb)
-        diff_log=rbind(diff_log,log_tb)
-    }
+        #log_tb=data.table(cutoff=cutoff,diff=diff)
+        #print(log_tb)
+        #diff_log=rbind(diff_log,log_tb)
+    },ts=ts,mc.cores=20
+    ))
+
     #return(list(cutoff=diff_log[which.min(abs(diff))]$cutoff,region_sel=dat_region[which.min(abs(diff_log$diff))],diff=diff_log[which.min(abs(diff))]$diff,diff_log=diff_log))
-    return(list(cutoff=diff_log,region_sel=dat_region,diff=diff,diff_log=diff_log))
+    #return(list(cutoff=diff_log,region_sel=dat_region,diff=diff,diff_log=diff_log))
 
 }
+#Relax UC cutoff for one and only one
 cutoff_out=list()
 summary_output=data.table()
-for(ts in names(tissue_out_filtered)){
+dNME_cutoff=list()
+dMML_cutoff=list()
+UC_cutoff=list()
+for(ts in names(dNME_in)){
     cat("Processing:",ts,"\n")
-    all_region=tissue_out_filtered[[ts]]$region
-    dNME_regions=tissue_out_filtered[[ts]][region_type%in%c("NME only","Both")]$region
-    dMML_regions=tissue_out_filtered[[ts]][region_type%in%c("MML only","Both")]$region
-    dNME_cutoff=cutoff_selection_only(dNME_in,ts,length(dNME_regions))
-    if(ts=='liver'){dMML_cutoff=cutoff_selection_only(dMML_in,ts,length(dMML_regions),diff_threshold=0.25)}
-    else{ dMML_cutoff=cutoff_selection_only(dMML_in,ts,length(dMML_regions))}
-    all_UC=aid_UC[[ts]]
-    summary_output=rbind(summary_output,
-                        data.table(stat_type="dNME",olap_type='stat only',cutoff=dNME_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(dNME_regions,dNME_cutoff$region_sel)),
-                                    shared=length(intersect(dNME_regions,dNME_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dNME_cutoff$region_sel,dNME_regions))),
-                        data.table(stat_type="dNME",olap_type='all',cutoff=dNME_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(all_region,dNME_cutoff$region_sel)),
-                                    shared=length(intersect(all_region,dNME_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dNME_cutoff$region_sel,all_region))),
-                        data.table(stat_type="dMML",olap_type='stat only',cutoff=dMML_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(dMML_regions,dMML_cutoff$region_sel)),
-                                    shared=length(intersect(dMML_regions,dMML_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dMML_cutoff$region_sel,dMML_regions))),
-                        data.table(stat_type="dMML",olap_type='all',cutoff=dMML_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(all_region,dMML_cutoff$region_sel)),
-                                    shared=length(intersect(all_region,dMML_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dMML_cutoff$region_sel,all_region))),
-                        data.table(stat_type="dMML",olap_type='all UC',cutoff=dMML_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(all_UC,dMML_cutoff$region_sel)),
-                                    shared=length(intersect(all_UC,dMML_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dMML_cutoff$region_sel,all_UC))),
-                        data.table(stat_type="dNME",olap_type='all UC',cutoff=dNME_cutoff$cutoff,tissue=ts,
-                                    UC_only=length(setdiff(all_UC,dNME_cutoff$region_sel)),
-                                    shared=length(intersect(all_UC,dNME_cutoff$region_sel)),
-                                    stat_specific=length(setdiff(dNME_cutoff$region_sel,all_UC)))
+    #all_region=tissue_out_filtered[[ts]]$region
+    #dNME_regions=tissue_out_filtered[[ts]][region_type%in%c("NME only","Both")]$region
+    #dMML_regions=tissue_out_filtered[[ts]][region_type%in%c("MML only","Both")]$region
+    dNME_cutoff[[ts]]=cutoff_selection_only(dNME_in,ts)
+    
+    dMML_cutoff[[ts]]=cutoff_selection_only(dMML_in,ts)
+    UC_cutoff[[ts]]=cutoff_selection_only(UC_in_only,ts)
+    # all_UC=aid_UC[[ts]]
+    # summary_output=rbind(summary_output,
+    #                     data.table(stat_type="dNME",olap_type='stat only',cutoff=dNME_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(dNME_regions,dNME_cutoff$region_sel)),
+    #                                 shared=length(intersect(dNME_regions,dNME_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dNME_cutoff$region_sel,dNME_regions))),
+    #                     data.table(stat_type="dNME",olap_type='all',cutoff=dNME_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(all_region,dNME_cutoff$region_sel)),
+    #                                 shared=length(intersect(all_region,dNME_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dNME_cutoff$region_sel,all_region))),
+    #                     data.table(stat_type="dMML",olap_type='stat only',cutoff=dMML_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(dMML_regions,dMML_cutoff$region_sel)),
+    #                                 shared=length(intersect(dMML_regions,dMML_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dMML_cutoff$region_sel,dMML_regions))),
+    #                     data.table(stat_type="dMML",olap_type='all',cutoff=dMML_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(all_region,dMML_cutoff$region_sel)),
+    #                                 shared=length(intersect(all_region,dMML_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dMML_cutoff$region_sel,all_region))),
+    #                     data.table(stat_type="dMML",olap_type='all UC',cutoff=dMML_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(all_UC,dMML_cutoff$region_sel)),
+    #                                 shared=length(intersect(all_UC,dMML_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dMML_cutoff$region_sel,all_UC))),
+    #                     data.table(stat_type="dNME",olap_type='all UC',cutoff=dNME_cutoff$cutoff,tissue=ts,
+    #                                 UC_only=length(setdiff(all_UC,dNME_cutoff$region_sel)),
+    #                                 shared=length(intersect(all_UC,dNME_cutoff$region_sel)),
+    #                                 stat_specific=length(setdiff(dNME_cutoff$region_sel,all_UC)))
                                     
-                        )   
-    cutoff_out[[ts]]=list(dNME_cutoff=dNME_cutoff,dMML_cutoff=dMML_cutoff)
+    #                     )   
+    # cutoff_out[[ts]]=list(dNME_cutoff=dNME_cutoff,dMML_cutoff=dMML_cutoff)
 
 }
-summary_output$overlap_prop=summary_output$shared/(summary_output$shared+summary_output$stat_specific)
-saveRDS(summary_output,'../downstream/output/mouse_analysis/UC_dNME_olap/summary_output_ts_only_UC.rds')
-saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_ts_only_UC.rds')
+#summary_output$overlap_prop=summary_output$shared/(summary_output$shared+summary_output$stat_specific)
+saveRDS(list(UC_cutoff=UC_cutoff,dMML_cutoff=dMML_cutoff,dNME_cutoff),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_ts_only.rds')
+#For each possible cutoff, find the overlap
+

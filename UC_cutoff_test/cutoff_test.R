@@ -21,8 +21,8 @@ cluster_assignment(cluster_dir_in,cluster_assigned_dir,cutoffs=cutoff,
 dir_in_cor_Jason='../downstream/input/mouse_analysis/correlation_analysis/all_regions/'
 dMML_cor=readRDS(dmml_cor_file)
 dNME_cor=readRDS(dnme_cor_file)
-dmml_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudmmlcor.rds'))
-dnme_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudnmecor.rds'))
+dmml_perm=readRDS(paste0(dir_in_cor_Jason,'permudmmlcor.rds'))
+dnme_perm=readRDS(paste0(dir_in_cor_Jason,'permudnmecor.rds'))
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"), # nolint
