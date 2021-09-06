@@ -58,8 +58,8 @@ for (n in names(d)) {
   dnmecor[[n]] <- sapply(1:20,function(i) corfunc(dnme,d[[n]][,sampid[,i]]))
 }
 
-saveRDS(dmmlcor,file='/dcl01/hongkai/data/zji4/ase/mouse/res/dmmldnmecor/fullpermudmmlcor.rds')
-saveRDS(dnmecor,file='/dcl01/hongkai/data/zji4/ase/mouse/res/dmmldnmecor/fullpermudnmecor.rds')
+saveRDS(dmmlcor,file=paste0(dir_in_cor_Jason,'permudmmlcor_YQ.rds'))
+saveRDS(dnmecor,file=paste0(dir_in_cor_Jason,'permudmmlcor_YQ.rds'))
 
 
 

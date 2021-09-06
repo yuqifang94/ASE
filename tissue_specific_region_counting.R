@@ -253,8 +253,8 @@ saveRDS(venn_out_all_dMML,'../downstream/output/mouse_analysis/UC_dNME_olap/dMML
 #Fixing dNME and dMML cutoff, vary UC cutoff
 #Try different cut of dNME and see overlap
 venn_out_all_UC_all=data.table()
-for(cut_dMML in seq(0,1,0.001)){
-    for(cut_dNME in seq(0,1,001)){
+for(cut_dMML in seq(0,1,0.01)){
+    for(cut_dNME in seq(0,1,0.01)){
         aid_dMML <- sapply(names(dMML_in),function(i) {
 
                 names(which(rowSums(dMML_in[[i]] > cut_dMML) > 0))
@@ -265,7 +265,8 @@ for(cut_dMML in seq(0,1,0.001)){
         })  
         set.seed(12345)
         venn_out_all_UC=list()
-        venn_out_all_UC=mclapply(seq(0,1,0.001),function(cut_UC){
+        tt1=proc.time()
+        venn_out_all_UC=mclapply(seq(0,1,0.01),function(cut_UC){
             cat("Processing:",cut_UC,'\n')
             aid_UC <- sapply(names(UC_in_only),function(i) {
 
@@ -322,6 +323,7 @@ for(cut_dMML in seq(0,1,0.001)){
         venn_out_all_UC$dMML_cutoff=dMML_cutoff
        venn_out_all_UC_all=rbind(venn_out_all_UC_all,))
          print(head(venn_out_all_UC_all))
+        cat("Finishing processing: dMML=",dMML_cutoff," dNME=",dNME_cutoff,"in:",proc.time()[[3]]-tt1,'\n')
     }
 }
 
@@ -981,7 +983,7 @@ saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_
 
 
 #One and only one overlap analysis
-cutoff_selection_only<-function(dat_in,ts,ts_only=T#,
+cutoff_selection_only<-function(dat_in,ts#,
     #n_regions,
     #diff_threshold=0.1,
     #step=0.1
@@ -999,8 +1001,8 @@ cutoff_selection_only<-function(dat_in,ts,ts_only=T#,
         aid <- sapply(names(dat_in),function(i) {
                     names(which(rowSums(dat_in[[i]] > cutoff) > 0))
                     })          
-
-        if(ts_only(return(setdiff(aid[[ts]],unlist(aid[names(aid)!=ts]))))
+        out=list()
+        return(out[[as.character(cutoff)]]=setdiff(aid[[ts]],unlist(aid[names(aid)!=ts])))
         
         #diff=(length(dat_region)-n_regions)/n_regions
         #diff >0: increase cut, replace low dNME to current cut
@@ -1062,6 +1064,54 @@ for(ts in names(dNME_in)){
 
 }
 #summary_output$overlap_prop=summary_output$shared/(summary_output$shared+summary_output$stat_specific)
-saveRDS(list(UC_cutoff=UC_cutoff,dMML_cutoff=dMML_cutoff,dNME_cutoff),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_ts_only.rds')
+assign_name<-function(x) {names(x)=as.character(seq(0,1,0.001)); return(x)}
+saveRDS(list(UC_cutoff=lapply(UC_cutoff,assign_name),
+            dMML_cutoff=lapply(dMML_cutoff,assign_name),
+            dNME_cutoff=lapply(dNME_cutoff,assign_name)
+            ),
+UC_in=readRDS(UC_merge_file)
 #For each possible cutoff, find the overlap
+region_rand_pool=lapply(UC_in,rownames)
+rm(UC_in)
+cutoff_ts_only_out=readRDS('../downstream/output/mouse_analysis/UC_dNME_olap/regions_ts_only.rds')
+cutoff_ts_num_output_all=list()
+set.seed(12345)
+for(ts in names(region_rand_pool)){
+    cat("Processing:",ts,'\n')
+    tt1=proc.time()[[3]]
+    cutoff_ts_num_output=as.data.table(expand.grid(seq(0,1,0.002),seq(0,1,0.01),seq(0,1,0.01)))
+    colnames(cutoff_ts_num_output)=c("UC","dNME","dMML")
 
+    cutoff_ts_only_out_ts=lapply(cutoff_ts_only_out,function(x) x[[ts]])
+    cutoff_ts_num_output_all[[ts]]=cbind(cutoff_ts_num_output,
+    fastDoCall("rbind",
+    mclapply(1:nrow(cutoff_ts_num_output),
+    function(x) {
+         dNME_region=cutoff_ts_only_out_ts$dNME_cutoff[[as.character(cutoff_ts_num_output$dNME[[x]])]]
+         dMML_region=cutoff_ts_only_out_ts$dMML_cutoff[[as.character(cutoff_ts_num_output$dMML[[x]])]]
+         UC_region=cutoff_ts_only_out_ts$UC_cutoff[[as.character(cutoff_ts_num_output$UC[[x]])]]
+        #if(length(UC_region)>0){
+         UC_region_rand=sample(region_rand_pool[[ts]],length(UC_region))
+         return(data.table(        
+         dNME_specific=length(setdiff(dNME_region,UC_region)),
+         dMML_specific=length(setdiff(dMML_region,UC_region)),
+         UC_specific_dNME=length(setdiff(UC_region,dNME_region)),
+         UC_specific_dMML=length(setdiff(UC_region,dMML_region)),
+         shared_dNME=length(intersect(dNME_region,UC_region)),
+         shared_dMML=length(intersect(dMML_region,UC_region)),
+         dNME_specific_rand=length(setdiff(dNME_region,UC_region_rand)),
+         dMML_specific_rand=length(setdiff(dMML_region,UC_region_rand)),
+         UC_specific_dNME_rand=length(setdiff(UC_region_rand,dNME_region)),
+         UC_specific_dMML_rand=length(setdiff(UC_region_rand,dMML_region)),
+         shared_dNME_rand=length(intersect(dNME_region,UC_region_rand)),
+         shared_dMML_rand=length(intersect(dMML_region,UC_region_rand)),
+         dNME_cutoff=cutoff_ts_num_output$dNME[[x]],
+         dMML_cutoff=cutoff_ts_num_output$dMML[[x]],
+         UC_cutoff=cutoff_ts_num_output$UC[[x]]
+         )
+         )
+         #}
+    },mc.cores=20)))
+    cat("Finish processing:",ts,'in',proc.time()[[3]]-tt1,'\n')
+
+}

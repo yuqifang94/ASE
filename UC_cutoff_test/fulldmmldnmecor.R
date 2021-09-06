@@ -1,9 +1,11 @@
 library(RColorBrewer)
 library(pheatmap)
 library(ggplot2)
-d <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fulluc.rds')
-mml <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fullmml.rds')
-nme <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fullnme.rds')
+UC_in=readRDS(UC_merge_file)
+dnme=mclapply(UC_in,function(x) x[,grepl('dNME',colnames(x))],mc.cores=7)
+dmml=mclapply(UC_in,function(x) x[,grepl('dMML',colnames(x))],mc.cores=7)
+d=mclapply(UC_in,function(x) x[,grepl('UC',colnames(x))],mc.cores=7)
+rm(UC_in)
 
 scalematrix <- function(data) {
   cm <- rowMeans(data)
@@ -24,30 +26,17 @@ d <- sapply(d,function(i) {
   i <- i[rowSums(i) > 0,]
   i <- i[,colnames(i) %in% timeorder]
   i <- i[,order(match(colnames(i),timeorder))]
-  scalematrix <- function(data) {
-    cm <- rowMeans(data)
-    csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
-    (data - cm) / csd
-  }
   i <- scalematrix(i)
   i <- i[complete.cases(i),]
 })
 
 dmmlcor <- dnmecor <- list()
 for (n in names(d)) {
-  dmml <- sapply(colnames(d[[n]]),function(i) {
-    time <- strsplit(i,'-')[[1]]
-    abs(mml[rownames(d[[n]]),paste0(n,'-',time[1])]-mml[rownames(d[[n]]),paste0(n,'-',time[2])])
-  })
-  dnme <- sapply(colnames(d[[n]]),function(i) {
-    time <- strsplit(i,'-')[[1]]
-    abs(nme[rownames(d[[n]]),paste0(n,'-',time[1])]-nme[rownames(d[[n]]),paste0(n,'-',time[2])])
-  })
-  dmmlcor[[n]] <- corfunc(dmml,d[[n]])
-  dnmecor[[n]] <- corfunc(dnme,d[[n]])
+  dmmlcor[[n]] <- corfunc(dmml[[n]],d[[n]])
+  dnmecor[[n]] <- corfunc(dnme[[n]],d[[n]])
 }
 
-saveRDS(dmmlcor,file='/dcl01/hongkai/data/zji4/ase/mouse/res/dmmldnmecor/fulldmmlcor.rds')
-saveRDS(dnmecor,file='/dcl01/hongkai/data/zji4/ase/mouse/res/dmmldnmecor/fulldnmecor.rds')
+saveRDS(dmmlcor,file=dmml_cor_file)
+saveRDS(dnmecor,file=dnme_cor_file)
 
 
