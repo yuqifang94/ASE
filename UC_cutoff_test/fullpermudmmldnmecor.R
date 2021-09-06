@@ -1,9 +1,11 @@
 library(RColorBrewer)
 library(pheatmap)
 library(ggplot2)
-d <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fulluc.rds')
-mml <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fullmml.rds')
-nme <- readRDS('/dcl01/hongkai/data/zji4/ase/mouse/data/proc/fullnme.rds')
+UC_in=readRDS(UC_merge_file)
+dnme_all=mclapply(UC_in,function(x) {x[,grepl('dNME',colnames(x))];colnames(x)=gsub('dNME-|-all','',colnames(x));return(x)},mc.cores=7)
+dmml_all=mclapply(UC_in,function(x) {x[,grepl('dMML',colnames(x))];colnames(x)=gsub('dMML-|-all','',colnames(x));return(x)},mc.cores=7)
+d=mclapply(UC_in,function(x) {x[,grepl('UC',colnames(x))];colnames(x)=gsub('UC-|-all','',colnames(x));return(x)},mc.cores=7)
+rm(UC_in)
 
 scalematrix <- function(data) {
   cm <- rowMeans(data)
@@ -21,28 +23,18 @@ corfunc <- function(m1,m2,type='concordant') {
 
 timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 d <- sapply(d,function(i) {
-  i <- i[rowSums(i > 0.1) > 0,]
+  #i <- i[rowSums(i > 0.1) > 0,]
   i <- i[,colnames(i) %in% timeorder]
   i <- i[,order(match(colnames(i),timeorder))]
-  scalematrix <- function(data) {
-    cm <- rowMeans(data)
-    csd <- sqrt((rowMeans(data*data) - cm^2) / (ncol(data) - 1) * ncol(data))
-    (data - cm) / csd
-  }
   i <- scalematrix(i)
   i <- i[complete.cases(i),]
 })
 
 dmmlcor <- dnmecor <- list()
+ library(combinat)
 for (n in names(d)) {
-  dmml <- sapply(colnames(d[[n]]),function(i) {
-    time <- strsplit(i,'-')[[1]]
-    abs(mml[rownames(d[[n]]),paste0(n,'-',time[1])]-mml[rownames(d[[n]]),paste0(n,'-',time[2])])
-  })
-  dnme <- sapply(colnames(d[[n]]),function(i) {
-    time <- strsplit(i,'-')[[1]]
-    abs(nme[rownames(d[[n]]),paste0(n,'-',time[1])]-nme[rownames(d[[n]]),paste0(n,'-',time[2])])
-  })
+  dmml=dmml_all[[n]][rownames(d[[n]]),colnames(d[[n]])]
+  dnme=dnme_all[[n]][rownames(d[[n]]),colnames(d[[n]])]
   mat <- do.call(rbind,combinat::permn(1:ncol(d[[n]])))
   iden <- apply(mat,1,function(i) {
     mean(i==sort(i))
@@ -58,8 +50,8 @@ for (n in names(d)) {
   dnmecor[[n]] <- sapply(1:20,function(i) corfunc(dnme,d[[n]][,sampid[,i]]))
 }
 
-saveRDS(dmmlcor,file=paste0(dir_in_cor_Jason,'permudmmlcor_YQ.rds'))
-saveRDS(dnmecor,file=paste0(dir_in_cor_Jason,'permudmmlcor_YQ.rds'))
+saveRDS(dmmlcor,file=paste0(dir_in_cor_Jason,'fullpermudmmlcor_YQ.rds'))
+saveRDS(dnmecor,file=paste0(dir_in_cor_Jason,'fullpermudmmlcor_YQ.rds'))
 
 
 

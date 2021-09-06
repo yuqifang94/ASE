@@ -1,10 +1,7 @@
-library(RColorBrewer)
-library(pheatmap)
-library(ggplot2)
 UC_in=readRDS(UC_merge_file)
-dnme=mclapply(UC_in,function(x) x[,grepl('dNME',colnames(x))],mc.cores=7)
-dmml=mclapply(UC_in,function(x) x[,grepl('dMML',colnames(x))],mc.cores=7)
-d=mclapply(UC_in,function(x) x[,grepl('UC',colnames(x))],mc.cores=7)
+dnme_all=mclapply(UC_in,function(x) {x[,grepl('dNME',colnames(x))];colnames(x)=gsub('dNME-|-all','',colnames(x));return(x)},mc.cores=7)
+dmml_all=mclapply(UC_in,function(x) {x[,grepl('dMML',colnames(x))];colnames(x)=gsub('dMML-|-all','',colnames(x));return(x)},mc.cores=7)
+d=mclapply(UC_in,function(x) {x[,grepl('UC',colnames(x))];colnames(x)=gsub('UC-|-all','',colnames(x));return(x)},mc.cores=7)
 rm(UC_in)
 
 scalematrix <- function(data) {
@@ -32,8 +29,8 @@ d <- sapply(d,function(i) {
 
 dmmlcor <- dnmecor <- list()
 for (n in names(d)) {
-  dmmlcor[[n]] <- corfunc(dmml[[n]],d[[n]])
-  dnmecor[[n]] <- corfunc(dnme[[n]],d[[n]])
+  dmmlcor[[n]] <- corfunc(dmml[[n]][rownames(d[[n]],colnames(d[[n]]))],d[[n]])
+  dnmecor[[n]] <- corfunc(dnme[[n]][rownames(d[[n]],colnames(d[[n]]))],d[[n]])
 }
 
 saveRDS(dmmlcor,file=dmml_cor_file)

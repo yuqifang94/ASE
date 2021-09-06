@@ -1092,6 +1092,8 @@ for(ts in names(region_rand_pool)){
          UC_region=cutoff_ts_only_out_ts$UC_cutoff[[as.character(cutoff_ts_num_output$UC[[x]])]]
         #if(length(UC_region)>0){
          UC_region_rand=sample(region_rand_pool[[ts]],length(UC_region))
+         p5_num=round(nrow(cutoff_ts_num_output)*seq(0,1,0.01))
+        if (x %in% p5_num){cat("Finishing:",seq(0,1,0.01)*100[p5_num==x],'\\% finished\n')}
          return(data.table(        
          dNME_specific=length(setdiff(dNME_region,UC_region)),
          dMML_specific=length(setdiff(dMML_region,UC_region)),
@@ -1110,8 +1112,10 @@ for(ts in names(region_rand_pool)){
          UC_cutoff=cutoff_ts_num_output$UC[[x]]
          )
          )
+
          #}
     },mc.cores=20)))
+  
     cat("Finish processing:",ts,'in',proc.time()[[3]]-tt1,'\n')
 
 }
