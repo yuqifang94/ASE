@@ -1801,8 +1801,8 @@ cor_dt_preprocessing<-function(x,dMML_cor,dNME_cor,dmml_perm,dnme_perm,filtered=
   out_dt$dNME_pval=pval_cor(out_dt$dNME_cor,dNME_perm_in$value)
   out_dt$dMML_FDR=p.adjust(out_dt$dMML_pval,method='BH')
   out_dt$dNME_FDR=p.adjust(out_dt$dNME_pval,method='BH')
-  dNME_cutoff=min(out_dt[dNME_FDR<=0.25]$dNME_cor)
-  dMML_cutoff=min(out_dt[dMML_FDR<=0.25]$dMML_cor)
+  #dNME_cutoff=min(out_dt[dNME_FDR<=0.25]$dNME_cor)
+  #dMML_cutoff=min(out_dt[dMML_FDR<=0.25]$dMML_cor)
 
   return(out_dt)
   
@@ -2026,6 +2026,8 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   #Plot density and FDR with cutoffs
   cutoff_dMML=min(tissue_in[dMML_FDR<=FDR_cutoff]$dMML_cor)
   cutoff_dNME=min(tissue_in[dNME_FDR<=FDR_cutoff]$dNME_cor)
+  if(is.infinite(cutoff_dNME)){cutoff_dNME=1}
+  if(is.infinite(cutoff_dMML)){cutoff_dMML=1}
   dMML_seq=c(seq(-1,cutoff_dMML,0.001),cutoff_dMML)
   dNME_seq=c(seq(-1,cutoff_dNME,0.001),cutoff_dNME)
   FDR_cutoff_dt=rbind(

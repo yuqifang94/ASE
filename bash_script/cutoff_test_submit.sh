@@ -1,7 +1,7 @@
 #!/bin/bash
 #$ -l cee,mf=15G,h_vmem=20G
 #$ -pe local 5
-#$ -cwd
+#$ -wd ../
 #$ -o "../logfiles/cutoff-test-$JOB_ID.err"
 #$ -j y
 #$ -m ebas
