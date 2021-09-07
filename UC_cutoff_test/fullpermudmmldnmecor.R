@@ -1,11 +1,8 @@
-library(RColorBrewer)
-library(pheatmap)
-library(ggplot2)
+source('mainFunctions_sub.R')
 UC_in=readRDS(UC_merge_file)
-dnme_all=mclapply(UC_in,function(x) {x[,grepl('dNME',colnames(x))];colnames(x)=gsub('dNME-|-all','',colnames(x));return(x)},mc.cores=7)
-dmml_all=mclapply(UC_in,function(x) {x[,grepl('dMML',colnames(x))];colnames(x)=gsub('dMML-|-all','',colnames(x));return(x)},mc.cores=7)
-d=mclapply(UC_in,function(x) {x[,grepl('UC',colnames(x))];colnames(x)=gsub('UC-|-all','',colnames(x));return(x)},mc.cores=7)
-rm(UC_in)
+dnme_all=mclapply(UC_in,function(x) {x=x[,grepl('dNME',colnames(x))];colnames(x)=gsub('dNME-|-all','',colnames(x));return(x)},mc.cores=7)
+dmml_all=mclapply(UC_in,function(x) {x=x[,grepl('dMML',colnames(x))];colnames(x)=gsub('dMML-|-all','',colnames(x));return(x)},mc.cores=7)
+d=mclapply(UC_in,function(x) {x=x[,grepl('UC',colnames(x))];colnames(x)=gsub('UC-|-all','',colnames(x));colnames(x)=sub('.*?-','',colnames(x));return(x)},mc.cores=7)
 
 scalematrix <- function(data) {
   cm <- rowMeans(data)
@@ -49,9 +46,9 @@ for (n in names(d)) {
   dmmlcor[[n]] <- sapply(1:20,function(i) corfunc(dmml,d[[n]][,sampid[,i]]))
   dnmecor[[n]] <- sapply(1:20,function(i) corfunc(dnme,d[[n]][,sampid[,i]]))
 }
-
+dir_in_cor_Jason='../downstream/input/mouse_analysis/correlation_analysis/all_regions/'
 saveRDS(dmmlcor,file=paste0(dir_in_cor_Jason,'fullpermudmmlcor_YQ.rds'))
-saveRDS(dnmecor,file=paste0(dir_in_cor_Jason,'fullpermudmmlcor_YQ.rds'))
+saveRDS(dnmecor,file=paste0(dir_in_cor_Jason,'fullpermudnmecor_YQ.rds'))
 
 
 

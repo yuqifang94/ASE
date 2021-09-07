@@ -1,5 +1,5 @@
 # nolint start
-cutoff=0.1
+cutoff=0.01
 source('mainFunctions_sub.R')
 #We have already done the clustering for each cutoff, we need to run cluster assignment and GO and correlation analysis# nolint
 #Input folder 
@@ -21,8 +21,8 @@ cluster_assignment(cluster_dir_in,cluster_assigned_dir,cutoffs=cutoff,
 dir_in_cor_Jason='../downstream/input/mouse_analysis/correlation_analysis/all_regions/'
 dMML_cor=readRDS(dmml_cor_file)
 dNME_cor=readRDS(dnme_cor_file)
-dmml_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudmmlcor.rds'))
-dnme_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudnmecor.rds'))
+dmml_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudmmlcor_YQ.rds'))
+dnme_perm=readRDS(paste0(dir_in_cor_Jason,'fullpermudnmecor_YQ.rds'))
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"), # nolint
@@ -40,11 +40,14 @@ if(!file.exists(cor_dt_pre_process_fn)){
 }
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
+fig_out_dir=paste0(output_dir,'correlation_figure/')
+cor_dt_pre_process_fn=paste0(output_dir,'tissue_out_N17_kmeans_10run_filtered_all_region_',cutoff_char,'.rds')
+if(!dir.exists(fig_out_dir)){dir.create(fig_out_dir)}
 tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,
-                           dir_figure=paste0(dir_out_rds_correlation,'correlation_figure/'))
+                           dir_figure=fig_out_dir)
 names(tissue_out_filtered)=names(cor_dt_filtered)
 
-saveRDS(tissue_out_filtered,tissue_out_filtered_fn)
+saveRDS(tissue_out_filtered,cor_dt_pre_process_fn)
 
 #GO analysis for enhancers
 UC_merge=readRDS(UC_merge_file)#Define all analyzed regions, were using UC_merge_max_loc_cluster01.rds,4626

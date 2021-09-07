@@ -1989,11 +1989,11 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   cat('Finish smooting cutoffs:',proc.time()[[3]]-tt1,'\n')
   tt1=proc.time()[[3]]
   #smoothing plot
-  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dMML_sm_quant_weighted_',filtered,'.png'))
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dMML_sm_quant_weighted_',filtered,'.png')type='cairo')
   plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dMML_only,xlab="mean correlation",ylab="correlation differnce cutoff",xlim=c(-1,1))
   lines(cor_cutoffs$cor_mean_round,predict(dMML_fit,data=cor_cutoffs))
   dev.off()
-  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dNME_sm_quant_weighted_',filtered,'.png'))
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dNME_sm_quant_weighted_',filtered,'.png')type='cairo')
   plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dNME_only,xlab="mean correlation",ylab="correlation differnce cutoff")
   lines(cor_cutoffs$cor_mean_round,predict(dNME_fit,data=cor_cutoffs))
   dev.off()
@@ -2145,13 +2145,13 @@ tt1=proc.time()[[3]]
     #     xlab("average correlation")+ylab("correlation difference")
      
       #dev.off()
-      png(paste0(dir_figure,ts,'_density_',filtered,'.png'),width=9,height=12.5,units = 'in',res=1080)
+      png(paste0(dir_figure,ts,'_density_',filtered,'.png'),width=9,height=12.5,units = 'in',res=1080,type='cairo')
       print(ggarrange(raw_density_log,raw_MA_log,raw_density_log_cutoff_only,raw_MA_log_cutoff_only,
                       raw_density_log_cutoff_FDR,
                       #cat_density_log,cat_density_MA_log, 
                       ncol = 2, nrow = 3,common.legend = TRUE))
       dev.off()
-      png(paste0(dir_figure,ts,'_dot_',filtered,'.png'),width=4.5,height=9,units = 'in',res=1080)
+      png(paste0(dir_figure,ts,'_dot_',filtered,'.png'),width=4.5,height=9,units = 'in',res=1080,type='cairo')
       print(ggarrange(catotry_dot_cor,catotry_dot_MA, 
                       ncol = 1, nrow = 2,common.legend = TRUE))
       dev.off()

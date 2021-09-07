@@ -253,79 +253,78 @@ saveRDS(venn_out_all_dMML,'../downstream/output/mouse_analysis/UC_dNME_olap/dMML
 #Fixing dNME and dMML cutoff, vary UC cutoff
 #Try different cut of dNME and see overlap
 venn_out_all_UC_all=data.table()
-for(cut_dMML in seq(0,1,0.01)){
-    for(cut_dNME in seq(0,1,0.01)){
-        aid_dMML <- sapply(names(dMML_in),function(i) {
+cut_dMML=0.134375
+cut_dNME=0.31875
+aid_dMML <- sapply(names(dMML_in),function(i) {
 
-                names(which(rowSums(dMML_in[[i]] > cut_dMML) > 0))
-        })  
-        aid_dNME <- sapply(names(dNME_in),function(i) {
+        names(which(rowSums(dMML_in[[i]] > cut_dMML) > 0))
+})  
+aid_dNME <- sapply(names(dNME_in),function(i) {
 
-                names(which(rowSums(dNME_in[[i]] > cut_dNME) > 0))
-        })  
-        set.seed(12345)
-        venn_out_all_UC=list()
-        tt1=proc.time()
-        venn_out_all_UC=mclapply(seq(0,1,0.01),function(cut_UC){
-            cat("Processing:",cut_UC,'\n')
-            aid_UC <- sapply(names(UC_in_only),function(i) {
+        names(which(rowSums(dNME_in[[i]] > cut_dNME) > 0))
+})  
+set.seed(12345)
+venn_out_all_UC=list()
+tt1=proc.time()
+venn_out_all_UC=mclapply(seq(0,1,0.01),function(cut_UC){
+    cat("Processing:",cut_UC,'\n')
+    aid_UC <- sapply(names(UC_in_only),function(i) {
 
-                names(which(rowSums(UC_in_only[[i]] > cut_UC) > 0))
-            })  
-            venn_out=data.table()
-            
+        names(which(rowSums(UC_in_only[[i]] > cut_UC) > 0))
+    })  
+    venn_out=data.table()
+    
 
-            for(ts in names(aid_UC)){
+    for(ts in names(aid_UC)){
 
-            UC_specific_dMML=setdiff(aid_UC[[ts]],aid_dMML[[ts]])
-            shared_dMML=intersect(aid_UC[[ts]],aid_dMML[[ts]])
-            dMML_specific=setdiff(aid_dMML[[ts]],aid_UC[[ts]])
+    UC_specific_dMML=setdiff(aid_UC[[ts]],aid_dMML[[ts]])
+    shared_dMML=intersect(aid_UC[[ts]],aid_dMML[[ts]])
+    dMML_specific=setdiff(aid_dMML[[ts]],aid_UC[[ts]])
 
-            shared_dNME=intersect(aid_UC[[ts]],aid_dNME[[ts]])
-            dNME_specific=setdiff(aid_dNME[[ts]],aid_UC[[ts]])
-            UC_specific_dNME=setdiff(aid_UC[[ts]],aid_dNME[[ts]])
+    shared_dNME=intersect(aid_UC[[ts]],aid_dNME[[ts]])
+    dNME_specific=setdiff(aid_dNME[[ts]],aid_UC[[ts]])
+    UC_specific_dNME=setdiff(aid_UC[[ts]],aid_dNME[[ts]])
 
-            #Get random control for UC
-            aid_UC_random=sample(rownames(UC_in_only[[ts]]),length(aid_UC[[ts]]))
-            UC_specific_dMML_rand=setdiff(aid_UC_random,aid_dMML[[ts]])
-            shared_dMML_rand=intersect(aid_UC_random,aid_dMML[[ts]])
-            dMML_specific_rand=setdiff(aid_dMML[[ts]],aid_UC_random)
+    #Get random control for UC
+    aid_UC_random=sample(rownames(UC_in_only[[ts]]),length(aid_UC[[ts]]))
+    UC_specific_dMML_rand=setdiff(aid_UC_random,aid_dMML[[ts]])
+    shared_dMML_rand=intersect(aid_UC_random,aid_dMML[[ts]])
+    dMML_specific_rand=setdiff(aid_dMML[[ts]],aid_UC_random)
 
-            shared_dNME_rand=intersect(aid_UC_random,aid_dNME[[ts]])
-            dNME_specific_rand=setdiff(aid_dNME[[ts]],aid_UC_random)
-            UC_specific_dNME_rand=setdiff(aid_UC_random,aid_dNME[[ts]])
+    shared_dNME_rand=intersect(aid_UC_random,aid_dNME[[ts]])
+    dNME_specific_rand=setdiff(aid_dNME[[ts]],aid_UC_random)
+    UC_specific_dNME_rand=setdiff(aid_UC_random,aid_dNME[[ts]])
 
 
-            venn_out=rbind(venn_out,data.table(tissue=ts,
-                                                UC_specific_dMML=length(UC_specific_dMML),
-                                                shared_dMML=length(shared_dMML),
-                                                dMML_specific=length(dMML_specific),
-                                                shared_dNME=length(shared_dNME),
-                                                dNME_specific=length(dNME_specific),
-                                                UC_specific_dNME=length(UC_specific_dNME),
-                                                cutoff=cut_UC,
-                                                UC_specific_dMML_rand=length(UC_specific_dMML_rand),
-                                                shared_dMML_rand=length(shared_dMML_rand),
-                                                dMML_specific_rand=length(dMML_specific_rand),
-                                                shared_dNME_rand=length(shared_dNME_rand),
-                                                dNME_specific_rand=length(dNME_specific_rand),
-                                                UC_specific_dNME_rand=length(UC_specific_dNME_rand)
-                                            ))
+    venn_out=rbind(venn_out,data.table(tissue=ts,
+                                        UC_specific_dMML=length(UC_specific_dMML),
+                                        shared_dMML=length(shared_dMML),
+                                        dMML_specific=length(dMML_specific),
+                                        shared_dNME=length(shared_dNME),
+                                        dNME_specific=length(dNME_specific),
+                                        UC_specific_dNME=length(UC_specific_dNME),
+                                        cutoff=cut_UC,
+                                        UC_specific_dMML_rand=length(UC_specific_dMML_rand),
+                                        shared_dMML_rand=length(shared_dMML_rand),
+                                        dMML_specific_rand=length(dMML_specific_rand),
+                                        shared_dNME_rand=length(shared_dNME_rand),
+                                        dNME_specific_rand=length(dNME_specific_rand),
+                                        UC_specific_dNME_rand=length(UC_specific_dNME_rand)
+                                    ))
 
-            
-        }
-        print(head(venn_out))
-        return(venn_out)
-        },mc.cores=20
-        )
-        venn_out_all_UC=do.call(rbind,venn_out_all_UC)
-        venn_out_all_UC$dNME_cutoff=dNME_cutoff
-        venn_out_all_UC$dMML_cutoff=dMML_cutoff
-       venn_out_all_UC_all=rbind(venn_out_all_UC_all,))
-         print(head(venn_out_all_UC_all))
-        cat("Finishing processing: dMML=",dMML_cutoff," dNME=",dNME_cutoff,"in:",proc.time()[[3]]-tt1,'\n')
-    }
+    
 }
+print(head(venn_out))
+return(venn_out)
+},mc.cores=20
+)
+venn_out_all_UC=do.call(rbind,venn_out_all_UC)
+venn_out_all_UC$dNME_cutoff=dNME_cutoff
+venn_out_all_UC$dMML_cutoff=dMML_cutoff
+venn_out_all_UC_all=rbind(venn_out_all_UC_all,))
+    print(head(venn_out_all_UC_all))
+cat("Finishing processing: dMML=",dMML_cutoff," dNME=",dNME_cutoff,"in:",proc.time()[[3]]-tt1,'\n')
+
 
 saveRDS(venn_out_all_UC_all,'../downstream/output/mouse_analysis/UC_dNME_olap/UC_var_venn_out_all_dNME_dMML_cutoff.rds')
 
@@ -983,7 +982,7 @@ saveRDS(cutoff_out,'../downstream/output/mouse_analysis/UC_dNME_olap/cutoff_out_
 
 
 #One and only one overlap analysis
-cutoff_selection_only<-function(dat_in,ts#,
+cutoff_selection_only<-function(dat_in,ts,ts_only=T#,
     #n_regions,
     #diff_threshold=0.1,
     #step=0.1
@@ -995,14 +994,14 @@ cutoff_selection_only<-function(dat_in,ts#,
     #This is no longer linear try different threshold
     #while(abs(diff)>diff_threshold){
     
-    return(mclapply(seq(0,1,0.001),function(cutoff,ts) {
+    if(ts_only){return(mclapply(seq(0,1,0.001),function(cutoff,ts) {
         #cutoff=cutoff+step*diff
         cat("Processing:",cutoff,'\n')
         aid <- sapply(names(dat_in),function(i) {
                     names(which(rowSums(dat_in[[i]] > cutoff) > 0))
                     })          
         out=list()
-        return(out[[as.character(cutoff)]]=setdiff(aid[[ts]],unlist(aid[names(aid)!=ts])))
+        return(setdiff(aid[[ts]],unlist(aid[names(aid)!=ts])))
         
         #diff=(length(dat_region)-n_regions)/n_regions
         #diff >0: increase cut, replace low dNME to current cut
@@ -1011,6 +1010,23 @@ cutoff_selection_only<-function(dat_in,ts#,
         #print(log_tb)
         #diff_log=rbind(diff_log,log_tb)
     },ts=ts,mc.cores=20
+    ))else(return(
+        (mclapply(seq(0,1,0.001),function(cutoff,ts) {
+        #cutoff=cutoff+step*diff
+        cat("Processing:",cutoff,'\n')
+        
+       
+        return(names(which(rowSums(dat_in[[ts]] > cutoff) > 0)))
+        
+        #diff=(length(dat_region)-n_regions)/n_regions
+        #diff >0: increase cut, replace low dNME to current cut
+        
+        #log_tb=data.table(cutoff=cutoff,diff=diff)
+        #print(log_tb)
+        #diff_log=rbind(diff_log,log_tb)
+    },ts=ts,mc.cores=20
+    ))
+
     ))
 
     #return(list(cutoff=diff_log[which.min(abs(diff))]$cutoff,region_sel=dat_region[which.min(abs(diff_log$diff))],diff=diff_log[which.min(abs(diff))]$diff,diff_log=diff_log))
@@ -1068,7 +1084,7 @@ assign_name<-function(x) {names(x)=as.character(seq(0,1,0.001)); return(x)}
 saveRDS(list(UC_cutoff=lapply(UC_cutoff,assign_name),
             dMML_cutoff=lapply(dMML_cutoff,assign_name),
             dNME_cutoff=lapply(dNME_cutoff,assign_name)
-            ),
+            ),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_ts_only.rds')
 UC_in=readRDS(UC_merge_file)
 #For each possible cutoff, find the overlap
 region_rand_pool=lapply(UC_in,rownames)
@@ -1076,46 +1092,80 @@ rm(UC_in)
 cutoff_ts_only_out=readRDS('../downstream/output/mouse_analysis/UC_dNME_olap/regions_ts_only.rds')
 cutoff_ts_num_output_all=list()
 set.seed(12345)
+ pdf(paste0('../downstream/output/mouse_analysis/UC_dNME_olap/UC_dNME_dMML_cutoff_num.pdf'))
 for(ts in names(region_rand_pool)){
-    cat("Processing:",ts,'\n')
+    
     tt1=proc.time()[[3]]
-    cutoff_ts_num_output=as.data.table(expand.grid(seq(0,1,0.002),seq(0,1,0.01),seq(0,1,0.01)))
+    
+    cutoff_ts_only_out_ts=lapply(cutoff_ts_only_out,function(x) x[[ts]])
+    ts_num=lapply(cutoff_ts_only_out_ts,function(x) unlist(lapply(x,length)))
+    ts_num_dt=data.table(cutoff=names(ts_num$UC))
+    ts_num_dt$dNME=ts_num$dNME[ts_num_dt$cutoff]
+    ts_num_dt$dMML=ts_num$dMML[ts_num_dt$cutoff]
+    ts_num_dt$UC=ts_num$UC[ts_num_dt$cutoff]
+    ts_num_dt_mt=melt.data.table(ts_num_dt,id.vars='cutoff',variable.name='stat_type',value.name='region_count')
+   ts_num_dt_mt$cutoff=as.numeric(ts_num_dt_mt$cutoff)
+    print(ggplot(ts_num_dt_mt,aes(x=cutoff,y=region_count,color=stat_type))+geom_line()+
+            ylab("Number of regions")+ggtitle(ts))
+    cat("Processing:",ts,'\n')
+    cutoff_ts_num_output=as.data.table(expand.grid(seq(0,max(ts_num_dt[UC>=round(mean(ts_num_dt$UC)/100,digits=2)]$cutoff),0.005),
+                                        seq(0,max(ts_num_dt[dNME>=round(mean(ts_num_dt$dNME)/100,digits=2)]$cutoff),0.01),
+                                        seq(0,max(ts_num_dt[dMML>=round(mean(ts_num_dt$dMML)/100,digits=2)]$cutoff),0.01)))
     colnames(cutoff_ts_num_output)=c("UC","dNME","dMML")
 
-    cutoff_ts_only_out_ts=lapply(cutoff_ts_only_out,function(x) x[[ts]])
-    cutoff_ts_num_output_all[[ts]]=cbind(cutoff_ts_num_output,
-    fastDoCall("rbind",
-    mclapply(1:nrow(cutoff_ts_num_output),
-    function(x) {
-         dNME_region=cutoff_ts_only_out_ts$dNME_cutoff[[as.character(cutoff_ts_num_output$dNME[[x]])]]
-         dMML_region=cutoff_ts_only_out_ts$dMML_cutoff[[as.character(cutoff_ts_num_output$dMML[[x]])]]
-         UC_region=cutoff_ts_only_out_ts$UC_cutoff[[as.character(cutoff_ts_num_output$UC[[x]])]]
-        #if(length(UC_region)>0){
-         UC_region_rand=sample(region_rand_pool[[ts]],length(UC_region))
-         p5_num=round(nrow(cutoff_ts_num_output)*seq(0,1,0.01))
-        if (x %in% p5_num){cat("Finishing:",seq(0,1,0.01)*100[p5_num==x],'\\% finished\n')}
-         return(data.table(        
-         dNME_specific=length(setdiff(dNME_region,UC_region)),
-         dMML_specific=length(setdiff(dMML_region,UC_region)),
-         UC_specific_dNME=length(setdiff(UC_region,dNME_region)),
-         UC_specific_dMML=length(setdiff(UC_region,dMML_region)),
-         shared_dNME=length(intersect(dNME_region,UC_region)),
-         shared_dMML=length(intersect(dMML_region,UC_region)),
-         dNME_specific_rand=length(setdiff(dNME_region,UC_region_rand)),
-         dMML_specific_rand=length(setdiff(dMML_region,UC_region_rand)),
-         UC_specific_dNME_rand=length(setdiff(UC_region_rand,dNME_region)),
-         UC_specific_dMML_rand=length(setdiff(UC_region_rand,dMML_region)),
-         shared_dNME_rand=length(intersect(dNME_region,UC_region_rand)),
-         shared_dMML_rand=length(intersect(dMML_region,UC_region_rand)),
-         dNME_cutoff=cutoff_ts_num_output$dNME[[x]],
-         dMML_cutoff=cutoff_ts_num_output$dMML[[x]],
-         UC_cutoff=cutoff_ts_num_output$UC[[x]]
-         )
-         )
-
-         #}
-    },mc.cores=20)))
+    cutoff_ts_num_output_all[[ts]]=
+    cbind(cutoff_ts_num_output,
+        fastDoCall("rbind",
+                    mclapply(1:nrow(cutoff_ts_num_output),
+                                function(x,cutoff_ts_only_out_ts,cutoff_ts_num_output) {
+                                                dNME_region=cutoff_ts_only_out_ts$dNME_cutoff[[as.character(cutoff_ts_num_output$dNME[[x]])]]
+                                                dMML_region=cutoff_ts_only_out_ts$dMML_cutoff[[as.character(cutoff_ts_num_output$dMML[[x]])]]
+                                                UC_region=cutoff_ts_only_out_ts$UC_cutoff[[as.character(cutoff_ts_num_output$UC[[x]])]]
+                                                #if(length(UC_region)>0){
+                                                UC_region_rand=sample(region_rand_pool[[ts]],length(UC_region))
+                                                return(data.table(        
+                                                    dNME_specific=length(setdiff(dNME_region,UC_region)),
+                                                    dMML_specific=length(setdiff(dMML_region,UC_region)),
+                                                    UC_specific_dNME=length(setdiff(UC_region,dNME_region)),
+                                                    UC_specific_dMML=length(setdiff(UC_region,dMML_region)),
+                                                    shared_dNME=length(intersect(dNME_region,UC_region)),
+                                                    shared_dMML=length(intersect(dMML_region,UC_region)),
+                                                    dNME_specific_rand=length(setdiff(dNME_region,UC_region_rand)),
+                                                    dMML_specific_rand=length(setdiff(dMML_region,UC_region_rand)),
+                                                    UC_specific_dNME_rand=length(setdiff(UC_region_rand,dNME_region)),
+                                                    UC_specific_dMML_rand=length(setdiff(UC_region_rand,dMML_region)),
+                                                    shared_dNME_rand=length(intersect(dNME_region,UC_region_rand)),
+                                                    shared_dMML_rand=length(intersect(dMML_region,UC_region_rand)),
+                                                    dNME_cutoff=cutoff_ts_num_output$dNME[[x]],
+                                                    dMML_cutoff=cutoff_ts_num_output$dMML[[x]],
+                                                    UC_cutoff=cutoff_ts_num_output$UC[[x]]
+                                                )
+                                                )
+                                                },
+                                                cutoff_ts_only_out_ts=cutoff_ts_only_out_ts,cutoff_ts_num_output=cutoff_ts_num_output,mc.cores=20)))
   
     cat("Finish processing:",ts,'in',proc.time()[[3]]-tt1,'\n')
 
 }
+dev.off()
+
+#Relax UC cutoff for one and only one
+cutoff_out=list()
+summary_output=data.table()
+dNME_cutoff=list()
+dMML_cutoff=list()
+UC_cutoff=list()
+for(ts in names(dNME_in)){
+    cat("Processing:",ts,"\n")
+    dNME_cutoff[[ts]]=cutoff_selection_only(dNME_in,ts,ts_only=F)
+    
+    dMML_cutoff[[ts]]=cutoff_selection_only(dMML_in,ts,ts_only=F)
+    UC_cutoff[[ts]]=cutoff_selection_only(UC_in_only,ts,ts_only=F)
+
+
+}
+
+saveRDS(list(UC_cutoff=lapply(UC_cutoff,assign_name),
+            dMML_cutoff=lapply(dMML_cutoff,assign_name),
+            dNME_cutoff=lapply(dNME_cutoff,assign_name)
+            ),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only.rds')
