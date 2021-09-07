@@ -1989,11 +1989,11 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   cat('Finish smooting cutoffs:',proc.time()[[3]]-tt1,'\n')
   tt1=proc.time()[[3]]
   #smoothing plot
-  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dMML_sm_quant_weighted_',filtered,'.png')type='cairo')
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dMML_sm_quant_weighted_',filtered,'.png'),type='cairo')
   plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dMML_only,xlab="mean correlation",ylab="correlation differnce cutoff",xlim=c(-1,1))
   lines(cor_cutoffs$cor_mean_round,predict(dMML_fit,data=cor_cutoffs))
   dev.off()
-  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dNME_sm_quant_weighted_',filtered,'.png')type='cairo')
+  png(paste0(dir_figure,'cor_',ts,'_cluster_all_cor_dNME_sm_quant_weighted_',filtered,'.png'),type='cairo')
   plot(cor_cutoffs$cor_mean_round,cor_cutoffs$diff_cutoff_dNME_only,xlab="mean correlation",ylab="correlation differnce cutoff")
   lines(cor_cutoffs$cor_mean_round,predict(dNME_fit,data=cor_cutoffs))
   dev.off()
