@@ -45,7 +45,7 @@ if(!file.exists(cor_dt_pre_process_fn)){
 }
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
-libray(ggpubr)
+library(ggpubr)
 fig_out_dir=paste0(output_dir,'correlation_figure/')
 cor_dt_pre_process_fn=paste0(output_dir,'tissue_out_N17_kmeans_10run_filtered_all_region_',cutoff_char,'.rds')
 if(!dir.exists(fig_out_dir)){dir.create(fig_out_dir)}

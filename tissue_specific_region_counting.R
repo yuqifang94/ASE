@@ -1158,7 +1158,7 @@ summary_output=data.table()
 dNME_cutoff=list()
 dMML_cutoff=list()
 UC_cutoff=list()
-step=0.01
+step=0.001
 for(ts in names(dNME_in)){
     cat("Processing:",ts,"\n")
     dNME_cutoff[[ts]]=cutoff_selection_only(dNME_in,ts,ts_only=F,step_in=step)
@@ -1172,17 +1172,17 @@ for(ts in names(dNME_in)){
 saveRDS(list(UC_cutoff=lapply(UC_cutoff,assign_name,step_in=step),
             dMML_cutoff=lapply(dMML_cutoff,assign_name,step_in=step),
             dNME_cutoff=lapply(dNME_cutoff,assign_name,step_in=step)
-            ),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only.rds')
+            ),'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only_001.rds')
 
 
 cutoff_ts_all_out=readRDS('../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only.rds')
 
 cutoff_ts_all_out=list(UC_cutoff=lapply(UC_cutoff,assign_name,step_in=step),
             dMML_cutoff=lapply(dMML_cutoff,assign_name,step_in=step),
-            dNME_cutoff=lapply(dNME_cutoff,assign_name,step_in=step)
+            dNME_cutoff=lapply(dNME_cutoff,assign_name,step_in=step))
 cutoff_ts_num_output_all=list()
 set.seed(12345)
- pdf(paste0('../downstream/output/mouse_analysis/UC_dNME_olap/UC_dNME_dMML_cutoff_num_non_ts_only.pdf'))
+ pdf(paste0('../downstream/output/mouse_analysis/UC_dNME_olap/UC_dNME_dMML_cutoff_num_non_ts_only_001.pdf'))
 for(ts in names(region_rand_pool)){
     
     tt1=proc.time()[[3]]
@@ -1198,9 +1198,9 @@ for(ts in names(region_rand_pool)){
     print(ggplot(ts_num_dt_mt,aes(x=cutoff,y=region_count,color=stat_type))+geom_line()+
             ylab("Number of regions")+ggtitle(ts))
     cat("Processing:",ts,'\n')
-    cutoff_ts_num_output=as.data.table(expand.grid(seq(0,max(ts_num_dt[UC>=round(mean(ts_num_dt$UC)/100,digits=2)]$cutoff),0.01),
-                                        seq(0,max(ts_num_dt[dNME>=round(mean(ts_num_dt$dNME)/100,digits=2)]$cutoff),0.05),
-                                        seq(0,max(ts_num_dt[dMML>=round(mean(ts_num_dt$dMML)/100,digits=2)]$cutoff),0.05)))
+    cutoff_ts_num_output=as.data.table(expand.grid(seq(0,max(ts_num_dt[UC>=round(mean(ts_num_dt$UC)/100,digits=2)]$cutoff),step*5),
+                                        seq(0,max(ts_num_dt[dNME>=round(mean(ts_num_dt$dNME)/100,digits=2)]$cutoff),step*10),
+                                        seq(0,max(ts_num_dt[dMML>=round(mean(ts_num_dt$dMML)/100,digits=2)]$cutoff),step*10)))
     colnames(cutoff_ts_num_output)=c("UC","dNME","dMML")
 
     cutoff_ts_num_output_all[[ts]]=
@@ -1238,4 +1238,4 @@ for(ts in names(region_rand_pool)){
 
 }
 dev.off()
-saveRDS(cutoff_ts_num_output_all,'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only_tb.rds')
+saveRDS(cutoff_ts_num_output_all,'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only_tb_001.rds')
