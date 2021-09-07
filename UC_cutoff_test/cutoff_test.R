@@ -1,5 +1,7 @@
 # nolint start
-cutoff=0.01
+args = commandArgs(trailingOnly=TRUE)
+cutoff=args[1]
+cat("Processing:",cutoff,'\n')
 source('mainFunctions_sub.R')
 #We have already done the clustering for each cutoff, we need to run cluster assignment and GO and correlation analysis# nolint
 #Input folder 
@@ -12,7 +14,8 @@ cluster_assigned_dir=paste0(output_dir,'cluster_assigned/')
 if(!dir.exists(cluster_assigned_dir)){dir.create(cluster_assigned_dir)}
   UC_merge=readRDS(UC_merge_max_loc_file)
 #Clustering
-
+cat("Start cluster generation\n")
+tt1=proc.time()[[3]]
 figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',cutoff_char,'.png')
 cluster_assignment(cluster_dir_in,cluster_assigned_dir,cutoffs=cutoff,
             cluster_region_out_fn=paste0(cluster_assigned_dir,'cluster_assginment_filtered_',cutoff_char,'.rds'),figure_name=figure_name,UC_merge)
@@ -28,8 +31,10 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"), # nolint
                                  axis.text.x=element_text(size=16),
                                  axis.text.y=element_text(size=16))
-
+cat("Finish cluster generation in:", proc.time()[[3]]-tt1,"\n")
+tt1=proc.time()[[3]]
 #Filtered result
+cat("Start correlation analysis\n")
 cor_dt_pre_process_fn=paste0(output_dir,'correlation_dt_N17_kmeans_10run_filtered_all_regions_',cutoff_char,'.rds')
 if(!file.exists(cor_dt_pre_process_fn)){
   cor_dt_filtered=lapply(names(dNME_cor),cor_dt_preprocessing,dMML_cor=dMML_cor,
@@ -40,6 +45,7 @@ if(!file.exists(cor_dt_pre_process_fn)){
 }
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
+libray(ggpubr)
 fig_out_dir=paste0(output_dir,'correlation_figure/')
 cor_dt_pre_process_fn=paste0(output_dir,'tissue_out_N17_kmeans_10run_filtered_all_region_',cutoff_char,'.rds')
 if(!dir.exists(fig_out_dir)){dir.create(fig_out_dir)}
@@ -48,7 +54,10 @@ tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=
 names(tissue_out_filtered)=names(cor_dt_filtered)
 
 saveRDS(tissue_out_filtered,cor_dt_pre_process_fn)
-
+plot_correlation(tissue_out_filtered,pdf_fn=paste0(output_dir,cutoff_char,'_correlation_main.pdf'))
+cat("Finish correlation analysis in:", proc.time()[[3]]-tt1,"\n")
+tt1=proc.time()[[3]]
+cat("Starting GO analysis\n")
 #GO analysis for enhancers
 UC_merge=readRDS(UC_merge_file)#Define all analyzed regions, were using UC_merge_max_loc_cluster01.rds,4626
 cutoff_fn=cutoff_char
@@ -78,5 +87,12 @@ for(ts in tissue_all){
 }
   # UC_maxUC is wrong
 saveRDS(GO_out_all,paste0(output_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_enhancer.rds'))
-
+GO_out_all=readRDS(paste0(output_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_enhancer.rds'))
+tissue_select=names(which(table(select_top_GO(GO_out_all,names(GO_out_all),ptcount=0,FDR_cutoff=0.2,FC_cutoff=1.5)[[1]][FDR<=0.2&FC>=1.5]$tissue)>0))
+if(!is.null(tissue_select)){
+plot_GO_heatmap_all(tissue_select,GO_out_all,region_type="all",enc_type="enhancer",ptcount=0,FDR_cutoff=0.2,
+                      dir_plot=output_dir)
+}else{cat("No significant GO for cutoff:",cutoff,'\n')}
+cat("Finish GO analysis in:", proc.time()[[3]]-tt1,"\n")
+tt1=proc.time()[[3]]
 # nolint end

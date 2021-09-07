@@ -1439,12 +1439,15 @@ plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=
   tissue_all_merged=select_top_GO_out$tissue_all_merged
   tissue_all_merged_top=select_top_GO_out$tissue_all_merged_top
   #Plot for all samples
-  
+  figure_dir_all=paste0(dir_plot,'all_sample/')
+  if(!dir.exists(figure_dir_all)){dir.create(figure_dir_all)}
+  figure_dir_single=paste0(dir_plot,'single_sample/')
+  if(!dir.exists(figure_dir_single)){dir.create(figure_dir_single)}
   sel_term=plot_GO_heatmap(
     tissue_all_merged=tissue_all_merged,
     tissue_all_merged_top=tissue_all_merged_top,
     FDR_cutoff=FDR_cutoff,
-    fn=paste0(dir_plot,'all_sample/GO_all_samples_',region_type,'_',enc_type,'.pdf')
+    fn=paste0(figure_dir_all,'GO_all_samples_',region_type,'_',enc_type,'.pdf')
   )
   #Plot for single sample
   for(ts in unique(tissue_all_merged$tissue)){
@@ -1458,7 +1461,7 @@ plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=
       tissue_all_merged=tissue_all_merged[tissue==ts],
       tissue_all_merged_top=tissue_all_merged_top_ts,
       FDR_cutoff=FDR_cutoff,
-      fn=paste0(dir_plot,'single_sample/GO_single_sample_',ts,'_',region_type,'_',enc_type,'.pdf'),
+      fn=paste0(figure_dir_single,'GO_single_sample_',ts,'_',region_type,'_',enc_type,'.pdf'),
       term_ft=F
     )
     
