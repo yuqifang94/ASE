@@ -14,10 +14,6 @@ names(d) <- sapply(d,function(i) sub('-.*','',colnames(i)[1]))
 for (i in 1:length(d)) colnames(d[[i]]) <- sub('-all','',sub(paste0(names(d)[i],'-'),'',colnames(d[[i]])))
 saveRDS('fulluc.rds')
 
-
-
-
-
 #### clustering
 library(RColorBrewer)
 library(pheatmap)
