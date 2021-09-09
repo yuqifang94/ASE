@@ -1165,6 +1165,17 @@ agnostic_matrix_conversion<-function(gr_in,stat='NME'){
   return(gr_out)
   
 }
+#filtering UC region based on available data
+UC_filtering<-function(d){
+  d <- sapply(d,function(am) {
+    am <- am[,!grepl('P0',colnames(am))]
+    am <- am[complete.cases(am),]
+  })
+  k <- table(unlist(sapply(d,rownames)))
+  id <- names(k)[k==length(d)]
+  d <- sapply(d,function(i) i[id,],simplify = F)
+  return(d)
+}
 
 cor_dMML_dNME_enrich<-function(all_region_ts,prob_cutoff,FeDMR){
   all_region_ts$change=FALSE
@@ -1534,7 +1545,8 @@ matrix_conv<-function(dt_in,value.var){
   return(out_dc)
 }
 #Clustering assignment
-cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,figure_name,UC_merge){
+cluster_assignment<-function(dir_in,dir_out,cluster_region_out_fn,figure_name,UC_merge,
+                            cutoffs=0.1,figure_width=2000,figure_height=2000,res=200){
   ifelse(!dir.exists(file.path(dir_out)), dir.create(file.path(dir_out)), FALSE)
   cat('reading in clustering result\n')
   total_run=10
@@ -1641,114 +1653,115 @@ cluster_assignment<-function(dir_in,dir_out,cutoffs=0.1,cluster_region_out_fn,fi
   # Percent left for: midbrain 0.9891808
   
   saveRDS(cluster_region_out,cluster_region_out_fn)
-  
+  plot_heatmap_cluster(UC_merge,cluster_region_out_fn,figure_name,
+  figure_width=figure_width,figure_height=figure_height,res=res)
+}
   # Plot heatmap ------------------------------------------------------------
-  cat('Plotting heatmap\n')
-  library(RColorBrewer)
-  library(pheatmap)
-  library(gplots)
-  UC_merge=readRDS(UC_merge_file)
-  UC_merge=lapply(UC_merge,function(x) x[,!grepl('max',colnames(x))])
-  d <- lapply(UC_merge,function(x) x[,grepl('UC-',colnames(x))])
-  names(d)=names(UC_merge)
-  # dmml <-readRDS(dmml_cor_file)
-  # dnme <-readRDS(dnme_cor_file)
-  tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
-  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+plot_heatmap_cluster<-function(d,cluster_region_out_fn,figure_name,figure_width=2000,figure_height=2000,res=200){
+    cat('Plotting heatmap\n')
+    library(gplots)
 
-  clu=readRDS(cluster_region_out_fn)
-  clu=lapply(clu,function(x){
-    out=as.numeric(x$cluster)
-    names(out)=x$regions
-    return(out)
-    
-  })
-  d=d[tissue_all]
-  d=lapply(d,function(x) {
-    
-    colnames(x)=gsub(paste0('UC-|-all|',paste(tissue_all,'-',sep='',collapse = '|')),'',colnames(x))
-    return(x)
-  })
-  d <- sapply(d,function(i) {
-    
-    i <- i[rowSums(i) > 0,]
-    i <- i[,colnames(i) %in% timeorder]
-    i <- i[,order(match(colnames(i),timeorder))]
-    
-    #i <- scalematrix(i)
-    i <- i[complete.cases(i),]
-  })
-  
-  mat_out=matrix(ncol=39,nrow=0)
-  rowann_out=data.frame()
-  row_gap=c(0)
-  for (n in names(d)) {
-    cl <- clu[[n]]
-    cl <- sort(cl)
-    mat <- do.call(cbind,sapply(tissue_all,function(i) {
-      tmp <- matrix(NA,nrow=length(cl),ncol=ncol(d[[i]]),dimnames = list(names(cl),colnames(d[[i]])))
+    d=lapply(UC_merge,d(x) x[,!grepl('max',colnames(x))])
+    d <- lapply(d,function(x) x[,grepl('UC-',colnames(x))])
+    #names(d)=names(UC_merge)
+    # dmml <-readRDS(dmml_cor_file)
+    # dnme <-readRDS(dnme_cor_file)
+    tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
+    timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
+
+    clu=readRDS(cluster_region_out_fn)
+    clu=lapply(clu,function(x){
+      out=as.numeric(x$cluster)
+      names(out)=x$regions
+      return(out)
       
-      rn <- intersect(names(cl),rownames(d[[i]]))
-      tmp[rn,] <- as.matrix(d[[i]][rn,])
+    })
+    d=d[tissue_all]
+    d=lapply(d,function(x) {
       
-      colnames(tmp) <- paste0(i,':',colnames(tmp))
+      colnames(x)=gsub(paste0('UC-|-all|',paste(tissue_all,'-',sep='',collapse = '|')),'',colnames(x))
+      return(x)
+    })
+    d <- sapply(d,function(i) {
       
-      tmp
-    }))
-    na_ma=-which(rowSums(is.na(mat))>0)
-    if(length(na_ma)>0){
-      mat= mat[na_ma,]
-      rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
-                           #dMMLJSDcor=dmml[[n]][rownames(mat)],
-                           #dNMEJSDcor=dnme[[n]][rownames(mat)],
-                           stringsAsFactors = F)
-      rowann=rowann[na_ma,]
-    }else{
+      i <- i[rowSums(i) > 0,]
+      i <- i[,colnames(i) %in% timeorder]
+      i <- i[,order(match(colnames(i),timeorder))]
       
-      rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
-                           #dMMLJSDcor=dmml[[n]][rownames(mat)],
-                           #dNMEJSDcor=dnme[[n]][rownames(mat)],
-                           stringsAsFactors = F)
+      #i <- scalematrix(i)
+      i <- i[complete.cases(i),]
+    })
+    
+    mat_out=matrix(ncol=39,nrow=0)
+    rowann_out=data.frame()
+    row_gap=c(0)
+    for (n in names(d)) {
+      cl <- clu[[n]]
+      cl <- sort(cl)
+      mat <- do.call(cbind,sapply(tissue_all,function(i) {
+        tmp <- matrix(NA,nrow=length(cl),ncol=ncol(d[[i]]),dimnames = list(names(cl),colnames(d[[i]])))
+        
+        rn <- intersect(names(cl),rownames(d[[i]]))
+        tmp[rn,] <- as.matrix(d[[i]][rn,])
+        
+        colnames(tmp) <- paste0(i,':',colnames(tmp))
+        
+        tmp
+      }))
+      na_ma=-which(rowSums(is.na(mat))>0)
+      if(length(na_ma)>0){
+        mat= mat[na_ma,]
+        rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                            #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                            #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                            stringsAsFactors = F)
+        rowann=rowann[na_ma,]
+      }else{
+        
+        rowann <- data.frame(tissue_r=n,cluster=sub(':.*','',cl),
+                            #dMMLJSDcor=dmml[[n]][rownames(mat)],
+                            #dNMEJSDcor=dnme[[n]][rownames(mat)],
+                            stringsAsFactors = F)
+      }
+      #Note for non-tissue specific UC 01, add tissue name to mat
+      rownames(mat)=paste0(n,'-',rownames(mat))
+      mat_out=rbind(mat_out,mat)
+      
+      rownames(rowann) <- rownames(mat)
+      rowann <- rowann[,ncol(rowann):1]
+      rowann_out=rbind(rowann_out,rowann)
+      #row_gap=c(row_gap,row_gap[length(row_gap)]+cumsum(rle(sub(':.*','',cl))$lengths))
+      row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
     }
-    #Note for non-tissue specific UC 01, add tissue name to mat
-    rownames(mat)=paste0(n,'-',rownames(mat))
-    mat_out=rbind(mat_out,mat)
     
-    rownames(rowann) <- rownames(mat)
-    rowann <- rowann[,ncol(rowann):1]
-    rowann_out=rbind(rowann_out,rowann)
-    #row_gap=c(row_gap,row_gap[length(row_gap)]+cumsum(rle(sub(':.*','',cl))$lengths))
-    row_gap=c(row_gap,row_gap[length(row_gap)]+nrow(mat))
-  }
-  
-  #Refine plotting parameters
-  colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
-  rownames(colann) <- colnames(mat_out)
-  c1 <- mouse_color()
-  c2 <- brewer.pal(10,'Set3')
-  names(c2) <- 1:10
-  c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
-  names(c4) <- sort(unique(colann[,1]))
-  #remove row with all NA 
+    #Refine plotting parameters
+    colann <- data.frame(time=sub('.*:','',colnames(mat_out)),tissue=sub(':.*','',colnames(mat_out)),stringsAsFactors = F)
+    rownames(colann) <- colnames(mat_out)
+    c1 <- mouse_color()
+    c2 <- brewer.pal(10,'Set3')
+    names(c2) <- 1:10
+    c4 <- brewer.pal(length(unique(colann[,1])),'BrBG')
+    names(c4) <- sort(unique(colann[,1]))
+    #remove row with all NA 
 
-  sub_sp=sort(sample(1:nrow(mat_out),round(nrow(mat_out))))
-    mat_out_sc=scalematrix(mat_out)
-  png(figure_name,
-      width=2000,
-      height=2000,
-      res=200,type='cairo')
-  pheatmap(mat_out_sc,cluster_rows = F,
-           annotation_row = rowann_out[sub_sp,],
-           cluster_cols = F,
-           annotation_col = colann,show_colnames = F,show_rownames = F,
-           #gaps_row = row_gap[-1],
-           gaps_col = cumsum(rle(colann[,2])$lengths),
-           annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4)
-                                    #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10))
-                                    
-           #filename=figure_name
-  )
-  dev.off()
+    sub_sp=sort(sample(1:nrow(mat_out),round(nrow(mat_out))))
+      mat_out_sc=scalematrix(mat_out)
+    png(figure_name,
+        width=figure_width,
+        height=figure_width,
+        res=res,type='cairo')
+    pheatmap(mat_out_sc,cluster_rows = F,
+            annotation_row = rowann_out[sub_sp,],
+            cluster_cols = F,
+            annotation_col = colann,show_colnames = F,show_rownames = F,
+            #gaps_row = row_gap[-1],
+            gaps_col = cumsum(rle(colann[,2])$lengths),
+            annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4)
+                                      #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10))
+                                      
+            #filename=figure_name
+    )
+    dev.off()
   
 }
 

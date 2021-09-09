@@ -463,7 +463,14 @@ UC_merge_max_loc=lapply(UC_merge,function(x){
 })
 names(UC_merge_max_loc)=names(UC_merge)
 saveRDS(UC_merge_max_loc,UC_merge_max_loc_file)
-
+#Filtering complete data and regions having all data: should be 4876367
+UC_merge=readRDS(UC_merge_file)
+UC_merge_max_loc=readRDS(UC_merge_max_loc_file)
+UC_merge=UC_filtering(UC_merge)
+UC_merge_max_loc=UC_merge=UC_filtering(UC_merge_max_loc)
+saveRDS(UC_merge_max_loc,UC_merge_max_loc_file)
+saveRDS(UC_merge,UC_merge_file)
+#Subset regions by UC>0.1
 cluster=readRDS(paste0(dir_cluster_in_01,'uc_0.1_1.rds'))
 UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
   print(x)
@@ -472,9 +479,6 @@ UC_merge_max_loc_sub=lapply(names(UC_merge_max_loc),function(x) {
 })
 names(UC_merge_max_loc_sub)=names(UC_merge_max_loc)
 saveRDS(UC_merge_max_loc_sub,UC_merge_max_loc_01_file)
-
-
-
 
 #Read in mouse NME and scRNA
 NME_in=readRDS(NME_matrix_file)
