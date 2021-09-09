@@ -1661,7 +1661,7 @@ plot_heatmap_cluster<-function(d,cluster_region_out_fn,figure_name,figure_width=
     cat('Plotting heatmap\n')
     library(gplots)
 
-    d=lapply(UC_merge,d(x) x[,!grepl('max',colnames(x))])
+    d=lapply(d,function(x) x[,!grepl('max',colnames(x))])
     d <- lapply(d,function(x) x[,grepl('UC-',colnames(x))])
     #names(d)=names(UC_merge)
     # dmml <-readRDS(dmml_cor_file)
