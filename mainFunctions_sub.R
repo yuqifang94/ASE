@@ -1653,11 +1653,11 @@ cluster_assignment<-function(dir_in,dir_out,cluster_region_out_fn,figure_name,UC
   # Percent left for: midbrain 0.9891808
   
   saveRDS(cluster_region_out,cluster_region_out_fn)
-  plot_heatmap_cluster(UC_merge,cluster_region_out_fn,figure_name,
+  plot_heatmap_cluster(UC_merge,clu=cluster_region_out,figure_name,
   figure_width=figure_width,figure_height=figure_height,res=res)
 }
   # Plot heatmap ------------------------------------------------------------
-plot_heatmap_cluster<-function(d,cluster_region_out_fn,figure_name,figure_width=2000,figure_height=2000,res=200){
+plot_heatmap_cluster<-function(d,clu,figure_name,figure_width=2000,figure_height=2000,res=200){
     cat('Plotting heatmap\n')
     library(gplots)
 
@@ -1669,7 +1669,6 @@ plot_heatmap_cluster<-function(d,cluster_region_out_fn,figure_name,figure_width=
     tissue_all=c("EFP","forebrain","heart","hindbrain", "limb","liver" ,"midbrain" )
     timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
 
-    clu=readRDS(cluster_region_out_fn)
     clu=lapply(clu,function(x){
       out=as.numeric(x$cluster)
       names(out)=x$regions
