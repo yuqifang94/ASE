@@ -77,6 +77,7 @@ for (seed in 1:10) {
   saveRDS(d2,file=paste0('../downstream/output/mouse_analysis/non_ts_clustering/uc_',cut,'_',seed,'.rds'))
 }
 UC_in=readRDS(UC_merge_max_loc_file)
+cutoff_char='01'
 cluster_assignment('../downstream/output/mouse_analysis/non_ts_clustering/',
                     '../downstream/output/mouse_analysis/non_ts_clustering/cluster_assigned/',
                     UC_merge=UC_in,
@@ -84,3 +85,7 @@ cluster_assignment('../downstream/output/mouse_analysis/non_ts_clustering/',
                     cluster_region_out_fn=paste0('../downstream/output/mouse_analysis/non_ts_clustering/cluster_assginment_filtered_',cutoff_char,'.rds'),
                     figure_name='../downstream/output/mouse_analysis/non_ts_clustering/heatmap_non_ts.png',
                     figure_width=5000,figure_height=50000,res=500)
+plot_heatmap_cluster(UC_in,
+                              paste0('../downstream/output/mouse_analysis/non_ts_clustering/cluster_assginment_filtered_',cutoff_char,'.rds'),
+                              figure_name='../downstream/output/mouse_analysis/non_ts_clustering/heatmap_non_ts.png',
+                              figure_width=2000,figure_height=20000,res=200)
