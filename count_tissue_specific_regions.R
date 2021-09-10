@@ -39,7 +39,6 @@ dev.off()
 #Generate cluster
 for (seed in 1:10) {
   cut <-0.1
-  seed=1
   
   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
   
@@ -77,6 +76,7 @@ for (seed in 1:10) {
   })
   saveRDS(d2,file=paste0('../downstream/output/mouse_analysis/non_ts_clustering/uc_',cut,'_',seed,'.rds'))
 }
+UC_in=lapply(UC_in,function(x) {colnames(x)=paste0('UC-',colnames(x));return(x)})
 cluster_assignment('../downstream/output/mouse_analysis/non_ts_clustering/',
                     '../downstream/output/mouse_analysis/non_ts_clustering/cluster_assigned/',
                     UC_merge=UC_in,
