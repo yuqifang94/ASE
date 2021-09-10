@@ -76,7 +76,7 @@ for (seed in 1:10) {
   })
   saveRDS(d2,file=paste0('../downstream/output/mouse_analysis/non_ts_clustering/uc_',cut,'_',seed,'.rds'))
 }
-UC_in=lapply(UC_in,function(x) {colnames(x)=paste0('UC-',colnames(x));return(x)})
+UC_in=readRDS(UC_merge_max_loc_file)
 cluster_assignment('../downstream/output/mouse_analysis/non_ts_clustering/',
                     '../downstream/output/mouse_analysis/non_ts_clustering/cluster_assigned/',
                     UC_merge=UC_in,

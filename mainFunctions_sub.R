@@ -1603,7 +1603,7 @@ cluster_assignment<-function(dir_in,dir_out,cluster_region_out_fn,figure_name,UC
   for(ts in names(cluster_out)){
     cluster_out_ts=cluster_out[[ts]]
     UC_ts=UC_merge[[ts]][,grepl('UC-',colnames(UC_merge[[ts]]))]
-    print(core_cluster)
+
     #Define core clusters
     core_cluster=cluster_out_ts[percent_cluster_in==1]
     core_cluster=core_cluster[,list(regions,cluster_1,percent_cluster_in)]
