@@ -1745,9 +1745,10 @@ plot_heatmap_cluster<-function(d,clu,figure_name,figure_width=2000,figure_height
 
     sub_sp=sort(sample(1:nrow(mat_out),round(nrow(mat_out))))
       mat_out_sc=scalematrix(mat_out)
+      print(head(mat_out_sc))
     png(figure_name,
         width=figure_width,
-        height=figure_width,
+        height=figure_height,
         res=res,type='cairo')
     pheatmap(mat_out_sc,cluster_rows = F,
             annotation_row = rowann_out[sub_sp,],
