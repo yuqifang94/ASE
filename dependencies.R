@@ -135,7 +135,9 @@ suppressPackageStartupMessages({
   if (!requireNamespace("topGO", quietly = TRUE))
   {BiocManager::install("topGO")}
   library(topGO)
-  
+  if (!requireNamespace("ggpubr", quietly = TRUE))
+  {install.packages("ggpubr")}
+  library(ggpubr)
   #Motif analysis: need atlas, gcc/5.5.0, R/3.6.1
   if (!requireNamespace("motifbreakR", quietly = TRUE)){
     BiocManager::install("motifbreakR")}

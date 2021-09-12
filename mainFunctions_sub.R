@@ -1444,7 +1444,7 @@ select_top_GO<-function(GO_in,tissue_all,ptcount=0,FDR_cutoff=0.1,FC_cutoff=1.5)
   
 }
 plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=0.1,FC_cutoff=1.5,enc_type="enhancer",
-                              dir_plot='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run/'){
+                              dir_plot='../downstream/output/mouse_analysis/GO_analysis/kmeans_N17_10run/',plot_pdf=T){
   
   select_top_GO_out=select_top_GO(GO_in,tissue_all,ptcount=ptcount,FDR_cutoff=FDR_cutoff,FC_cutoff=FC_cutoff)
   tissue_all_merged=select_top_GO_out$tissue_all_merged
@@ -1473,7 +1473,7 @@ plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=
       tissue_all_merged_top=tissue_all_merged_top_ts,
       FDR_cutoff=FDR_cutoff,
       fn=paste0(figure_dir_single,'GO_single_sample_',ts,'_',region_type,'_',enc_type,'.pdf'),
-      term_ft=F
+      term_ft=F,plot_pdf=T
     )
     
     
@@ -1481,7 +1481,7 @@ plot_GO_heatmap_all<-function(tissue_all,GO_in,region_type,ptcount=0,FDR_cutoff=
 }
 
 
-plot_GO_heatmap<-function(tissue_all_merged,tissue_all_merged_top,fn,FDR_cutoff,term_ft=T){
+plot_GO_heatmap<-function(tissue_all_merged,tissue_all_merged_top,fn,FDR_cutoff,term_ft=T,plot_pdf=T){
   tissue_all_merged_sel=tissue_all_merged[Term %in% tissue_all_merged_top$Term]
   if(nrow(tissue_all_merged_sel)>0){
     #reshape main matrix and FDR matrix

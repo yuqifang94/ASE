@@ -38,7 +38,8 @@ for (seed in 1:10) {
     names(clu) <- n
     clu
   })
-  saveRDS(d,file=paste0('/home-4/zji4@jhu.edu/scratch/andy_ASE/cluster/res/uc_',cut,'_',seed,'.rds'))
+  
+  saveRDS(d,file=paste0('../downstream/input/mouse_analysis/clustering/tissue_specific/uc_',as.character(gsub('\\.','',cut)),'/uc_',cut,'_',seed,'.rds'))
 }
 
 
