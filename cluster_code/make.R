@@ -1,7 +1,7 @@
 library(RColorBrewer)
 library(pheatmap)
 setwd('../')
-source('mainFunction_sub.R')
+source('mainFunctions_sub.R')
 cut <- as.numeric(commandArgs(trailingOnly = T))
 for (seed in 1:10) {
   #see fulluc.R
