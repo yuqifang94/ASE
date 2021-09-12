@@ -39,13 +39,10 @@ dev.off()
 #Generate cluster
 for (seed in 1:10) {
   cut <-0.1
-  
-  timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
-  
   aid <- sapply(names(UC_in),function(i) {
     names(which(rowSums(UC_in[[i]] > cut) > 0))
   })  
-  
+   timeorder <- sapply(1:20,function(i) paste0('E',i,'.5-E',i+1,'.5'))
   d2 <- sapply(names(UC_in),function(i) {
     ###### this is the line to ensure it's > cut in only one tissue
     #sid <- setdiff(aid[[i]],unlist(aid[names(aid)!=i]))
@@ -84,8 +81,8 @@ cluster_assignment('../downstream/output/mouse_analysis/non_ts_clustering/',
                     cutoffs=0.1,
                     cluster_region_out_fn=paste0('../downstream/output/mouse_analysis/non_ts_clustering/cluster_assginment_filtered_',cutoff_char,'.rds'),
                     figure_name='../downstream/output/mouse_analysis/non_ts_clustering/heatmap_non_ts.png',
-                    figure_width=5000,figure_height=50000,res=500)
-clu=readRDS( paste0('../downstream/output/mouse_analysis/non_ts_clustering/cluster_assginment_filtered_',cutoff_char,'.rds'))
-plot_heatmap_cluster(UC_in,clu,
-                    figure_name='../downstream/output/mouse_analysis/non_ts_clustering/heatmap_non_ts.png',
-                    figure_width=2000,figure_height=50000,res=200)
+                    figure_width=2000,figure_height=20000,res=200)
+# clu=readRDS( paste0('../downstream/output/mouse_analysis/non_ts_clustering/cluster_assginment_filtered_',cutoff_char,'.rds'))
+# plot_heatmap_cluster(UC_in,clu,
+#                     figure_name='../downstream/output/mouse_analysis/non_ts_clustering/heatmap_non_ts.png',
+#                     figure_width=2000,figure_height=20000,res=200)

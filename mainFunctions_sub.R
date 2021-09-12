@@ -2221,7 +2221,7 @@ dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff){
   return(cutoff_dt)
 }
 
-plot_correlation<-function(tissue_out_filtered,pdf_fn){
+plot_correlation<-function(tissue_out_filtered,pdf_fn,plot_pdf=T){
   tissue_out_filtered=do.call(rbind,tissue_out_filtered)
   tissue_out_filtered$region_type=factor(tissue_out_filtered$region_type,
                                          levels=c("MML only","NME only","Both","Neither"))
@@ -2231,17 +2231,18 @@ plot_correlation<-function(tissue_out_filtered,pdf_fn){
   tissue_out_filtered_frequency_p[,list(minp=min(percentage),maxp=max(percentage)),by=list(region_type)]
   print(t.test(tissue_out_filtered_frequency_p[region_type=="MML only"]$percentage,
          tissue_out_filtered_frequency_p[region_type=="NME only"]$percentage,alternative = "less"))
-  
-  
-  pdf(pdf_fn,width=7,height=16)
-  print(ggplot(tissue_out_filtered_frequency, aes(y=count, x=tissue,fill=region_type)) + 
+  plot_out=ggplot(tissue_out_filtered_frequency, aes(y=count, x=tissue,fill=region_type)) + 
           geom_bar( stat="identity",position="fill")+ylab("")+xlab("")+
           
           theme_classic()+theme(axis.text.x=element_text(size=32,angle=90),
                                 axis.text.y=element_text(size=32))+
           scale_fill_manual(values=brewer.pal(4,'Set1'))+guides(fill=guide_legend(nrow=2,byrow=TRUE))+
-          theme(legend.position = "bottom",legend.title = element_blank(),legend.text =element_text(size=28)))
+          theme(legend.position = "bottom",legend.title = element_blank(),legend.text =element_text(size=28))
+  if(plot_pdf){
+  pdf(pdf_fn,width=7,height=16)
+  print(plot_out)
   dev.off()
+  }else{return(plot_out)}
   
 }
 assign_regions<-function(tissue_out_filtered,folder_in_clu,DNAase){
