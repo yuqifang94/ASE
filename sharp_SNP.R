@@ -1,6 +1,0 @@
-source('mainFunctions_sub.R')
-GR_merge=readRDS(GR_merge_file)
-sharp_SNP=read_xlsx('../downstream/input/human_analysis/sharp_SNP.xlsx',skip=1)
-sharp_SNP=GRanges(seqnames=sharp_SNP$`Chr, hg19`,ranges=IRanges(start=sharp_SNP$`Rare SNV MapInfo`,end=sharp_SNP$`Rare SNV MapInfo`))
-variant_HetCpG=readRDS(variant_HetCpG_meta_file)
-subsetByOverlaps(variant_HetCpG,sharp_SNP)
