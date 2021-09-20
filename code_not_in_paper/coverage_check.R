@@ -35,6 +35,20 @@ for (fn in dir(pattern='*.cov')){
   bed_out=c(bed_out,bed_in)
   
 }
+#Mouse coverage
+cov_dir='../downstream/data/coverage_mouse/'
+bed_out=GRanges()
+for (fn in dir(cov_dir,pattern='*.cov')){
+  bed_in=import.bedGraph(paste0(cov_dir,fn))
+  sample=gsub('_all.sort.dup.bam.agnostic.cov','',fn)
+  bed_in$coverage=bed_in$NA.2
+  bed_in$Sample=sample
+  bed_in=bed_in[seqlevels(bed_in)%in%paste0('chr',1:19)]
+  mcols(bed_in)=mcols(bed_in)[,c('coverage','Sample')]
+  bed_out=c(bed_out,bed_in)
+  
+}
+saveRDS(bed_out,'../downstream/output/mouse_analysis/mouse_coverage.rds')
 #ASM coverage
 #for fn in ../bam_asm/*.bam; do sbatch coverage_calc.sh hg19_all_CpG.bed $fn "${fn/\.\.\/bam_asm\//}".agnostic.cov; done
 
