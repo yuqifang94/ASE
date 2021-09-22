@@ -16,7 +16,8 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
 #588188 used for clustering
 #
 figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',gsub('.','',cutoffs),'.tiff')
-cluster_assignment(dir_cluster_in_01,dir_out_cluster01,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn,figure_path=figure_path)
+cluster_assignment(dir_cluster_in_01,dir_out_cluster01,cutoffs=0.1,cluster_region_out_fn=cluster_01_region_out_fn,
+                    figure_path=figure_path,figure_width=1800,figure_height=2000,res=200)
 #Merge into data table
 #Filtered result
 cor_dt_pre_process_fn=paste0(dir_out_rds_correlation,'correlation_dt_N17_kmeans_10run_filtered_all_regions.rds')

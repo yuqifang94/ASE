@@ -1,5 +1,10 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=10),
+                                 axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
+                                 axis.text.x=element_text(size=6),
+                                 axis.text.y=element_text(size=6))
 # get all variant to prepare motifbreakR analysis---------------------------------------------------------
 variant_HetCpG=readRDS(variant_HetCpG_file)
 names(variant_HetCpG)=NULL
@@ -32,7 +37,13 @@ write.csv(motif_dir_dNME[FDR<=0.1&Proportion>0.5,list(TF,proportion_high_NME,Pva
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/table1_motif_prefer_high_NME.csv')
 write.csv(motif_dir_dNME[FDR<=0.1&Proportion<0.5,list(TF,Proportion=proportion_low_NME,`Pvalue`,FDR)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/table2_motif_prefer_low_NME.csv')
-
+write.table(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[order(FDR,-Proportion )]$TF),"::")),'../downstream/output/human_analysis/motif_analysis/dNME_bg_gene.txt',row.names = F,col.names = F,quote=F)
+NME_only_GO=GO_run(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[FDR<=0.1]$TF),"::")),
+                   unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[order(FDR,-Proportion )]$TF),"::")),1,mapping="org.Hs.eg.db")
+write.csv(NME_only_GO[FDR<=0.2&FC>=1.5],'../downstream/output/human_analysis/motif_analysis/NME_only_topGO.csv')
+pdf('../downstream/output/human_analysis/motif_analysis/ASCL1_NME_allele.pdf',width=2.35,height=2.35)
+plot_merge_SNP_motif(variant_HetCpG_meta,motif_gene,motif="ASCL1",stat="NME",pval_cutoff=pval_cutoff,theme_glob=theme_glob)
+dev.off()
 #MML
 motif_dir_dMML=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
                                        unique(motif_gene$geneSymbol),pval_cutoff=0.1,stat="MML")
@@ -46,8 +57,14 @@ write.csv(motif_dir_dMML[FDR<=0.1&Proportion<0.5,list(TF,Proportion=Proportion_l
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_low_MML.csv')
 write.csv(motif_dir_dMML[FDR<=0.1&Proportion>0.5,list(TF,Proportion_high_MML,Pvalue,FDR)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_high_MML.csv')
+write.table(unlist(strsplit(gsub('\\(.*',"",motif_dir_dMML[order(FDR,-Proportion )]$TF),"::")),'../downstream/output/human_analysis/motif_analysis/dMML_bg_gene.txt',row.names = F,col.names = F,quote=F)
+MML_only_GO=GO_run(unlist(strsplit(gsub('\\(.*',"",motif_dir_dMML[FDR<=0.1]$TF),"::")),
+                   unlist(strsplit(gsub('\\(.*',"",motif_dir_dMML[order(FDR,-Proportion )]$TF),"::")),1,mapping="org.Hs.eg.db")
+write.csv(MML_only_GO[FDR<=0.2&FC>=1.5],'../downstream/output/human_analysis/motif_analysis/MML_only_topGO.csv')
 
-
+pdf('../downstream/output/human_analysis/motif_analysis/LEF1_MML_allele.pdf',width=2.35,height=2.35)
+plot_merge_SNP_motif(variant_HetCpG_meta,motif_gene,motif="LEF1",stat="MML",pval_cutoff=pval_cutoff,theme_glob=theme_glob)
+dev.off()
 # Find low MML and high NME only ------------------------------------------
 #Rename columns
 low_MML=motif_dir_dMML[FDR<=0.1&Proportion<0.5]$TF

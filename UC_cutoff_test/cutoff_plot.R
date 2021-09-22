@@ -50,3 +50,9 @@ UC_ecdf=ecdf(fastDoCall('c',lapply(UC,as.vector)))
 saveRDS(UC_ecdf,'../downstream/output/mouse_analysis/cutoff_testing/UC_ecdf.rds')
 UC_ecdf_rowMax=ecdf(fastDoCall('c',lapply(UC,rowMaxs)))
 saveRDS(UC_ecdf_rowMax,'../downstream/output/mouse_analysis/cutoff_testing/UC_ecdf_rowMax.rds')
+
+ 
+#Plotting the UC01 ones
+figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',gsub('.','',cutoffs),'.tiff')
+clu=readRDS(cluster_01_region_out_fn)
+plot_heatmap_cluster(d,clu,figure_name,figure_width=1800,figure_height=2000,res=200)

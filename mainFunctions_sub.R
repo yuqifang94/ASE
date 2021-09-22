@@ -926,17 +926,37 @@ direction_calc_enriched_subj<-function(motif_loc,variant_all,gene_in,pval_cutoff
   
   return(do.call(rbind,motif_direction_out))
 }
-
-direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,nperm=0,stat="NME"){
-  motif_gene_subj=motif_gene_subj[motif_gene_subj$geneSymbol==tf]
-  variant_gene=variant_gene[mcols(variant_gene)[[paste0('d',stat,'_pval')]]<=pval_cutoff]
+merge_SNP_motif<-function(variant_gene,motif_gene_subj,stat){
   olap=findOverlaps(variant_gene,motif_gene_subj)
   variant_gene=variant_gene[queryHits(olap)]
   variant_gene$alleleDiff=motif_gene_subj$alleleDiff[subjectHits(olap)]
   variant_gene=variant_gene[!is.na(variant_gene$alleleDiff)]
-  
-  #alleleDiff is calculated use ref - alt, prefer low ent ones
   variant_gene$stat_diff=mcols(variant_gene)[[paste0('alt',stat)]]-mcols(variant_gene)[[paste0('ref',stat)]]
+
+  return(variant_gene)
+  
+}
+plot_merge_SNP_motif<-function(variant_gene,motif_gene_subj,stat,motif,pval_cutoff,theme_glob){
+  motif_out=merge_SNP_motif(variant_gene[mcols(variant_gene)[[paste0('d',stat,'_pval')]]<=pval_cutoff],motif_gene [motif_gene$geneSymbol==motif],stat=stat)
+  motif_out=convert_GR(motif_out,direction='DT')
+  motif_out$`High binding affinity`=NaN
+  motif_out$`Low binding affinity`=NaN
+  #AlleleDiff is using alt-ref
+  motif_out[alleleDiff<0]$`High binding affinity`=motif_out[alleleDiff<0,paste0("ref",stat),with=F]
+  motif_out[alleleDiff>0]$`High binding affinity`=motif_out[alleleDiff>0,paste0("alt",stat),with=F]
+  motif_out[alleleDiff<0]$`Low binding affinity`=motif_out[alleleDiff<0,paste0("alt",stat),with=F]
+  motif_out[alleleDiff>0]$`Low binding affinity`=motif_out[alleleDiff>0,paste0("ref",stat),with=F]
+  motif_out=melt.data.table(motif_out[,list(`High binding affinity`,`Low binding affinity`,region)],id.vars='region',value.name = "stat")
+  print(ggplot(motif_out,aes(x=variable,y=stat))+
+          geom_violin()+xlab("")+
+          stat_summary(fun=median, geom="point", size=2, color="red")+
+          ylab(stat)+ggtitle(motif)+theme_glob)
+}
+direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,nperm=0,stat="NME"){
+  variant_gene=merge_SNP_motif(variant_gene[mcols(variant_gene)[[paste0('d',stat,'_pval')]]<=pval_cutoff],
+                                motif_gene_subj[motif_gene_subj$geneSymbol==tf],stat=stat)
+  #alleleDiff is calculated use ref - alt, prefer low ent ones
+
   same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$stat_diff),na.rm = TRUE)
   opposite_dir=sum(sign(variant_gene$alleleDiff)!= sign(variant_gene$stat_diff),na.rm = TRUE)
   # same_dir=sum(sign(variant_gene$alleleDiff)== sign(variant_gene$MML_diff),na.rm = TRUE)
@@ -1245,12 +1265,12 @@ get_mm10_tss<-function(){
   
 }
 #GO annotation
-GO_run<-function(gl,back,cluster,ptcount=0){
+GO_run<-function(gl,back,cluster,ptcount=0,mapping="org.Mm.eg.db"){
   
   geneList <- factor(as.integer(back %in% gl))
   names(geneList) <- back
   suppressMessages({GOdata <- new("topGOdata", ontology = "BP", allGenes = geneList,geneSel=function(a) {a},
-                                  annot = annFUN.org, mapping = "org.Mm.eg.db", ID = "Symbol")
+                                  annot = annFUN.org, mapping = mapping, ID = "Symbol")
   resultFisher <- runTest(GOdata, algorithm = "classic", statistic = "fisher")})
   # pval <- score(resultFisher)
   # pval_adj <- p.adjust(pval, method="BH")
