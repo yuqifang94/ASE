@@ -951,6 +951,7 @@ plot_merge_SNP_motif<-function(variant_gene,motif_gene_subj,stat,motif,pval_cuto
           geom_violin()+xlab("")+
           stat_summary(fun=median, geom="point", size=2, color="red")+
           ylab(stat)+ggtitle(motif)+theme_glob)
+  return(motif_out)
 }
 direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,nperm=0,stat="NME"){
   variant_gene=merge_SNP_motif(variant_gene[mcols(variant_gene)[[paste0('d',stat,'_pval')]]<=pval_cutoff],
