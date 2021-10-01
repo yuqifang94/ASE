@@ -85,11 +85,11 @@ color_theme=c(rainbow(length(unique(variant_HetCpG_meta_dt$SNP))))
 variant_SNP_tri=data.table()
 variant_SNP_tri_out=list()
 names(color_theme)=unique(variant_HetCpG_meta_dt$SNP)
-theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
-                                 axis.title.x=element_text(hjust=0.5,size=16,face="bold"),
-                                 axis.title.y=element_text(hjust=0.5,size=16,face="bold"),
-                                 axis.text.x=element_text(size=12),
-                                 axis.text.y=element_text(size=12))
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
+                                 axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
+                                 axis.text.x=element_text(size=7),
+                                 axis.text.y=element_text(size=7))
 # text=element_text(family="Space Mono"))
 for (sn in unique(variant_HetCpG_meta_dt$SNP)){
   #OR calculation
@@ -159,6 +159,24 @@ cor.test(GR_merge_dt[dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$dNME_relativ
          GR_merge_dt[dNME_pval<=pval_cutoff&dNME_pval<=pval_cutoff&GR_merge_dt$CpGdiff!=0]$density_diff)
 
 #Figure C for density
+#compare allele with more CpG vs allele with fewer CpG
+GR_merge_dt_CG_diff=GR_merge_dt[dNME_pval<=pval_cutoff]
+GR_merge_dt_CG_diff[,`more CG`:=c(NME1,NME2)[which.max(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff))][,`fewer CG`:=c(NME1,NME2)[which.min(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff))]
+GR_merge_dt_CG_diff_mt=melt.data.table(GR_merge_dt_CG_diff[g1CG!=g2CG,list(`more CG`,`fewer CG`)],id.vars=NULL,variable.name = "region_type",value.name="NME")
+all_NME=c(GR_merge_dt_CG_diff$NME1,GR_merge_dt_CG_diff$NME2)
+GR_merge_dt_CG_diff_mt=rbind(GR_merge_dt_CG_diff_mt,data.table(region_type="all",NME=all_NME))
+
+pdf(paste0(figure_path,'CpG_number_NME_hg19_violin.pdf'),width=4,height=2)
+ggplot(GR_merge_dt_CG_diff_mt,aes(x=region_type,y=NME,fill=region_type))+geom_violin()+xlab("allele type")+theme_glob+theme(legend.position = "none")
+dev.off()
+
+CG_difference=ggplot(GR_merge_dt_CG_diff[g1CG!=g2CG],aes(x=`more CG`,y=`fewer CG`))+geom_hex()+theme_glob+theme(legend.position = "none")+ggtitle("Allele has CG difference")
+noCG_difference=ggplot(GR_merge_dt_CG_diff[g1CG==g2CG],aes(x=NME1,y=NME2))+geom_hex()+theme_glob+theme(legend.position = "none")+ggtitle("Allele has no CG difference")
+pdf(paste0(figure_path,'CpG_number_NME_hg19_scatter.pdf'),width=4.75,height=10)
+ggarrange(CG_difference,noCG_difference,ncol=1)
+dev.off()
+
+t.test(x=GR_merge_dt_CG_diff[g1CG!=g2CG]$`more CG`,y=GR_merge_dt_CG_diff[g1CG!=g2CG]$`fewer CG`,paired=TRUE,alternative="less")
 #Categorizing regions
 GR_merge_dt$CpG_stat="No difference"
 GR_merge_dt[CpGdiff!=0]$CpG_stat="With CpG difference"
@@ -166,7 +184,7 @@ GR_merge_dt$CpG_stat=factor(GR_merge_dt$CpG_stat,levels = c("With CpG difference
 #Always using allele with more CG minus alleles with less CG
 GR_merge_dt$dNME_relative_more_less=GR_merge_dt$dNME_relative
 GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative_more_less=GR_merge_dt[GR_merge_dt$CpGdiff!=0]$dNME_relative*sign(GR_merge_dt[GR_merge_dt$CpGdiff!=0]$CpGdiff)
-#Test for if "With CpG difference" is significantly smaller thant "No difference"
+#Test for if "With CpG difference" is significantly smaller than "No difference"
 t.test(GR_merge_dt[CpGdiff!=0&dNME_pval<=pval_cutoff]$dNME_relative_more_less,alternative="less")
 #Figure C
 pdf(paste0(figure_path,'CpG_number_NME_hg19.pdf',width=7,height=7))

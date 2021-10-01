@@ -1,5 +1,4 @@
 This folder contains all the script that generate the region samples for CPEL analysis and read the outputs
-data_collection: contains linux script to download data
 bin_enhancer_read.R: read in the supplmentary table 8c from PMID:32728240
 counting_ASM.R: count number of ASM events
 CPEL_submission_file_gen.R: generating the submission file for NME, MML and UC calculation for CPEL
