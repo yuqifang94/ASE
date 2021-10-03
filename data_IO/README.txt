@@ -4,3 +4,4 @@ counting_ASM.R: count number of ASM events
 CPEL_submission_file_gen.R: generating the submission file for NME, MML and UC calculation for CPEL
 gff_file_generation.R: generating gff file based for CPEL analysis for human and mouse
 pre_process_CPEL.R: reading in UC, NME, MML and merge them into R object
+bedGraph_to_bw.sh: convert bedGraph files to bigwig files for submission
