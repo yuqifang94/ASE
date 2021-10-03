@@ -1,7 +1,6 @@
 #!/bin/bash
 #$ -l cee,mf=3G,h_vmem=4G
 #$ -pe local 1
-#$ -wd ../
 #$ -o "../logfiles/bedGrpah-bw-$JOB_ID.err"
 #$ -j y
 #$ -m ebas
