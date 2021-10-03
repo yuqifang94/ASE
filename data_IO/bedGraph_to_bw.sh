@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l cee,mf=3G,h_vmem=4G
+#$ -l cee,mf=1G,h_vmem=2G
 #$ -pe local 2
 #$ -wd ../
 #$ -o "../logfiles/cutoff-test-$JOB_ID.err"
