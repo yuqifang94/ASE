@@ -2,11 +2,11 @@
 #$ -l cee,mf=3G,h_vmem=4G
 #$ -pe local 1
 #$ -wd ../
-#$ -o "../logfiles/cutoff-test-$JOB_ID.err"
+#$ -o "../logfiles/bedGrpah-bw-$JOB_ID.err"
 #$ -j y
 #$ -m ebas
 #$ -M "yfang27@jhmi.edu"
-#$ -N cutoff_test
+#$ -N bedGraph-bw
 # Args
 bedGraph_in="$1"
 output_dir="$2"
