@@ -1,5 +1,5 @@
 #!/bin/bash
-#$ -l cee,mf=3G,h_vmem=4G
+#$ -l cee,mf=1G,h_vmem=1.5G
 #$ -pe local 1
 #$ -o "../logfiles/bedGrpah-bw-$JOB_ID.err"
 #$ -j y
