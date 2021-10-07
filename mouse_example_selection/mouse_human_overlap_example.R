@@ -3,7 +3,7 @@ source('mainFunctions_sub.R')
 # reading in the Ken's file -----------------------------------------------
 Ken_motif_in='../downstream/input/mouse_analysis/motif_enrichment/'
 motif_enrichment_out=data.table()
-for(fn in dir(Ken_motif_in,pattern='NME_only.csv')){
+for(fn in dir(Ken_motif_in,pattern='dNME_NME_only.csv')){
   Ken_motif=fread(paste0(Ken_motif_in,fn))
   Ken_motif$tissue=gsub('_.*','',fn)
   Ken_motif=Ken_motif[human_high_NME==TRUE]

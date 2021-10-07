@@ -13,7 +13,7 @@ output_dir="$2"
 intermediate_dir="$3"
 chrom_size_file="$4"
 fn=${bedGraph_in/*\//}
-bw_out=${fn/\.bedGraph/.bw}
+#bw_out=${fn/\.bedGraph/.bw}
 
 # Cut bedfile for first row (data)
 cut -f1,2,3,4 $bedGraph_in > $intermediate_dir$fn.cut

@@ -81,8 +81,8 @@ colnames(enhancer_regions_motif_dNME_all_dNME)=c('Tissue','Motif','Cluster','Gen
 enhancer_regions_motif_dMML_all_dMML=do.call(rbind,enhancer_regions_motif_dMML_all)
 enhancer_regions_motif_dMML_all_dMML=enhancer_regions_motif_dMML_all_dMML[region_type=='MML only',list(tissue,dMML_motif,cluster,gene,dNME_max_pair,dNME_cor,dMML_max_pair,dMML_cor,UC_max_time,PMID)]
 colnames(enhancer_regions_motif_dMML_all_dMML)=c('Tissue','Motif','Cluster','Gene','dNME','dNME-UC correlation','dMML','dMML-UC correlation','Stage','PMID')
-write.csv(enhancer_regions_motif_dNME_all_dNME,paste0(mouse_motif_dir,'merged_motif_dNME.csv',row.names = F)
-write.csv(enhancer_regions_motif_dMML_all_dMML,paste0(mouse_motif_dir,'merged_motif_dMML.csv',row.names = F)
+write.csv(enhancer_regions_motif_dNME_all_dNME,paste0(mouse_motif_dir,'merged_motif_dNME.csv',row.names = F))
+write.csv(enhancer_regions_motif_dMML_all_dMML,paste0(mouse_motif_dir,'merged_motif_dMML.csv',row.names = F))
 # Reformat motif from Ken -------------------------------------------------
 
 dMML_motifs=data.table()
@@ -93,7 +93,7 @@ for(fn in dir(Ken_motif_folder,pattern='dMML')){
   csv_in$motif=gsub('.*_','',csv_in$motif)
   dMML_motifs=rbind(dMML_motifs,csv_in[,list(tissue,motif,human_high_NME,residual,log_OR_dMML,normalized_log_OR_dMML,FDR_dMML)])
 }
-write.csv(dMML_motifs,paste0(mouse_motif_dir,'Ken_dMML_all.csv')
+write.csv(dMML_motifs,paste0(mouse_motif_dir,'Ken_dMML_all.csv'))
 dNME_motifs=data.table()
 for(fn in dir(Ken_motif_folder,pattern='dNME')){
   ts=gsub('_.*','',fn)
@@ -102,4 +102,29 @@ for(fn in dir(Ken_motif_folder,pattern='dNME')){
   csv_in$motif=gsub('.*_','',csv_in$motif)
   dNME_motifs=rbind(dNME_motifs,csv_in[,list(tissue,motif,human_high_NME,residual,log_OR_dNME,normalized_log_OR_dNME,FDR_dNME)])
 }
-write.csv(dNME_motifs,paste0(mouse_motif_dir,'Ken_dNME_all.csv')
+write.csv(dNME_motifs,paste0(mouse_motif_dir,'Ken_dNME_all.csv'))
+
+
+# reading in each motif and subset NME only in human ----------------------
+Ken_motif_in='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
+enhancer_motif_all=fread(paste0(mouse_motif_dir,"merged_motif_dNME.csv"))
+for(ts in unique(enhancer_motif_all$Tissue)){
+  ts_NME_only=fread(paste0(Ken_motif_in,ts,'_OR_residual_dNME.csv'))
+  ts_human_NME_only=unlist(strsplit(gsub('.*_|\\(.*','',ts_NME_only[human_high_NME==TRUE]$motif),"::"))
+  enhancer_motif_all[Tissue==ts]$Motif=unlist(lapply(strsplit(enhancer_motif_all[Tissue==ts]$Motif,";"),function(x) paste(x[toupper(x)%in%toupper(ts_human_NME_only)],collapse=";")))
+  
+  
+}
+write.csv(enhancer_motif_all,paste0(mouse_motif_dir,"merged_motif_dNME_human_only.csv"),row.names = F)
+
+# reading in each motif and subset NME only all ----------------------
+Ken_motif_in='../downstream/input/mouse_analysis/motif_analysis/mouse_motif_enrichment_0526/'
+enhancer_motif_all=fread(paste0(mouse_motif_dir,"merged_motif_dNME.csv"))
+for(ts in unique(enhancer_motif_all$Tissue)){
+  ts_NME_only=fread(paste0(Ken_motif_in,ts,'_OR_residual_dNME.csv'))
+  ts_human_NME_only=unlist(strsplit(gsub('.*_|\\(.*','',ts_NME_only$motif),"::"))
+  enhancer_motif_all[Tissue==ts]$Motif=unlist(lapply(strsplit(enhancer_motif_all[Tissue==ts]$Motif,";"),function(x) paste(x[toupper(x)%in%toupper(ts_human_NME_only)],collapse=";")))
+  
+  
+}
+write.csv(enhancer_motif_all,paste0(mouse_motif_dir,"merged_motif_dNME_all.csv"),row.names = F)
