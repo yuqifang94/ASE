@@ -85,7 +85,7 @@ for(ts in tissue_all){
         
         })
 }
-  # UC_maxUC is wrong
+
 saveRDS(GO_out_all,paste0(output_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_enhancer.rds'))
 GO_out_all=readRDS(paste0(output_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_enhancer.rds'))
 tissue_select=names(which(table(select_top_GO(GO_out_all,names(GO_out_all),ptcount=0,FDR_cutoff=0.2,FC_cutoff=1.5)[[1]][FDR<=0.2&FC>=1.5]$tissue)>0))
