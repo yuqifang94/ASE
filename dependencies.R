@@ -2,7 +2,9 @@ suppressPackageStartupMessages({
   if (!requireNamespace("ggfortify", quietly = TRUE))
   {
     install.packages("glue")
-    BiocManager::install("ggfortify")}
+    BiocManager::install("ggfortify")
+    }
+  library(ggfortify)
   if (!requireNamespace("xlsx", quietly = TRUE))
   {
     install.packages("xlsx")

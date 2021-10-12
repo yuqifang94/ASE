@@ -43,21 +43,22 @@ for (sp in unique(NME_in$Sample)){
 #MML: check: 53478342
 saveRDS(list(NME_hypervar_calc=NME_hypervar_calc,
              MML_hypervar_calc=MML_hypervar_calc),
-             paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous2_MAV.rds'))
+             paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous3_MAV.rds'))
 # Find number of overlapped regions ---------------------------------------
 
-hyper_var_all=readRDS(paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous2_MAV.rds'))#cor=0.211722 
+hyper_var_all=readRDS(paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous3_MAV.rds'))#cor=0.211722 
 hyper_var_all=lapply(hyper_var_all,function(x) x[x$N>=2])
 hyper_var_all=lapply(hyper_var_all,convert_GR,direction='DT')
 #Figure 3C and D in different context
-#0.1744904 
+#0.2324964
 dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="hypervar_logvar",dir=NME_MAV_human_out_dir)
 dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="mean",dir=NME_MAV_human_out_dir)
 dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="var",dir=NME_MAV_human_out_dir)
 hyper_var_all$NME_hypervar_calc$CV=sqrt(hyper_var_all$NME_hypervar_calc$var)/hyper_var_all$NME_hypervar_calc$mean
 dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="CV")
-
+# 0.1984991
 dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="hypervar_logvar",dir=NME_MAV_human_out_dir)
+#-0.107
 dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="mean",dir=NME_MAV_human_out_dir)
 dist_plot_run(as.data.table(hyper_var_all$MML_hypervar_calc),theme_glob,ylab="MML",stat_in="var",dir=NME_MAV_human_out_dir)
 hyper_var_all$MML_hypervar_calc$CV=sqrt(hyper_var_all$MML_hypervar_calc$var)/hyper_var_all$MML_hypervar_calc$mean

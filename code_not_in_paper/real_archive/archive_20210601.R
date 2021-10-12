@@ -2185,3 +2185,58 @@ GR_merge_dt_perm=GR_merge_dt[,list(perm_larger=olap_perm_test(region,dMML_pval,d
 GR_merge_dt_perm_all=olap_perm_test(GR_merge_dt$region,GR_merge_dt$dMML_pval,GR_merge_dt$dNME_pval,total_perm=10000)
 saveRDS(GR_merge_dt_perm,'../downstream/output/human_analysis/CPEL_outputs/GR_merge_dt_perm.rds')
 saveRDS(GR_merge_dt_perm_all,'../downstream/output/human_analysis/CPEL_outputs/GR_merge_dt_perm_all.rds')
+#Correlation analysis
+#as.character #if(diff(range(cutoff_dt[region_type=='NME only']$dMML))>=0.05&diff(range(cutoff_dt[region_type=='MML only']$dMML))>=0.05){
+    #   subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+    #   cutoff_dt_dNME_only_sm=loess(dNME~dMML,data=cutoff_dt[region_type=='dNME only'])
+    #   cutoff_dt_dMML_only_sm=loess(dNME~dMML,data=cutoff_dt[region_type=='dMML only'])
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_raw_density_',filtered,'.pdf'),width=4,height=4.5)
+    # 
+    #   cat_density=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,fill = after_stat(density)), geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #      geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    # 
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("dMML-UC correlation")+ylab("dNME-UC correlation")
+    #   
+    #   #dev.off()
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_log_density_',filtered,'.pdf'),width=4,height=4.5)
+    #   cat_density_log=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,fill = log(after_stat(density)+0.1)), geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=dMML,y=dNME),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    #     
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("UC-dMML correlation")+ylab("UC-dMML correlation")
+    #   
+    #   #dev.off()
+    #   cutoff_dt$mean=(cutoff_dt$dMML+cutoff_dt$dNME)/2
+    #   cutoff_dt$diff=(cutoff_dt$dNME-cutoff_dt$dMML)
+    #   cutoff_dt=cutoff_dt[order(mean)]
+    #   #pdf(paste0('../downstream/output/correlation/',ts,'_catogry_raw_MA_',filtered,'.pdf'),width=4,height=4.5)
+    #   cat_density_MA_log=ggplot()+
+    #     stat_density_2d(data=tissue_in[subsample_tissue_in],aes(x=cor_mean,y=cor_diff,fill = log(after_stat(density)+0.1)), 
+    #                     geom = "raster", contour = FALSE,n=200)+
+    #     #scale_fill_distiller(palette = "YlOrBr",trans="log10")
+    #     geom_line(data=cutoff_dt[region_type=='dMML FDR cutoff'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_line(data=cutoff_dt[region_type=='dNME FDR cutoff'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dMML only'],aes(x=mean,y=diff),size=1,color="red")+
+    #     geom_smooth(data=cutoff_dt[region_type=='dNME only'],aes(x=mean,y=diff),size=1,color="red")+
+    #     scale_fill_viridis_c()+theme_density+
+    #     #scale_fill_gradientn(colors=mycolors)+
+    #     
+    #     #guides(fill=guide_legend(title="log(density"))+
+    #     xlab("average correlation")+ylab("correlation difference")
+     
+      #dev.off()
