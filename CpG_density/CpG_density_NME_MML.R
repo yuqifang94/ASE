@@ -313,7 +313,7 @@ mm10_CpG=getCpgSitesmm10()
 nme$CG_mm10=countOverlaps(nme,mm10_CpG)
 mml$CG_mm10=countOverlaps(mml,mm10_CpG)
 #the regions are the same for mml and nme so use same gr files
-saveRDS(density_gr,CG_density_mouse)
+
 nme_olap=findOverlaps(nme,density_gr,type='equal')
 nme$CGcont_exp[queryHits(nme_olap)]=density_gr$CGcont_exp[subjectHits(nme_olap)]
 nme$density=nme$CG_mm10/nme$CGcont_exp
@@ -345,5 +345,5 @@ density_mouse_calc(nme,stat_name="MML")
 dev.off()
 
 NME_dt=convert_GR(nme,direction='DT')
-NME_dt_mt=melt.data.table(NME_dt,id.vars=c('region','density_quant','density','CGcont_exp','CG_mm10'),value.name = "NME",variable.name='Sample')
+NME_dt_mt=melt.data.table(NME_dt,id.vars=c('region','density','CGcont_exp','CG_mm10'),value.name = "NME",variable.name='Sample')
 cor.test(NME_dt_mt$NME,NME_dt_mt$density,method='pearson')
