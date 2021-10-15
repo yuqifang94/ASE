@@ -7,6 +7,8 @@
 # get all file location ---------------------------------------------------
 source('file_path.R')
 source('dependencies.R')
+#Set DT use only 1 thread
+setDTthreads(1)
 # main functions ----------------------------------------------------------
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){

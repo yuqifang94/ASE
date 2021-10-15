@@ -13,7 +13,7 @@ aid_tb_dt$n_region_pro=aid_tb_dt$n_region/sum(aid_tb_dt$n_region)
 aid_tb_dt$n_tissue=factor(aid_tb_dt$n_tissue,levels=as.character(1:10))
 pdf(paste0(figure_path,'number_tissue_pass_filter.pdf'))
 ggplot(aid_tb_dt,aes(x=n_tissue,y=n_region_pro))+geom_bar(stat='identity', fill="steelblue")+
-xlab('Number of tissue with regions having UC>=0.1')+ylab('Proportion of regions')+
+xlab('Number of tissue with regions having UC> 0.1')+ylab('Proportion of regions')+
 geom_text(aes(label=round(n_region_pro,digits=2)),vjust=-1.6)
 dev.off()
 #Count overlap enhancers
