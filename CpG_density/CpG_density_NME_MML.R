@@ -346,4 +346,7 @@ dev.off()
 
 NME_dt=convert_GR(nme,direction='DT')
 NME_dt_mt=melt.data.table(NME_dt,id.vars=c('region','density','CGcont_exp','CG_mm10'),value.name = "NME",variable.name='Sample')
-cor.test(as.numeric(NME_dt_mt$NME),NME_dt_mt$density,method='pearson')
+
+
+cor.test(NME_dt_mt$NME,NME_dt_mt$density,method='pearson')
+
