@@ -25,7 +25,8 @@ saveRDS(motif_gene,motif_gene_file)
 motif_gene <- readRDS(motif_gene_file)
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
   #NME
-motif_dir_dNME=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
+  variant_HetCpG_meta_sub=variant_HetCpG_meta[sample(1:length(variant_HetCpG_meta),10000)]
+motif_dir_dNME=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta[sample(1:length(variant_HetCpG_meta),10000)],
                                        unique(motif_gene$geneSymbol),pval_cutoff=0.1,stat="NME")
 colnames(motif_dir_dNME)[c(1,6,7)]=c('TF','Pvalue','Proportion')
 motif_dir_dNME$FDR=p.adjust(motif_dir_dNME$Pvalue,method="BH")
