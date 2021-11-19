@@ -899,9 +899,12 @@ dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cut
   #Use correlation between hypervaribility quantile and NME
   # plot_informME_dat_cor=plot_informME_dat_ft[,list(median_score=median(score)),
   #                                         by=list(exp_stat,gene,hypervarquant,Sample)]
-  cor_out=cor.test(plot_informME_dat_ft$score,plot_informME_dat_ft$hypervarquant)
-  cor_mean=plot_informME_dat_ft[,list(cor=cor(score,hypervarquant),pvalue=cor_out$p.value,
-                      lowerCI=cor_out$conf.int[1],upperCI=cor_out$conf.int[2],df=cor_out$parameter,stat=cor_out$statistic),by=list(Sample)]
+  cor_mean=plot_informME_dat_ft[,list(cor=cor(score,hypervarquant),
+                                      pvalue=cor.test(score,hypervarquant)$p.value,
+                                      lowerCI=cor.test(score,hypervarquant)$p.conf.int[1],
+                                      upperCI=cor.test(score,hypervarquant)$p.conf.int[2],
+                                      df=cor.test(score,hypervarquant)$parameter,
+                                      stat=cor.test(score,hypervarquant)$statistic),by=list(Sample)]
   write.csv(cor_mean,paste0(dir,'Figure3A_',ylab,'_',stat_in,'_500bp_tb.csv'),row.names = F)
   print(mean(cor_mean$cor))
   # print(cor.test(plot_informME_dat_cor$median_score,plot_informME_dat_cor$hypervarquant))
