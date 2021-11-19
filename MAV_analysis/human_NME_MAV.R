@@ -15,9 +15,6 @@ MML_in=readRDS(MML_agnostic_file)
 genomic_features=readRDS(genomic_features_file)
 GR_calc=data.frame()
 scRNA_result=data.frame()
-
-
-
 MML_hypervar_calc=GRanges()
 NME_hypervar_calc=GRanges()
 #For the mean expression: log2 or not?
@@ -43,10 +40,10 @@ for (sp in unique(NME_in$Sample)){
 #MML: check: 53478342
 saveRDS(list(NME_hypervar_calc=NME_hypervar_calc,
              MML_hypervar_calc=MML_hypervar_calc),
-             paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous3_MAV.rds'))
+             paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous2_MAV.rds'))
 # Find number of overlapped regions ---------------------------------------
 
-hyper_var_all=readRDS(paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous3_MAV.rds'))#cor=0.211722 
+hyper_var_all=readRDS(paste0(NME_MAV_human_out_dir,'allele_agnostic_var_homogeneous2_MAV.rds'))#cor=0.211722 
 hyper_var_all=lapply(hyper_var_all,function(x) x[x$N>=2])
 hyper_var_all=lapply(hyper_var_all,convert_GR,direction='DT')
 #Figure 3C and D in different context
