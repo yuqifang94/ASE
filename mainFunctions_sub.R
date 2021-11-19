@@ -989,7 +989,7 @@ direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,
     # }else if(prob_binom<0.5){binom.pval=sum(same_dir_perm_prob<=(same_dir/total_data)|same_dir_perm_prob>=(1-(same_dir/total_data)))/nperm}
     #cat(tf,':',binom.pval,'\n')
     return(data.table(TF=unique(motif_gene_subj$geneSymbol),total_data=total_data,same_dir=same_dir,opposite_dir=opposite_dir,
-                      binom.pval_perm=binom.pval,binom.pval=binom$p.value,prob=prob_binom,NSNP=length(variant_gene)
+                      binom.pval_perm=binom.pval,binom.pval=binom$p.value,prob=prob_binom,NSNP=length(variant_gene),
                       CI=paset0('[',binom$conf.int[1],',',binom$$conf.int[2],']'),stringsAsFactors = F))
   }
 }
