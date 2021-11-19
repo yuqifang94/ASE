@@ -142,7 +142,7 @@ ggarrange(plotlist=lapply(SNP_het,function(x) x+ ylab("log(Odds Ratio)")+theme( 
 dev.off()
 
 #Calculate OR for SNPs gaining CG, numbers in text
-OR_calc(variant_HetCpG_meta_dt[dNME_pval<=pval_cutoff],'Gain CG',"CpG_change")
+OR_calc(variant_HetCpG_meta_dt[dNME_pval<=pval_cutoff],'Lose CpG',"CpG_change")
 
 # Density analysis using allele-specific way using regions------------------------------
 GR_merge=readRDS(GR_merge_file)
