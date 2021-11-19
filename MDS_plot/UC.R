@@ -39,7 +39,7 @@ contcv <- c(contcv,'red')
 names(contcv) <- c(setdiff(unique(pd$time),'Center'),'Center')
 
 pdf('/home-4/zji4@jhu.edu/scratch/andy_ASE/MDS/UC_tissue.pdf',width=5.5,height=4.5)
-ggplot() + geom_point(data=pd[pd$tissue!='Center',],aes(x=MDS1,y=MDS2,col=tissue)) + theme_classic() + scale_color_manual(values=cv) + theme(legend.title = element_blank())
+ggplot() + geom_point(data=pd[pd$tissue!='Center',],aes(x=MDS1,y=MDS2,col=tissue)) + theme_classic() + theme(legend.title = element_blank())
 dev.off()
 pdf('/home-4/zji4@jhu.edu/scratch/andy_ASE/MDS/UC_time.pdf',width=5.5,height=4.5)
 ggplot() + geom_point(data=pd,aes(x=MDS1,y=MDS2,col=time)) + theme_classic() + scale_color_manual(values=contcv) + theme(legend.title = element_blank())

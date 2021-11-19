@@ -33,10 +33,10 @@ for(subj in subjects){
 }
 #Result all 0
 
-# Extracting genomic features ---------------------------------------------
+# # Extracting genomic features ---------------------------------------------
 
-genomic_features=getGeneralFeats_CpG("../downstream/input/human_analysis/")
-saveRDS(genomic_features,genomic_features_file)
+# genomic_features=getGeneralFeats_CpG("../downstream/input/human_analysis/")
+# saveRDS(genomic_features,genomic_features_file)
 
 
 # creating merged object --------------------------------------------------
@@ -271,18 +271,25 @@ saveRDS(MML_in[MML_in$N>=2],MML_agnostic_comp_file)
 
 saveRDS(c(readRDS(NME_agnostic_file),
           readRDS(NME_agnostic_DNase_file),
-          readRDS(NME_agnostic_ASM_file),
+          #readRDS(NME_agnostic_ASM_file),
           readRDS(NME_agnostic_comp_file)
                   ),NME_agnostic_all_file)
 saveRDS(c(readRDS(MML_agnostic_file),
           readRDS(MML_agnostic_DNase_file),
-          readRDS(MML_agnostic_ASM_file),
+          #readRDS(MML_agnostic_ASM_file),
           readRDS(MML_agnostic_comp_file)
 ),MML_agnostic_all_file)
 #Unique analyzed region
 unique_gr=unique(granges(MML_all))
 CG_hg19=getCpgSitesH19()
-length(subsetByOverlaps(CG_hg19,unique_gr))/length(CG_hg19[seqnames(CG_hg19) %in% c(paste0('chr',c(1:22,'X','Y')))])#0.8720719
+CG_hg19_autosome=CG_hg19[seqnames(CG_hg19) %in% c(paste0('chr',c(1:22,'X','Y')))]
+length(subsetByOverlaps(CG_hg19_autosome,unique_gr,minoverlap=2))/length(CG_hg19_autosome)#0.7910136
+CG_hg19_covered=countOverlaps(CG_hg19_autosome,unique_gr,minoverlap=2)
+CG_hg19_covered_tb=table(CG_hg19_covered)
+CG_hg19_covered_tb_cov=CG_hg19_covered_tb[names(CG_hg19_covered_tb)!="0"]
+CG_hg19_covered_tb_cov[1]/sum(CG_hg19_covered_tb_cov)#0.7925
+
+
 # reading in mouse MML and NME --------------------------------------------
 #Complimentary regions
 dir_comp='../downstream/data/compliment_MML_NME_model_mouse/'
@@ -381,7 +388,7 @@ UC_in_MDS_comp_P0=data.table(region=gff_in_compliment)
 
 UC_in_MDS_comp_P0_UC=fastDoCall('cbind',
                              mclapply(dir(compliment_MDS_dir_P0,pattern = '.*uc.bedGraph'),function(x){
-                               read.agnostic.mouse.uc(paste(compliment_MDS_dir_P0,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=10))
+                               read.agnostic.mouse.uc(paste(compliment_MDS_dir_P0,x,sep=''),matrix=T,fileter_N=2,gff_in=gff_in_compliment)},mc.cores=20))
 UC_in_MDS_comp_P0_UC=cbind(UC_in_MDS_comp_P0,UC_in_MDS_comp_P0_UC)
 
 
@@ -396,7 +403,7 @@ UC_in_MDS_all_P0=rbind(UC_in_MDS_comp_P0_UC,UC_in_analyzed_MDS_P0)
 
 saveRDS(UC_in_MDS_all_P0,UC_in_MDS_all_P0_file)
 UC_in_all=readRDS(UC_in_MDS_all_file)
-UC_in_MDS_all_P0_all=cbind(UC_in_MDS_all_P0,UC_in_all[-1])
+UC_in_MDS_all_P0_all=cbind(UC_in_MDS_all_P0,UC_in_all[,-1])
 saveRDS(UC_in_MDS_all_P0_all, UC_in_MDS_all_P0_all_file)
 # created merged object for all UC, dMML and dNME ----------------------------------------
 
