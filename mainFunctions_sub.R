@@ -929,7 +929,7 @@ direction_calc_enriched_subj<-function(motif_loc,variant_all,gene_in,pval_cutoff
   #print(motif_sig_df)
   # motif_sig_df=motif_sig_df[which(motif_sig_df$qval<=0.2&motif_sig_df$OR>1),]
   motif_direction_out=mclapply(gene_in,direction_enriched_sample,
-                               variant_gene=variant_all,motif_gene_subj=motif_loc,pval_cutoff=pval_cutoff,stat=stat,mc.cores =1)
+                               variant_gene=variant_all,motif_gene_subj=motif_loc,pval_cutoff=pval_cutoff,stat=stat,mc.cores =10)
   
   
   
