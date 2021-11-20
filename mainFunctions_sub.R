@@ -997,7 +997,7 @@ direction_enriched_sample<-function(tf,variant_gene,motif_gene_subj,pval_cutoff,
     #cat(tf,':',binom.pval,'\n')
     return(data.table(TF=tf,total_data=total_data,same_dir=same_dir,opposite_dir=opposite_dir,
                       binom.pval_perm=binom.pval,binom.pval=binom$p.value,prob=prob_binom,NSNP=length(variant_gene),
-                      CI=paste0('[',round(binom$conf.int[1],digits=2),',',round(binom$conf.int[2],digits=2),']'),stringsAsFactors = F))
+                      lowerCI=binom$conf.int[1],upperCI=binom$conf.int[2],stringsAsFactors = F))
   }
 }
 OMIM_annotation<-function(motif_in,OMIM){

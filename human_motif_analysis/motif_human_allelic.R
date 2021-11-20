@@ -31,7 +31,10 @@ motif_dir_dNME=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
 colnames(motif_dir_dNME)[c(1,6,7)]=c('TF','Pvalue','Proportion')
 motif_dir_dNME$FDR=p.adjust(motif_dir_dNME$Pvalue,method="BH")
 motif_dir_dNME$proportion_high_NME=motif_dir_dNME$Proportion
+motif_dir_dNME$proportion_high_NME_CI=paste0("[",round(motif_dir_dNME$lowerCI,digits=2),' - ',round(motif_dir_dNME$upperCI,digits=2),"]")
 motif_dir_dNME$proportion_low_NME=1-motif_dir_dNME$Proportion
+motif_dir_dNME$proportion_low_NME_CI=paste0("[",round(1-motif_dir_dNME$upperCI,digits=2),' - ',round(1-motif_dir_dNME$lowerCI,digits=2),"]")
+
 saveRDS(motif_dir_dNME,'../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
 motif_dir_dNME=readRDS('../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
 write.csv(motif_dir_dNME[FDR<=0.1&Proportion>0.5,list(TF,proportion_high_NME,Pvalue,FDR)], row.names =F,
@@ -51,7 +54,9 @@ motif_dir_dMML=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
 colnames(motif_dir_dMML)[c(1,6,7)]=c('TF','Pvalue','Proportion')
 motif_dir_dMML$FDR=p.adjust(motif_dir_dMML$Pvalue,method="BH")
 motif_dir_dMML$Proportion_high_MML=motif_dir_dMML$Proportion
+motif_dir_dMML$proportion_high_MML_CI=paste0("[",round(motif_dir_dMML$lowerCI,digits=2),' - ',round(motif_dir_dMML$upperCI,digits=2),"]")
 motif_dir_dMML$Proportion_low_MML=1-motif_dir_dMML$Proportion_high_MML
+motif_dir_dMML$proportion_low_MML_CI=paste0("[",round(1-motif_dir_dMML$upperCI,digits=2),' - ',round(1-motif_dir_dMML$lowerCI,digits=2),"]")
 saveRDS(motif_dir_dMML,'../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
 motif_dir_dMML=readRDS('../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
 write.csv(motif_dir_dMML[FDR<=0.1&Proportion<0.5,list(TF,Proportion=Proportion_low_MML,Pvalue,FDR)], row.names =F,
