@@ -37,9 +37,9 @@ motif_dir_dNME$proportion_low_NME_CI=paste0("[",round(1-motif_dir_dNME$upperCI,d
 
 saveRDS(motif_dir_dNME,'../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
 motif_dir_dNME=readRDS('../downstream/output/human_analysis/motif_analysis/dNME_all.rds')
-write.csv(motif_dir_dNME[FDR<=0.1&Proportion>0.5,list(TF,proportion_high_NME,Pvalue,FDR)], row.names =F,
+write.csv(motif_dir_dNME[FDR<=0.1&Proportion>0.5,list(TF,proportion_high_NME,Pvalue,FDR,proportion_high_NME_CI)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/table1_motif_prefer_high_NME.csv')
-write.csv(motif_dir_dNME[FDR<=0.1&Proportion<0.5,list(TF,Proportion=proportion_low_NME,`Pvalue`,FDR)], row.names =F,
+write.csv(motif_dir_dNME[FDR<=0.1&Proportion<0.5,list(TF,Proportion=proportion_low_NME,Pvalue,FDR,proportion_low_NME_CI)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/table2_motif_prefer_low_NME.csv')
 write.table(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[order(FDR,-Proportion )]$TF),"::")),'../downstream/output/human_analysis/motif_analysis/dNME_bg_gene.txt',row.names = F,col.names = F,quote=F)
 NME_only_GO=GO_run(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[FDR<=0.1]$TF),"::")),
@@ -59,9 +59,9 @@ motif_dir_dMML$Proportion_low_MML=1-motif_dir_dMML$Proportion_high_MML
 motif_dir_dMML$proportion_low_MML_CI=paste0("[",round(1-motif_dir_dMML$upperCI,digits=2),' - ',round(1-motif_dir_dMML$lowerCI,digits=2),"]")
 saveRDS(motif_dir_dMML,'../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
 motif_dir_dMML=readRDS('../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
-write.csv(motif_dir_dMML[FDR<=0.1&Proportion<0.5,list(TF,Proportion=Proportion_low_MML,Pvalue,FDR)], row.names =F,
+write.csv(motif_dir_dMML[FDR<=0.1&Proportion<0.5,list(TF,Proportion=Proportion_low_MML,Pvalue,FDR,proportion_low_MML_CI)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_low_MML.csv')
-write.csv(motif_dir_dMML[FDR<=0.1&Proportion>0.5,list(TF,Proportion_high_MML,Pvalue,FDR)], row.names =F,
+write.csv(motif_dir_dMML[FDR<=0.1&Proportion>0.5,list(TF,Proportion_high_MML,Pvalue,FDR,proportion_high_MML_CI)], row.names =F,
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_high_MML.csv')
 write.table(unlist(strsplit(gsub('\\(.*',"",motif_dir_dMML[order(FDR,-Proportion )]$TF),"::")),'../downstream/output/human_analysis/motif_analysis/dMML_bg_gene.txt',row.names = F,col.names = F,quote=F)
 MML_only_GO=GO_run(unlist(strsplit(gsub('\\(.*',"",motif_dir_dMML[FDR<=0.1]$TF),"::")),
@@ -77,19 +77,21 @@ low_MML=motif_dir_dMML[FDR<=0.1&Proportion<0.5]$TF
 high_NME=motif_dir_dNME[FDR<=0.1&Proportion>0.5]$TF
 motif_dir_dMML$dMML_pvalue=motif_dir_dMML$Pvalue
 motif_dir_dMML$dMML_FDR=motif_dir_dMML$FDR
+motif_dir_dMML$CI=motif_dir_dMML$proportion_low_MML_CI
 motif_dir_dNME$dNME_pvalue=motif_dir_dNME$Pvalue
 motif_dir_dNME$dNME_FDR=motif_dir_dNME$FDR
+motif_dir_dNME$CI=motif_dir_dNME$proportion_high_NME_CI
 #Find low MML only and high NME only
-low_MML_only=cbind(data.table(TF=low_MML[!low_MML%in%high_NME]),
-                   motif_dir_dMML[TF%in%low_MML[!low_MML%in%high_NME]],
-                   motif_dir_dNME[TF%in%low_MML[!low_MML%in%high_NME]])
-high_NME_only=cbind(data.table(high_NME[!high_NME%in%low_MML]),
-                    motif_dir_dNME[TF%in%high_NME[!high_NME%in%low_MML]],
-                    motif_dir_dMML[TF%in%high_NME[!high_NME%in%low_MML]])
+low_MML_TF=low_MML[!low_MML%in%high_NME]
+low_MML_only=cbind(motif_dir_dMML[match(low_MML_TF,TF)],
+                   motif_dir_dNME[match(low_MML_TF,TF)])
+high_NME_TF=high_NME[!high_NME%in%low_MML]
+high_NME_only=cbind(motif_dir_dNME[match(high_NME_TF,TF)],
+                    motif_dir_dMML[match(high_NME_TF,TF)])
 
-write.csv(low_MML_only[order(Proportion_low_MML),list(TF,Proportion_low_MML,dMML_pvalue,dMML_FDR,proportion_high_NME,dNME_pvalue,dNME_FDR)],
+write.csv(low_MML_only[order(Proportion_low_MML),list(TF,Proportion_low_MML,dMML_pvalue,dMML_FDR,proportion_high_NME,dNME_pvalue,dNME_FDR,CI)],
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_low_MML_only.csv',row.names = F)
-write.csv(high_NME_only[order(Proportion_low_MML),list(TF,proportion_high_NME,dNME_pvalue,dNME_FDR,Proportion_low_MML,dMML_pvalue,dMML_FDR)],
+write.csv(high_NME_only[order(proportion_high_NME),list(TF,proportion_high_NME,dNME_pvalue,dNME_FDR,Proportion_low_MML,dMML_pvalue,dMML_FDR,CI)],
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_high_NME_only.csv',row.names = F)
 
 # find OMIM annotations ---------------------------------------------------

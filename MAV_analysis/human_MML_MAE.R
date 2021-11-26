@@ -29,11 +29,11 @@ imrinting_out=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0
       data.table(imprinting="All imprinted\ngenes")),
       
       cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Paternal']),
+           Imprinted_Genes$Gene[Imprinted_Genes[,5]=='Paternal']),
            data.table(imprinting="Paternally\nexpressed")),
 
       cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal']), data.table(imprinting="Maternally\nexpressed"))
+           Imprinted_Genes$Gene[Imprinted_Genes[,5]=='Maternal']), data.table(imprinting="Maternally\nexpressed"))
 )
 imrinting_out$imprinting=factor(imrinting_out$imprinting,levels=imrinting_out$imprinting)
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
@@ -50,9 +50,9 @@ ggplot(imrinting_out,aes(x=imprinting,y=OR))+
 
 dev.off()
 
-
+#This is for dNME
 MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',Imprinted_Genes$Gene)
 MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Paternal'])
+           Imprinted_Genes$Gene[Imprinted_Genes[,5]=='Paternal'])
 MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal'])
+           Imprinted_Genes$Gene[Imprinted_Genes[,5]=='Maternal'])

@@ -1,6 +1,5 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-
 # Human analysis ----------------------------------------------------------
 #ENCFF001TDO from ENCODE is the same file
 #https://github.com/Boyle-Lab/Blacklist/blob/master/lists/Blacklist_v1/
@@ -78,7 +77,7 @@ cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges
 #DNase vs control is also from Ken
 DNAase=readRDS('../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp.rds')
 control=readRDS('../downstream/input/mouse_analysis/DNase_mm10_peak_merge_250bp_control.rds')
-#PRC is from this command: takes long time
+#PRC is from this command: takes long time, from Bin's paper
 #pooled_PRC= read_chromHMM_bed_PRC('../downstream/input/mouse_analysis/enhancer_selection/chromHMM_mm10/pooled/','pooled',blacklist_region,cpgr)
 PRC_binding=readRDS('../downstream/input/mouse_analysis/mm10_PRC.rds')
 PRC_binding=granges(PRC_binding)
@@ -110,10 +109,11 @@ cpgr <- do.call(c, lapply(1:21, function(x) GRanges(names(Mmusculus)[x], IRanges
 gff_gen(mm10_all_comp_break,cpgr,blacklist_region,'../downstream/output/mouse_analysis/mm10_allele_agnostic_analysis_compliment.rds',
         mouse_compliment_gff_file)
 #Sanity check
+seqlength=0
 for(i in c(1:19,'X','Y')){seqlength=seqlength+length(BSgenome.Mmusculus.UCSC.mm10[[paste0('chr',i)]])} 
 mm10_all_break=subdivideGRanges(mm10_all,250)
 mm10_all_break$CpG=countOverlaps(mm10_all_break,cpgr)
-sum(width(mm10_all_comp_break[mm10_all_comp_break$CpG>0]))/seqlength#0.7355
+sum(width(mm10_all_break[mm10_all_break$CpG>0]))/seqlength#0.7355
 # mm10 linux reformat -----------------------------------------------------
 #mm10
 # sed -i 's/%2c/,/g' mm10_allele_agnostic_analysis.gff

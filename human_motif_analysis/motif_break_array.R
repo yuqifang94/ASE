@@ -49,8 +49,8 @@ file_out=args[4]
 method_motif=args[5]
 cat('Reading in',file_in,'for: ',n,'with gap of',1/cut_number,'\n')
 tt1=proc.time()[[3]]
-variant_in=readRDS(paste('../downstream/output/human_analysis/motif_analysis/',file_in,sep=''))
-JASPAR_2020=readRDS('../downstream/input/human_analysis/motif_analysis/JASPAR_2020_human_PFM.rds')
+variant_in=readRDS(paste('../../downstream/output/human_analysis/motif_analysis/',file_in,sep=''))
+JASPAR_2020=readRDS('../../downstream/input/human_analysis/motif_analysis/JASPAR_2020_human_PFM.rds')
 meta_JASPAR=data.frame(providerName=names(JASPAR_2020),providerId=unlist(lapply(JASPAR_2020@listData,function(x) x@ID)),
                        datasource='JASPAR2020',geneSymbol=unlist(lapply(JASPAR_2020@listData,function(x) x@name)),stringsAsFactors = F)
 meta_JASPAR$geneId=mapIds(org.Hs.eg.db,meta_JASPAR$geneSymbol,'ENTREZID','SYMBOL')
@@ -78,7 +78,7 @@ motif_out<- motifbreakR_parallel(snpList = motif_out, filterp = TRUE,
 
 tt3=proc.time()[[3]]
 cat('Motif break finish in',tt3-tt2,'\n')
-saveRDS(motif_out,paste('../downstream/output/human_analysis/motif_analysis/JASPAR_default/',file_out,'_',n,'_',method_motif,'.rds',sep=''))
+saveRDS(motif_out,paste('../../downstream/output/human_analysis/motif_analysis/JASPAR_default/',file_out,'_',n,'_',method_motif,'.rds',sep=''))
 tt4=proc.time()[[3]]
 cat('saving data finish in',tt4-tt3,'\n')
 
