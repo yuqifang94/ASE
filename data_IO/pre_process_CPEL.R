@@ -1,6 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-
+setwd('../')
 # get all hg19 CpG site ---------------------------------------------------
 CpG_hg19=getCpgSitesH19()
 saveRDS(CpG_hg19,'../downstream/input/human_analysis/CpG_hg19.rds')
@@ -124,8 +124,9 @@ variant_HetCpG_meta=fastDoCall('c',lapply(names(variant_HetCpG),variant_meta,var
 #Trinucleotide analysis
 #variant_HetCpG_meta$mask_tri=unlist(lapply(variant_HetCpG_meta$REF_tri,mask_tri))
 saveRDS(variant_HetCpG_meta,variant_HetCpG_meta_file)
-
-
+variant_in_all=granges(variant_HetCpG_meta)
+names(variant_in_all)=variant_HetCpG_meta$snpId
+saveRDS(unique(variant_in_all),'../downstream/output/human_analysis/motif_analysis/variant_in_all.rds')
 # reading in allele-agnostic analysis -------------------------------------
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/allele_agnostic_20kb/'
