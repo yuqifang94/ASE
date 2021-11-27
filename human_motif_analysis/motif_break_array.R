@@ -79,7 +79,7 @@ motif_out<- motifbreakR_parallel(snpList = motif_out, filterp = TRUE,
 
 tt3=proc.time()[[3]]
 cat('Motif break finish in',tt3-tt2,'\n')
-saveRDS(motif_out,paste('../../downstream/output/human_analysis/motif_analysis/JASPAR_default/',file_out,'_',n,'_',method_motif,'.rds',sep=''))
+saveRDS(motif_out,paste('../downstream/output/human_analysis/motif_analysis/JASPAR_default/',file_out,'_',n,'_',method_motif,'.rds',sep=''))
 tt4=proc.time()[[3]]
 cat('saving data finish in',tt4-tt3,'\n')
 
