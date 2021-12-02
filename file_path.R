@@ -92,3 +92,7 @@ compliment_MDS_dir_P0='../downstream/data/UC_MDS_day0/'
 DNase_conrol_MDS_dir='../downstream/data/DNase_control_PRC_MDS_mouse/'
 tissue_specific_out='../downstream/output/mouse_analysis/tissue_specific_enhancer/'
 H3K27ac_output_dt_fn=paste0(tissue_specific_out,'H3K27ac_output_dt.rds')
+hg19_control_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_NME.rds"
+hg19_DNase_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_NME.rds"
+hg19_control_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_MML.rds"
+hg19_DNase_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_MML.rds"

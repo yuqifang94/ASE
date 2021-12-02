@@ -1,5 +1,6 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
+
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=10),
                                  axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
                                  axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
@@ -12,6 +13,7 @@ saveRDS(unique(do.call('c',variant_HetCpG)),
         '../downstream/output/human_analysis/motif_analysis/variant_in_all.rds')
 
 # Read in result ----------------------------------------------------------
+#Checked in clean run 
 motif_dir='../downstream/output/human_analysis/motif_analysis/JASPAR_default/'
 motif_gene=GRanges()
 for(fn in dir(motif_dir)){
@@ -44,7 +46,7 @@ write.csv(motif_dir_dNME[FDR<=0.1&Proportion<0.5,list(TF,Proportion=proportion_l
 write.table(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[order(FDR,-Proportion )]$TF),"::")),'../downstream/output/human_analysis/motif_analysis/dNME_bg_gene.txt',row.names = F,col.names = F,quote=F)
 NME_only_GO=GO_run(unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[FDR<=0.1]$TF),"::")),
                    unlist(strsplit(gsub('\\(.*',"",motif_dir_dNME[order(FDR,-Proportion )]$TF),"::")),1,mapping="org.Hs.eg.db")
-write.csv(NME_only_GO[FDR<=0.2&FC>=1.5],'../downstream/output/human_analysis/motif_analysis/NME_only_topGO.csv')
+write.csv(NME_only_GO[FDR<=0.2&FC>=1.5],'../downstream/output/human_anacelysis/motif_analysis/NME_only_topGO.csv')
 pdf('../downstream/output/human_analysis/motif_analysis/ASCL1_NME_allele.pdf',width=2.35,height=2.35)
 motif_out_ASCL1=plot_merge_SNP_motif(variant_HetCpG_meta,motif_gene,motif="ASCL1",stat="NME",pval_cutoff=pval_cutoff,theme_glob=theme_glob)
 dev.off()

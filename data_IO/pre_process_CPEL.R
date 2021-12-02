@@ -124,12 +124,7 @@ variant_HetCpG_meta=fastDoCall('c',lapply(names(variant_HetCpG),variant_meta,var
 #Trinucleotide analysis
 #variant_HetCpG_meta$mask_tri=unlist(lapply(variant_HetCpG_meta$REF_tri,mask_tri))
 saveRDS(variant_HetCpG_meta,variant_HetCpG_meta_file)
-variant_in_all=granges(variant_HetCpG_meta)
-names(variant_in_all)=variant_HetCpG_meta$snpId
-variant_in_all$REF=variant_HetCpG_meta$REF
-variant_in_all$ALT=variant_HetCpG_meta$ALT
-variant_in_all$snpId=variant_HetCpG_meta$snpId
-saveRDS(unique(variant_in_all),'../downstream/output/human_analysis/motif_analysis/variant_in_all.rds')
+
 # reading in allele-agnostic analysis -------------------------------------
 GR_merge=readRDS(GR_merge_file)
 in_dir='../downstream/data/allele_agnostic_20kb/'

@@ -7,11 +7,11 @@ library(patchwork)
 library(ggsignif)
 library(matrixStats)
 
-setwd("../downstream/output/human_analysis/TFBS_analysis")
+
 
 ##read in NME data
-data_median_com_DNase <- readRDS("human_motif_DNase_median.rds")
-data_median_com_control <- readRDS("human_motif_control_median.rds")
+data_median_com_DNase <- readRDS(hg19_DNase_NME_fn)
+data_median_com_control <- readRDS(hg19_control_NME_fn)
 
 ##get sample order based on column mean
 data_median_com_DNase_colmean <- colMeans(data_median_com_DNase, na.rm=TRUE)
@@ -52,7 +52,7 @@ ht <- Heatmap(data_median_com_filter_sd, name = "NME",
 
 )
 
-pdf("motif_NME_heatmap_median_human_DNase_control_agnostic.pdf", width=20, height=40, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_NME_heatmap_median_human_DNase_control_agnostic.pdf"), width=20, height=40, family='ArialMT', useDingbats=FALSE)
 draw(ht)
 dev.off()
 
@@ -78,7 +78,7 @@ ht <- Heatmap(data_median_com_filter_top50_sd, name = "NME",
 							column_title_gp = gpar(fontsize = 30), column_names_gp = gpar(fontsize = 12)
 )
 
-pdf("motif_NME_heatmap_median_human_DNase_control_agnostic_top50.pdf", width=16, height=15, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_NME_heatmap_median_human_DNase_control_agnostic_top50.pdf"), width=16, height=15, family='ArialMT', useDingbats=FALSE)
 draw(ht,padding = unit(c(40, 2, 2, 2), "mm"))
 dev.off()
 
@@ -106,7 +106,7 @@ data_all_stat <- data_all_stat %>%
 		TRUE ~ "NS"
 	))
 
-write.csv(data_all_stat, file="diff_test_TFBS_human.csv")
+write.csv(data_all_stat, file=paste0(figure_path,"NME_diff_test_TFBS_human.csv"))
 
 ##generate violin plot for the top top 50 motifs
 data_plot_norm <- data_median_com_filter[motif_order,]
