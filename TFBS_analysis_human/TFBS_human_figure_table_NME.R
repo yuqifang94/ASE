@@ -6,7 +6,7 @@ library(ggplot2)
 library(patchwork)
 library(ggsignif)
 library(matrixStats)
-
+source('mainFunctions_sub.R')
 
 
 ##read in NME data

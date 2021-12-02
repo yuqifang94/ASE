@@ -7,11 +7,11 @@ library(patchwork)
 library(ggsignif)
 library(matrixStats)
 
-setwd("../downstream/output/human_analysis/TFBS_analysis")
+setwd("../")
 
 ##read in MML data
-data_median_com_DNase <- readRDS("human_motif_DNase_median_MML.rds")
-data_median_com_control <- readRDS("human_motif_control_median_MML.rds")
+data_median_com_DNase <- readRDS(hg19_DNase_MML_fn)
+data_median_com_control <- readRDS(hg19_control_MML_fn)
 
 ##get sample order based on column mean
 data_median_com_DNase_colmean <- colMeans(data_median_com_DNase, na.rm=TRUE)
@@ -51,7 +51,7 @@ ht <- Heatmap(data_median_com_filter_sd, name = "MML",
 							legend_height = unit(3, 'in'), grid_width = unit(0.5, 'in'))
 )
 
-pdf("motif_MML_heatmap_median_human_DNase_control_agnostic.pdf", width=20, height=40, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_MML_heatmap_median_human_DNase_control_agnostic.pdf"), width=20, height=40, family='ArialMT', useDingbats=FALSE)
 draw(ht)
 dev.off()
 
@@ -77,7 +77,7 @@ ht <- Heatmap(data_median_com_filter_top50_sd, name = "MML",
 							column_title_gp = gpar(fontsize = 30), column_names_gp = gpar(fontsize = 12)
 )
 
-pdf("motif_MML_heatmap_median_human_DNase_control_agnostic_top50.pdf", width=16, height=15, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_MML_heatmap_median_human_DNase_control_agnostic_top50.pdf"), width=16, height=15, family='ArialMT', useDingbats=FALSE)
 draw(ht,padding = unit(c(40, 2, 2, 2), "mm"))
 dev.off()
 
@@ -105,7 +105,7 @@ data_all_stat <- data_all_stat %>%
 		TRUE ~ "NS"
 	))
 
-write.csv(data_all_stat, file="diff_test_TFBS_human_MML.csv")
+write.csv(data_all_stat, file=paste0(figure_path,"diff_test_TFBS_human_MML.csv"))
 
 ##generate violin plot for the top top 50 motifs
 data_plot_norm <- data_median_com_filter[motif_order,]
@@ -129,6 +129,6 @@ plot_list <- lapply(colnames(data_all_plot[,-1]), function(t){
 					axis.title = element_blank())
 })
 
-pdf("motif_MML_violin_median_human_DNase_control_agnostic_top50.pdf", width=20, height=38, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_MML_violin_median_human_DNase_control_agnostic_top50.pdf"), width=20, height=38, family='ArialMT', useDingbats=FALSE)
 wrap_plots(plot_list, ncol=5, guides="collect")
 dev.off()

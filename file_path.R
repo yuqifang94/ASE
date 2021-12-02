@@ -94,5 +94,5 @@ tissue_specific_out='../downstream/output/mouse_analysis/tissue_specific_enhance
 H3K27ac_output_dt_fn=paste0(tissue_specific_out,'H3K27ac_output_dt.rds')
 hg19_control_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_NME.rds"
 hg19_DNase_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_NME.rds"
-hg19_control_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_MML.rds"
-hg19_DNase_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_MML.rds"
+hg19_control_MML_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_MML.rds"
+hg19_DNase_MML_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_MML.rds"
