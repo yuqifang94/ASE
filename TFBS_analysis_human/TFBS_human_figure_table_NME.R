@@ -130,6 +130,6 @@ plot_list <- lapply(colnames(data_all_plot[,-1]), function(t){
 					axis.title = element_blank())
 })
 
-pdf("motif_NME_violin_median_human_DNase_control_agnostic_top50.pdf", width=20, height=38, family='ArialMT', useDingbats=FALSE)
+pdf(paste0(figure_path,"motif_NME_violin_median_human_DNase_control_agnostic_top50.pdf"), width=20, height=38, family='ArialMT', useDingbats=FALSE)
 wrap_plots(plot_list, ncol=5, guides="collect")
 dev.off()
