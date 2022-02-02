@@ -1,0 +1,3 @@
+ import pysam
+ samfile=pysam.AlignmentFile('H1_WGBS_1_Arioc_WGBS.bam','rb')
+ for read in samfile.fetch():

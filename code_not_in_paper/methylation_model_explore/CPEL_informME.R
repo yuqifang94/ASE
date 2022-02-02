@@ -1,5 +1,6 @@
 source('mainFunctions_sub.R')
 informME_dir='../downstream/data/JSD_heart_mouse_informME/'
+informME_QC_fn='../downstream/output/model_QC/mouse_analysis/JSD_informME_heart.rds'
 JSD_in=GRanges()
 for(JSD_fn in dir(informME_dir,pattern='JSD')){
     JSD_in_sample=import.bedGraph(paste0(informME_dir,JSD_fn))
@@ -10,31 +11,31 @@ for(JSD_fn in dir(informME_dir,pattern='JSD')){
 }
 JSD_in_dt=convert_GR(JSD_in,dir='DT')
 JSD_in_dt=dcast.data.table(data=JSD_in_dt,region~Sample,value.var='score')
-saveRDS(JSD_in_dt,'../downstream/output/mouse_analysis/JSD_informME_heart.rds')
-JSD_in_dt=readRDS('../downstream/output/mouse_analysis/JSD_informME_heart.rds')
-UC=readRDS(UC_in_matrix_ls_file)
-UC=UC$heart
-olap=findOverlaps(UC,convert_GR(JSD_in_dt$region),minoverlap=100)
-UC_dt=convert_GR(UC[queryHits(olap)],dir='DT')
-colnames(UC_dt)[22]='region_UC'
-UC_dt$region_JSD=JSD_in_dt[subjectHits(olap)]$region
+saveRDS(JSD_in_dt,informME_QC_fn)
+JSD_in_dt=readRDS(informME_QC_fn)
+CPEL=readRDS(JSD_in_fn)
+CPEL=CPEL$heart
+olap=findOverlaps(CPEL,convert_GR(JSD_in_dt$region),minoverlap=100)
+CPEL_dt=convert_GR(CPEL[queryHits(olap)],dir='DT')
+colnames(CPEL_dt)[22]='region_CPEL'
+CPEL_dt$region_JSD=JSD_in_dt[subjectHits(olap)]$region
 JSD_in_dt=JSD_in_dt[subjectHits(olap)]
 colnames(JSD_in_dt)[1]='region_JSD'
-JSD_in_dt$region_UC=UC_dt$region_UC
-JSD_in_dt=melt.data.table(id.vars=c('region_UC','region_JSD'),data=JSD_in_dt,
+JSD_in_dt$region_CPEL=CPEL_dt$region_CPEL
+JSD_in_dt=melt.data.table(id.vars=c('region_CPEL','region_JSD'),data=JSD_in_dt,
     value.name='score',variable.name='Sample')
 JSD_in_dt$stat_type='JSD'
-colnames(UC_dt)=gsub('-5','\\.5',gsub('\\.','-',colnames(UC_dt)))
-UC_dt=melt.data.table(UC_dt,id.vars=c('region_UC','region_JSD'),
+colnames(CPEL_dt)=gsub('-5','\\.5',gsub('\\.','-',colnames(CPEL_dt)))
+CPEL_dt=melt.data.table(CPEL_dt,id.vars=c('region_CPEL','region_JSD'),
     value.name='score',variable.name='Sample')
-UC_dt$stat_type='UC'
+CPEL_dt$stat_type='CPEL'
 
-UC_JSD_comp=rbind(UC_dt,JSD_in_dt)
-UC_JSD_comp_dc=dcast.data.table(UC_JSD_comp,region_UC+region_JSD+Sample~stat_type,value.var='score',
+CPEL_JSD_comp=rbind(CPEL_dt,JSD_in_dt)
+CPEL_JSD_comp_dc=dcast.data.table(CPEL_JSD_comp,region_CPEL+region_JSD+Sample~stat_type,value.var='score',
 fun.aggregate=mean)
-UC_JSD_comp_dc=UC_JSD_comp_dc[!is.na(JSD)]
-saveRDS(UC_JSD_comp_dc,'../downstream/output/mouse_analysis/UC_CPEL_JSD_informME_heart.rds')
-UC_JSD_comp_dc[UC>0.1,list(cor=cor.test(UC,JSD,method='pearson')$estimate),by=Sample]
+CPEL_JSD_comp_dc=CPEL_JSD_comp_dc[!is.na(JSD)]
+saveRDS(CPEL_JSD_comp_dc,'../downstream/output/mouse_analysis/model_QC/CPEL_informME_JSD_heart.rds')
+CPEL_JSD_comp_dc[CPEL>0.1,list(cor=cor.test(CPEL,JSD,method='pearson')$estimate),by=Sample]
 #                   Sample          cor
 # 1: heart-E12.5-E13.5-all -0.055417879
 # 2: heart-E13.5-E14.5-all -0.066865054
@@ -43,7 +44,7 @@ UC_JSD_comp_dc[UC>0.1,list(cor=cor.test(UC,JSD,method='pearson')$estimate),by=Sa
 # 5: heart-E15.5-E16.5-all -0.044829555
 # 6: heart-E10.5-E11.5-all -0.004559908
 
-UC_JSD_comp_dc[,list(cor=cor.test(UC,JSD,method='pearson')$estimate),by=Sample]
+CPEL_JSD_comp_dc[,list(cor=cor.test(CPEL,JSD,method='pearson')$estimate),by=Sample]
 
 #                   Sample         cor
 # 1: heart-E10.5-E11.5-all -0.03964284

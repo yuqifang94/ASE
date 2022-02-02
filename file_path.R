@@ -96,3 +96,5 @@ hg19_control_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/h
 hg19_DNase_NME_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_NME.rds"
 hg19_control_MML_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_control_median_MML.rds"
 hg19_DNase_MML_fn="../downstream/output/human_analysis/Ken_motif/homogeneous/human_motif_DNase_median_MML.rds"
+JSD_in_fn='../downstream/output/mouse_analysis/model_QC/JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls.rds'
+UC_in_QC_fn='../downstream/output/mouse_analysis/model_QC/UC_JSD_QC.rds'

@@ -31,7 +31,7 @@ server <- function(input, output,session) {
       dMML_mt=dNME_dMML_mt[data_type%in%c("dMML","dMML random"),list(value=mean(value),total_region=mean(dMML_region)),
                                       by=list(dMML_cutoff,data_type)]
       colnames(dMML_mt)[1]="cutoff"
-      rbind(dNME_mt,dMML_mt)
+      rbind(dNME_mt[!is.na(value)],dMML_mt[!is.na(value)])
     }
                        
     
@@ -55,7 +55,17 @@ server <- function(input, output,session) {
                               axis.text.y=element_text(size=12),
                               legend.text=element_text(size=12)))
       }else if(input$fix_UC=="UC"){
-        NULL
+        ggplotly(ggplot(dt_in_mt(),aes(x=as.numeric(as.character(cutoff)),y=value))+
+                   geom_point(aes(color=data_type),size=1)+
+                   xlab("dMML or dNME cutoff")+ylab("Porportion of overlapped regions")+
+                   guides(color=guide_legend(title="",override.aes = list(size=10)))+
+                   scale_x_reverse()+
+                   theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
+                                         axis.title.x=element_text(hjust=0.5,size=14,face="bold"),
+                                         axis.title.y=element_text(hjust=0.5,size=14,face="bold"),
+                                         axis.text.x=element_text(size=12),
+                                         axis.text.y=element_text(size=12),
+                                         legend.text=element_text(size=12)))
         
       }
     })
@@ -63,7 +73,7 @@ server <- function(input, output,session) {
       if(input$fix_UC=="dNME_dMML"){
         ggplotly(ggplot(dt_in_mt(),aes(x=UC_region,y=value))+
           geom_point(aes(color=data_type),size=1)+
-          xlab("Number of regions")+ylab("Porportion of overlapped regions")+
+          xlab("Number of selected regions")+ylab("Porportion of overlapped regions")+
           guides(color=guide_legend(title="",override.aes = list(size=10)))+
           geom_vline(xintercept = dt_in_mt()[UC==0.1]$UC_region)+
           theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
@@ -75,7 +85,7 @@ server <- function(input, output,session) {
       }else if(input$fix_UC=="UC"){
         ggplotly(ggplot(dt_in_mt(),aes(x=total_region,y=value))+
                    geom_point(aes(color=data_type),size=1)+
-                   xlab("Number of regions")+ylab("Porportion of overlapped regions")+
+                   xlab("Number of selected regions")+ylab("Porportion of overlapped regions")+
                    guides(color=guide_legend(title="",override.aes = list(size=10)))+
                    scale_x_continuous(trans=reverselog_trans(10))+
                    theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
@@ -117,7 +127,7 @@ server <- function(input, output,session) {
         shinyjs::hide(id = "dMML_cutoff") 
         shinyjs::show(id = "UC_cutoff") 
         shinyjs::show(id="UC_overlap_region")
-        shinyjs::hide(id="UC_overlap")
+        shinyjs::show(id="UC_overlap")
         
       }
       

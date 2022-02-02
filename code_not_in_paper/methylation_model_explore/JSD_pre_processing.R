@@ -3,7 +3,7 @@ source('mainFunctions_sub.R')
 
 
 #read in JSD for MDS
-in_dir='./'
+in_dir='../downstream/data/mouse_JSD/'
 JSD_in=GRanges()
 JSD_in_ls=mclapply(dir(in_dir,pattern = '.*jsd.bedGraph'),function(x){JSD_in=read.agnostic.mouse.uc(paste(in_dir,x,sep=''))
 JSD_in$JSD=JSD_in$score
@@ -12,14 +12,13 @@ JSD_in=fastDoCall('c',JSD_in_ls)
 JSD_in$tissue=sub('_.*','',JSD_in$Sample)
 
 JSD_in_matrix_ls=mclapply(unique(JSD_in$tissue),function(x) agnostic_matrix_conversion(JSD_in[JSD_in$tissue==x],'JSD'),mc.cores=12)
-saveRDS(JSD_in,'JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls.rds')#74% regiOn have all data
+saveRDS(JSD_in,JSD_in_fn)#74% regiOn have all data
 
-#Filter out the region with N >=18, UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds
-UC_in=readRDS('UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix.rds')
-
-gff_in=readGFFAsGRanges('../mm10_allele_agnostic_analysis.gff')
-gff_in_sub=gff_in[as.numeric(gff_in$N)<=17]#98.3%
-UC_in_sub=mclapply(UC_in,function(x) {return(subsetByOverlaps(x,gff_in_sub,type='equal'))})
+#Filter out the region with N >=18
+UC_in=readRDS(UC_in_matrix_ls_file)
+JSD_in_gr=unique(granges(JSD_in))
+UC_in_sub=mclapply(UC_in,function(x) {return(subsetByOverlaps(x,JSD_in,type='equal'))})
+saveRDS(UC_in_sub,UC_in_QC_fn)
 # EFP : 0.9786391
 # Lung : 0.9792112
 # NT : 0.9789671
@@ -32,26 +31,26 @@ UC_in_sub=mclapply(UC_in,function(x) {return(subsetByOverlaps(x,gff_in_sub,type=
 # liver : 0.978591
 # midbrain : 0.9786526
 # stomach : 0.9788745
-saveRDS(UC_in_sub,'UC_agnostic_mouse_matrix_dedup_N2_all_merged_ls_fix_less_equal_17CG.rds')
 
 
-jsd_in=readRDS('JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls.rds')
-names(jsd_in)=unlist(lapply(jsd_in,function(x) sub('_.*','',colnames(mcols(x))[1])))
-for(ts in names(jsd_in)){
-  colnames(mcols(jsd_in[[ts]]))=gsub('_','-',sub(paste0('-',ts),'',gsub("_all","",colnames(mcols(jsd_in[[ts]])))))
-  mcols(jsd_in[[ts]])=mcols(jsd_in[[ts]])[,which(!grepl("P0",colnames(mcols(jsd_in[[ts]]))))]
-  jsd_in[[ts]]=jsd_in[[ts]][which(rowSums(is.na(mcols(jsd_in[[ts]])))==0)]
+
+JSD_in=readRDS(JSD_in_fn)
+names(JSD_in)=unlist(lapply(JSD_in,function(x) sub('_.*','',colnames(mcols(x))[1])))
+for(ts in names(JSD_in)){
+  colnames(mcols(JSD_in[[ts]]))=gsub('_','-',sub(paste0('-',ts),'',gsub("_all","",colnames(mcols(JSD_in[[ts]])))))
+  mcols(JSD_in[[ts]])=mcols(JSD_in[[ts]])[,which(!grepl("P0",colnames(mcols(JSD_in[[ts]]))))]
+  JSD_in[[ts]]=JSD_in[[ts]][which(rowSums(is.na(mcols(JSD_in[[ts]])))==0)]
 
 }
-saveRDS(jsd_in,'JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls_ft.rds')
+saveRDS(JSD_in,'JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls_ft.rds')
 gff_in=readGFFAsGRanges('../mm10_allele_agnostic_analysis.gff')
 gff_in_sub=gff_in[as.numeric(gff_in$N)<=17]#98.3%
-jsd_in_sub=mclapply(jsd_in,function(x) {return(subsetByOverlaps(x,gff_in_sub,type='equal'))})
-for(ts in names(jsd_in_sub)){
+JSD_in_sub=mclapply(JSD_in,function(x) {return(subsetByOverlaps(x,gff_in_sub,type='equal'))})
+for(ts in names(JSD_in_sub)){
   
   
-  cat("top 10% quantile for",ts,'is',quantile(as.vector(as.matrix(mcols(jsd_in_sub[[ts]]))),probs=0.9),'\n')
-  cat("Proportion regions letft for",ts,"is",length(jsd_in_sub[[ts]])/length(jsd_in[[ts]]),'\n')
+  cat("top 10% quantile for",ts,'is',quantile(as.vector(as.matrix(mcols(JSD_in_sub[[ts]]))),probs=0.9),'\n')
+  cat("Proportion regions letft for",ts,"is",length(JSD_in_sub[[ts]])/length(JSD_in[[ts]]),'\n')
 }
 # top 10% quantile for EFP is 0.2912969
 # Proportion regions letft for EFP is 0.9874118
@@ -78,4 +77,4 @@ for(ts in names(jsd_in_sub)){
 # top 10% quantile for stomach is 0.2534778
 # Proportion regions letft for stomach is 0.9843143
 
-saveRDS(jsd_in_sub,'JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls_less_equal_17CG.rds')
+saveRDS(JSD_in_sub,'JSD_agnostic_mouse_matrix_dedup_N2_all_merged_ls_less_equal_17CG.rds')
