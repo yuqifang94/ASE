@@ -15,8 +15,7 @@ enhancer_bg=subsetByOverlaps(enhancer,uc_gr)
 bg_enhancer=unique(enhancer_bg$`Target Gene`)
 #Get high correlation enhancer activity for each tissue
 H3K27ac_output_dt=readRDS(H3K27ac_output_dt_fn)
-H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman'),
-                                              
+H3K27ac_output_dt_cor=H3K27ac_output_dt[,list(cor=cor(log2RPKM,log2FPKM,method='spearman'),                                            
                                               std_log2RPKM=sd(log2RPKM),
                                               std_log2FPKM=sd(log2FPKM)),by=list(region,tissue,target_gene)]
 H3K27ac_output_dt_cor=H3K27ac_output_dt_cor[std_log2RPKM!=0&std_log2FPKM!=0]
