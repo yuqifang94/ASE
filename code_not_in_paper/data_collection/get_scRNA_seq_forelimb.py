@@ -24,8 +24,8 @@ for age in all_datasets.keys():
         os.system("mkdir -p "+sampleOutputDir) 
         for fileJSON in sampleFiles:
             sampleAc=fileJSON['accession']
-            fastqName=sampleAc+fileJSON['aliases'][0].lstrip('barbara-wold:wold10x_1_')
-            output_filename=sampleOutputDir+sampleAc+"_"+fastqName
+            fastqName=sampleAc+"_"+fileJSON['submitted_file_name'].split('/')[-1]
+            output_filename=sampleOutputDir+fastqName
             url = 'https://www.encodeproject.org'+fileJSON['href']
             
             print(url)
