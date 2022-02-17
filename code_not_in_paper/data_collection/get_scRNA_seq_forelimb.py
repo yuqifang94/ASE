@@ -14,7 +14,7 @@ all_datasets = {"E10_5":["ENCSR874BOF","ENCSR874BOF"],
 HEADERS = {'accept': 'application/json'}
 outputDir="../downstream/data/mouse_scRNA/fastq_files/"
 os.system("mkdir -p "+outputDir)
-for age in all_datasets.iterkeys():
+for age in all_datasets.keys():
     for accession in all_datasets[age]:
         URL = "https://www.encodeproject.org/reference-epigenomes/"+accession+"/?frame=embedded"
         response = requests.get(URL, headers=HEADERS)
