@@ -24,12 +24,13 @@ for age in all_datasets.keys():
         os.system("mkdir -p "+sampleOutputDir) 
         for fileJSON in sampleFiles:
             sampleAc=fileJSON['accession']
-            fastqName=sampleAc+"_"+fileJSON['submitted_file_name'].split('/')[-1]
+            fastqName=fileJSON['submitted_file_name'].split('/')[-1]
             output_filename=sampleOutputDir+fastqName
             url = 'https://www.encodeproject.org'+fileJSON['href']
-            
+            print(sampleAc)
             print(url)
             print(output_filename)
+            
             cmd_dl=['curl', '--keepalive-time', '2','-RL',url,"-o",output_filename]
             subprocess.check_call(cmd_dl)
 
