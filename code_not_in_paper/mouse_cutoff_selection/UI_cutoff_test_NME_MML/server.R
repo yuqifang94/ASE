@@ -16,13 +16,17 @@ server <- function(input, output,session) {
     #fixing UC cutoff
     else if(input$fix_UC=="UC"){
       dt_in=cutoff_dt[[input$ts]][UC_cutoff == as.character(input$UC_cutoff)]
+    
       dNME_dMML_mt=melt.data.table(dt_in[,list(dNME= shared_dNME/(shared_dNME+dNME_specific),
                                   dMML=shared_dMML/(shared_dMML+dMML_specific),
                                   `dMML random` = UC_rand_shared_dMML/(UC_rand_shared_dMML +UC_rand_dMML_specific),
                                   `dNME random`=UC_rand_shared_dNME/(UC_rand_shared_dNME +UC_rand_dNME_specific ),
                                   dMML_cutoff=dMML_cutoff,dNME_cutoff=dNME_cutoff,
+                                  dNMEQuant=dNMEQuant,dMMLQuant=dNMEQuant,
                                   dNME_region=shared_dNME+dNME_specific,dMML_region=shared_dMML+dMML_specific)],
-                      id.vars=c('dNME_region','dMML_region',"dMML_cutoff","dNME_cutoff"),variable.name='data_type')
+                      id.vars=c('dNME_region','dMML_region','dMMLQuant','dNMEQuant',
+                                "dMML_cutoff","dNME_cutoff"),variable.name='data_type')
+    
   
       #There're some randomness for the same cutoff for random
       dNME_mt=dNME_dMML_mt[data_type%in%c("dNME","dNME random"),list(value=mean(value),total_region=mean(dNME_region)),
@@ -43,6 +47,7 @@ server <- function(input, output,session) {
  
     output$UC_overlap <- renderPlotly({
       if(input$fix_UC=="dNME_dMML"){
+        print(dt_in_mt())
       ggplotly(ggplot(dt_in_mt(),aes(x=as.numeric(as.character(UC)),y=value))+
         geom_point(aes(color=data_type),size=1)+
         xlab("UC cutoff")+ylab("Porportion of overlapped regions")+

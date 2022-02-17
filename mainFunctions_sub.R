@@ -1781,7 +1781,8 @@ plot_heatmap_cluster<-function(d,clu,figure_name,figure_width=2000,figure_height
         width=figure_width,
         height=figure_height,
         res=res,type='cairo')
-    pheatmap(mat_out_sc,cluster_rows = F,
+    if(marker){
+        pheatmap(mat_out_sc,cluster_rows = F,
             annotation_row = rowann_out,
             cluster_cols = F,
             annotation_col = colann,show_colnames = F,show_rownames = F,
@@ -1793,6 +1794,20 @@ plot_heatmap_cluster<-function(d,clu,figure_name,figure_width=2000,figure_height
                                       
            
     )
+    }else{
+      pheatmap(mat_out_sc,cluster_rows = F,
+            annotation_row = rowann_out,
+            cluster_cols = F,
+            annotation_col = colann,show_colnames = F,show_rownames = F,
+            #gaps_row = row_gap[-1],
+            gaps_col = cumsum(rle(colann[,2])$lengths),
+            #filename=figure_name,
+            annotation_colors = list(tissue=c1,tissue_r=c1,cluster=c2,time=c4)
+                                      #dMMLJSDcor=bluered(10),dNMEJSDcor=bluered(10))
+                                      
+           
+    )
+    }
     dev.off()
   
 }

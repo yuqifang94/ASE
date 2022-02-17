@@ -130,4 +130,42 @@ cat("Finishing processing: dMML=",dMML_cutoff," dNME=",dNME_cutoff,"in:",proc.ti
 
 
 saveRDS(venn_out_all_UC_all,'../downstream/output/mouse_analysis/UC_dNME_olap/UC_var_venn_out_all_dNME_dMML_cutoff.rds')
+
+#Extract quantiles
+UC_in=readRDS(UC_merge_file)
+dNME_in=mclapply(UC_in,function(x) x[,grepl('dNME-E',colnames(x))],mc.cores=7)
+dMML_in=mclapply(UC_in,function(x) x[,grepl('dMML-E',colnames(x))],mc.cores=7)
+UC_in_only=mclapply(UC_in,function(x) x[,grepl('UC-',colnames(x))],mc.cores=7)
+ecdf_diff<-function(x){
+    
+    x=as.vector(x)
+    x=x[!is.na(x)]
+    return(ecdf(x))
+
+}
+quant_cutoff<-function(x){
+    x=as.vector(x)
+    x=x[!is.na(x)]
+    return(quantile(x,prob=seq(0,1,0.1)))
+}
+dNME_ecdf=mclapply(dNME_in,ecdf_diff,mc.cores=7)
+dMML_ecdf=mclapply(dMML_in,ecdf_diff,mc.cores=7)
+UC_ecdf=mclapply(UC_in_only,ecdf_diff,mc.cores=7)
+dNME_quantile=mclapply(dNME_in,quant_cutoff,mc.cores=7)
+dMML_quantile=mclapply(dMML_in,quant_cutoff,mc.cores=7)
+UC_quantile=mclapply(UC_in_only,quant_cutoff,mc.cores=7)
+saveRDS(dNME_ecdf,'../downstream/output/mouse_analysis/UC_dNME_olap/dNME_ecdf.rds')
+saveRDS(dMML_ecdf,'../downstream/output/mouse_analysis/UC_dNME_olap/dMML_ecdf.rds')
+saveRDS(UC_ecdf,'../downstream/output/mouse_analysis/UC_dNME_olap/UC_ecdf.rds')
+cutoff_dt=readRDS('../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only_tb_001.rds')
+cutoff_dt_quantile=lapply(names(cutoff_dt),function(x) {
+    cutoff_dt_ts=cutoff_dt[[x]]
+    cutoff_dt_ts$dNMEQuant=dNME_ecdf[[x]](as.numeric(as.character(cutoff_dt_ts$dNME_cutoff)))
+    cutoff_dt_ts$dMMLQuant=dMML_ecdf[[x]](as.numeric(as.character(cutoff_dt_ts$dMML_cutoff)))
+    cutoff_dt_ts$UCQuant=UC_ecdf[[x]](as.numeric(as.character(cutoff_dt_ts$UC_cutoff)))
+    return(cutoff_dt_ts)
+
+})
+names(cutoff_dt_quantile)=names(cutoff_dt)
+saveRDS(cutoff_dt_quantile,'../downstream/output/mouse_analysis/UC_dNME_olap/regions_non_ts_only_tb_001_quant.rds')
 # nolint end
