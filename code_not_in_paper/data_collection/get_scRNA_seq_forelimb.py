@@ -33,4 +33,12 @@ for age in all_datasets.keys():
             
             cmd_dl=['curl', '--keepalive-time', '2','-RL',url,"-o",output_filename]
             subprocess.check_call(cmd_dl)
-
+#STARSolo alignment
+#reference download
+#https://support.10xgenomics.com/single-cell-gene-expression/software/release-notes/build#mm10_2020A
+#cp gencode.vM23.primary_assembly.annotation.gtf.filtered ../
+#cp Mus_musculus.GRCm38.dna.primary_assembly.fa.modified ../
+#Genome prep
+#STAR --runThreadN 20 --runMode genomeGenerate --genomeDir /users/yfang/yfang_dcs04/referenceGenome/mm10_10x_STAR/ --genomeFastaFiles /users/yfang/yfang_dcs04/referenceGenome/mm10_10x_STAR/genome.fa --sjdbGTFfile /users/yfang/yfang_dcs04/referenceGenome/mm10_10x_STAR/genes.gtf --genomeSAsparseD 3 1>STARgen.out 2>STARgen.err
+#Alignment
+#STAR --genomeDir /users/yfang/yfang_dcs04/referenceGenome/mm10_10x_STAR/fasta/ --readFilesIn E10_5_ENCSR874BOF/FT-SA17497_S1_L004_R2_001.fastq.gz FT-SA17497_S1_L004_R1_001.fastq.gz --soloType CB_UMI_Simple --soloCBwhitelist /dcs04/feinberg/data/personal/yfang/ASE_clean_run_403/downstream/data/mouse_scRNA/scFetalLimb/10xV2WhiteList.txt 1>logFiles/E10_5_ENCSR874BOF.out 2>logFiles/E10_5_ENCSR874BOF.err

@@ -43,7 +43,7 @@ for(enc_type in c("enhancer","promoter")){
       
     }
   }
-  # UC_maxUC is wrong
+  
   saveRDS(GO_out_all,paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_',cutoff_fn,'_',enc_type,'.rds'))
 }
 
