@@ -1,11 +1,15 @@
-#It seems SAVER can only be on conda_R
+#Uuse SAVER in MARCC, conda_R with Jason's code at /scratch/users/zji4@jhu.edu/andy_ASE/hypervar/encmouse/data/code
+#MARCC R/4.0.2
 library(SAVER)
 library(data.table)
-rawCount=readRDS("../downstream/data/mouseLimb/mouse_limb_scRNA_10x_rawCount.rds")
-
-annotation=fread('../downstream/data/mouseLimb/meta.tsv')
-#Normalizing across all smples
-totalCount=colSums(rawCount)
-totalCount=totalCount/median(totalCount)
-#Normalzing the total count of each cell by the median total count
-res <- saver(rawCount,ncores=20,size.factor=1)$estimate
+#All takes too long, need to separate by stage
+m=readRDs('../downstream/data/mouseLimb/limb_10x.rds')
+stages=gsub('.*-|:.*','',colnames(m))
+i <- as.numeric(commandArgs(trailingOnly = T))#This is nth stage
+stages_selected <- unique(stages)[i]
+cat("Processing stage:",stage_selected,'\n')
+m <- 2^m-1#dim: 43346 90637
+m <- m[,stages==stages_selected]
+m <- m[rowSums(m) > 0,]#26384 90637
+d <- saver(m,ncores=10,size.factor=1)$estimate  
+saveRDS(d,file=paste0('../downstream/data/mouseLimb/10xLimbSaver.rds'))

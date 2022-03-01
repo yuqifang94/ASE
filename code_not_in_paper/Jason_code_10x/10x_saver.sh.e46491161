@@ -1,0 +1,94 @@
+Note that users no longer need to load the SLURM module. You may remove 'module
+load slurm' from your scripts. 
+Please read this resource guide to understand the above behavior:
+https://www.marcc.jhu.edu/getting-started/working-with-modules-on-centos-7/ 
+
+Lmod is automatically replacing "intel/18.0" with "gcc/5.5.0".
+
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/3.1
+
+Note that users no longer need to load the SLURM module. You may remove 'module
+load slurm' from your scripts. 
+Please read this resource guide to understand the above behavior:
+https://www.marcc.jhu.edu/getting-started/working-with-modules-on-centos-7/ 
+23797 genes, 21276 cells
+Running SAVER with 10 worker(s)
+Calculating predictions for 23797 genes using 11804 genes and 21276 cells...
+Start time: 2020-11-14 19:35:03
+Estimating finish time...
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Loading required package: SAVER
+loaded SAVER and set parent environment
+Finished 10/23797 genes. Approximate finish time: 2020-11-14 19:42:41
+Calculating max cor cutoff...
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+Finished 100/23797 genes. Approximate finish time: 2020-11-14 20:24:50
+Calculating lambda coefficients...
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+Finished 257/23797 genes. Approximate finish time: 2020-11-14 21:05:50
+Predicting remaining genes...
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+Finished 6142/23797 genes. Approximate finish time: 2020-11-15 17:28:12
+Predicting remaining genes...
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+loaded SAVER and set parent environment
+Done!
+Finish time: 2020-11-15 16:53:11
+Total time: 21.30208 hours
+Warning message:
+In if (!(grepl("matrix", class(x), ignore.case = TRUE))) { :
+  the condition has length > 1 and only the first element will be used
