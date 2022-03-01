@@ -3,7 +3,7 @@
 library(SAVER)
 library(data.table)
 #All takes too long, need to separate by stage
-m=readRDs('../downstream/data/mouseLimb/limb_10x.rds')
+m=readRDS('../downstream/data/mouseLimb/limb_10x.rds')
 stages=gsub('.*-|:.*','',colnames(m))
 i <- as.numeric(commandArgs(trailingOnly = T))#This is nth stage
 stages_selected <- unique(stages)[i]

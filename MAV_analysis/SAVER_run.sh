@@ -8,7 +8,7 @@ ml R/4.0.2
 echo $1
 Rscript 10x_saver.R $1
 
-#for i in `seq 1 7`
+# for i in `seq 1 7`
 # do
-# qsub 10x_saver.sh $i
+# qsub SAVER_run.sh $i
 # done

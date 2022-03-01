@@ -167,14 +167,22 @@ for (fn in dir(mouse10xDir)){
     MAVIn$stage=paste0("E",stage)
     MAV10x=rbind(MAV10x,MAVIn)
 }
-NME_limb_enhancerCor=enhancerCorCalc(NME_mm10_limb,enhancer,MAV10x[stage!="E13.5"])
+cellType_stage_only_uq=unique(limb_cellType$stage)
+cellType_stageOnlyMAV<-lapply(cellType_stage_only_uq,function(x) {
+    return(limb_RNA_data[,limb_cellType[stage==x]$index])
+
+})
+names(cellType_stageOnlyMAV)=cellType_stage_only_uq
+cellType_stageOnlyMAV = cellTypeMAVcalc(cellType_stageOnlyMAV,"*")
+cellType_stageOnlyMAV$stage=paste0('E',cellType_stageOnlyMAV$stage)
+NME_limb_enhancerCor=enhancerCorCalc(NME_mm10_limb,enhancer,cellType_stageOnlyMAV[stage!="E13.5"])
 pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_all.pdf')
 print(ggplot(NME_limb_enhancerCor,aes(x=NME_MAV_cor))+geom_density())
 hist(NME_limb_enhancerCor$NME_MAV_cor,xlab="correlation",main="NME MAV correlation at enhancer")
 dev.off()
 
 #dMAV
-cellTypeStage_dMAV_all=diffCalc(MAV10x[stage!="E13.5",list(gene,hypervar_logvar,stage)],"gene",valueName="dMAV",valueVar="hypervar_logvar")
+cellTypeStage_dMAV_all=diffCalc(cellType_stageOnlyMAV[stage!="E13.5",list(gene,hypervar_logvar,stage)],"gene",valueName="dMAV",valueVar="hypervar_logvar")
 NME_limb_enhancerCor_diff=enhancerCorCalc(dNME_mm10_limb,enhancer,cellTypeStage_dMAV_all,MAVVar="dMAV",NMEVar="dNME")
 pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/dNME_dMAV_cor_all.pdf')
 print(ggplot(NME_limb_enhancerCor_diff,aes(x=NME_MAV_cor))+geom_density())
