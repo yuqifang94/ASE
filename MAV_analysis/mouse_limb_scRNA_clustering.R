@@ -137,8 +137,13 @@ names(cellType_stageMAV)=cellType_stage_uq
 limb_cellType_nCell=limb_cellType[,list(nCell=length(index)),by=list(merged_celltype,stage)][order(nCell,decreasing=T)]
 #Find a cell type that have most nCell there
 limb_cellType_nCellAvg=limb_cellType_nCell[,list(meanNCell=mean(nCell)),by=list(merged_celltype)]
+#Mesenchymal
 cellTypeStage_Mesenchymal_MAV=cellTypeMAVcalc(cellType_stageMAV,'Mesenchymal')
 cellTypeStage_Mesenchymal_dMAV=diffCalc(cellTypeStage_Mesenchymal_MAV[,list(gene,hypervar_logvar,stage)],"gene",valueName="dMAV",valueVar="hypervar_logvar")
+#muscle
+cellTypeStage_Muscle_MAV=cellTypeMAVcalc(cellType_stageMAV,'Muscle')
+cellTypeStage_Muscle_dMAV=diffCalc(cellTypeStage_Muscle_MAV[,list(gene,hypervar_logvar,stage)],"gene",valueName="dMAV",valueVar="hypervar_logvar")
+
 #Adding NME
 NME_mm10=readRDS(NME_matrix_file)
 NME_mm10=convert_GR(NME_mm10,direction="matrix")
@@ -204,16 +209,13 @@ dev.off()
 
 write.csv(NME_limb_enhancerCor_mesenchymal[,list(mean_cor=mean(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)],
 '../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_mean.csv',row.names=F)
-
-#NME_limb_enhancerCor_mesenchymal_permute=c()
-# #Permutation null dist
-# for (npermute in 1:5){
-#     NME_limb_enhancerCor_mesenchymal_permute=
-#     c(NME_limb_enhancerCor_mesenchymal_permute,enhancerCorCalc(NME_mm10_limb,enhancer,cellTypeStage_Mesenchymal_MAV,permute=T,seed=npermute)$NME_MAV_cor)
-# }
-nullDistCor=ecdf(NME_limb_enhancerCor_mesenchymal_permute$NME_MAV_cor)
-NME_limb_enhancerCor_mesenchymal$pval=nullDistCor(NME_limb_enhancerCor_mesenchymal$NME_MAV_cor)
-NME_limb_enhancerCor_mesenchymal$FDR=p.adjust(NME_limb_enhancerCor_mesenchymal$pval,method='BH')#min = 0.65
+#P-value gen
+pvalCalc<-function(datIn,permuteIn){
+    nullDistCor=ecdf(permuteIn$NME_MAV_cor)
+    datIn$pval=nullDistCor(datIn$NME_MAV_cor)
+    datIn$FDR=p.adjust(datIn$pval,method='BH')#min = 0.65
+    return(datIn)
+}
 
 #Do differential MAV and NME
 NME_limb_enhancerCor_mesenchymal_Diff=enhancerCorCalc(dNME_mm10_limb,enhancer,cellTypeStage_Mesenchymal_dMAV,NMEVar="dNME",MAVVar="dMAV")
@@ -226,7 +228,7 @@ pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_Mese
 print(ggplot(NME_limb_enhancerCor_mesenchymal_Diff_permute,aes(x=NME_MAV_cor))+geom_density())
 hist(NME_limb_enhancerCor_mesenchymal_Diff_permute$NME_MAV_cor,xlab="correlation",main="dNME dMAV correlation at enhancer")
 dev.off()
-
+NME_limb_enhancerCor_mesenchymal_Diff=pvalCalc(NME_limb_enhancerCor_mesenchymal_Diff,NME_limb_enhancerCor_mesenchymal_Diff_permute)
 #GO terms that are related to limb?
 GO_out=readRDS(paste0(GO_01_dir,'GO_out_all_dMML_dNME_0rm_FC_N17_kmeans_10run_filtered_all_regions_01_enhancer.rds'))
 GO_out_limb=GO_out$`NME only`$limb
@@ -274,10 +276,51 @@ low_cor_gene_GO[grepl("mesenchymal",Term)&FC>1.5]
 #positive regulation of mesenchymal cell proliferation P=0.18
 
 #dNME dMAV correlation
-NME_mm10_limb_enhancer_cor_mean_diff=NME_limb_enhancerCor_mesenchymal_Diff[,list(mean_cor=max(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)]
+NME_mm10_limb_enhancer_cor_mean_diff=NME_limb_enhancerCor_mesenchymal_Diff[,list(mean_cor=mean(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)]
 high_cor_gene_GO=GO_run(NME_mm10_limb_enhancer_cor_mean_diff[mean_cor>0.5]$gene,NME_mm10_limb_enhancer_cor_mean_diff$gene,cluster=1)
 high_cor_gene_GO[grepl("mesenchymal",Term)&FC>1.5]
 
-NME_mm10_limb_enhancer_cor_mean_diff=NME_limb_enhancerCor_mesenchymal_Diff[,list(mean_cor=max(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)]
 low_cor_gene_GO=GO_run(NME_mm10_limb_enhancer_cor_mean_diff[mean_cor< -0.5]$gene,NME_mm10_limb_enhancer_cor_mean_diff$gene,cluster=1)
 low_cor_gene_GO[grepl("mesenchymal",Term)&FC>1.5]
+#Do the correlation for muscle
+cellTypeStage_Muscle_MAV_cor=enhancerCorCalc(NME_mm10_limb,enhancer,cellTypeStage_Muscle_MAV)
+pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_Muscle.pdf')
+print(ggplot(cellTypeStage_Muscle_MAV_cor,aes(x=NME_MAV_cor))+geom_density())
+hist(cellTypeStage_Muscle_MAV_cor$NME_MAV_cor,xlab="correlation",main="NME MAV correlation at enhancer")
+dev.off()
+cellTypeStage_Muscle_MAV_cor_permute=enhancerCorCalc(NME_mm10_limb,enhancer,cellTypeStage_Muscle_MAV,permute=T,seed=123)
+pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_Muscle_permute.pdf')
+print(ggplot(cellTypeStage_Muscle_MAV_cor_permute,aes(x=NME_MAV_cor))+geom_density())
+hist(cellTypeStage_Muscle_MAV_cor_permute$NME_MAV_cor,xlab="correlation",main="dNME dMAV correlation at enhancer")
+dev.off()
+
+write.csv(cellTypeStage_Muscle_MAV[,list(mean_cor=mean(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)],
+'../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_mean.csv',row.names=F)
+
+#Do differential MAV and NME
+NME_limb_enhancerCor_muscle_Diff=enhancerCorCalc(dNME_mm10_limb,enhancer,cellTypeStage_Muscle_dMAV,NMEVar="dNME",MAVVar="dMAV")
+pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_Muscle_diff.pdf')
+print(ggplot(NME_limb_enhancerCor_muscle_Diff,aes(x=NME_MAV_cor))+geom_density())
+hist(NME_limb_enhancerCor_muscle_Diff$NME_MAV_cor,xlab="correlation",main="dNME dMAV correlation at enhancer")
+dev.off()
+NME_limb_enhancerCor_muscle_Diff_permute=enhancerCorCalc(dNME_mm10_limb,enhancer,cellTypeStage_Muscle_dMAV,NMEVar="dNME",MAVVar="dMAV",permute=T,seed=123)
+pdf('../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_Muscle_diff_permute.pdf')
+print(ggplot(NME_limb_enhancerCor_muscle_Diff_permute,aes(x=NME_MAV_cor))+geom_density())
+hist(NME_limb_enhancerCor_muscle_Diff_permute$NME_MAV_cor,xlab="correlation",main="dNME dMAV correlation at enhancer")
+dev.off()
+
+#Top GO terms for correlation > 0.5, all data
+NME_mm10_limb_enhancer_cor_mean=cellTypeStage_Muscle_MAV_cor[,list(mean_cor=max(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)]
+high_cor_gene_GO=GO_run(NME_mm10_limb_enhancer_cor_mean[mean_cor>0.5]$gene,NME_mm10_limb_enhancer_cor_mean$gene,cluster=1)
+high_cor_gene_GO[grepl("muscle",Term)&FC>1.5&FDR<0.2]
+#Top GO terms for correlation <-0.5, all data
+low_cor_gene_GO=GO_run(NME_mm10_limb_enhancer_cor_mean[mean_cor < (-0.5)]$gene,NME_mm10_limb_enhancer_cor_mean$gene,cluster=1)
+low_cor_gene_GO[grepl("muscle",Term)&FC>1.5&FDR<0.2]
+#NME_limb_enhancerCor_mesenchymal_permute=c()
+# #Permutation null dist
+# for (npermute in 1:5){
+#     NME_limb_enhancerCor_mesenchymal_permute=
+#     c(NME_limb_enhancerCor_mesenchymal_permute,enhancerCorCalc(NME_mm10_limb,enhancer,cellTypeStage_Mesenchymal_MAV,permute=T,seed=npermute)$NME_MAV_cor)
+# }
+
+
