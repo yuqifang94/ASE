@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH --time=60:0:0
-#SBATCH --mem=200G
+#SBATCH --mem=300G
 #SBATCH --partition=lrgmem
 #SBATCH -o logfile/SAVER-%A.out
 #SBATCH -e logfile/SAVER-%A.err
