@@ -7,7 +7,7 @@ m=readRDS('../../downstream/data/mouseLimb/limb_10x.rds')
 stages=gsub('.*-|:.*','',colnames(m))
 i <- as.numeric(commandArgs(trailingOnly = T))#This is nth stage
 stages_selected <- unique(stages)[i]
-cat("Processing stage:",stage_selected,'\n')
+cat("Processing stage:",stages_selected,'\n')
 m <- 2^m-1#dim: 43346 90637
 m <- m[,stages==stages_selected]
 m <- m[rowSums(m) > 0,]#26384 90637
