@@ -26,38 +26,43 @@ library(SeuratDisk)
 #Reading in mouse data from Jason's saver
 #Ignore cell type, check correlation
 #Function to calculate correlation enhancer
-enhancerCorCalc<-function(NME,enhancer,MAV,permute=F,seed=0,NMEVar="NME",MAVVar="hypervar_logvar"){
-    
-    MAV$hypervar_logvar=MAV[[MAVVar]]
- 
-    NME$NME=NME[[NMEVar]]
-    #Get the annotated genes
+encAnno<-function(NME,enhancer){
+      #Get the annotated genes
     olap=findOverlaps(convert_GR(NME$region,direction="GR"),enhancer)
-    NME_enhancer=NME[queryHits(olap)]
-    NME_enhancer$gene=enhancer$`Target Gene`[subjectHits(olap)]
-    NME_enhancer$stage_relax=gsub('.5',"",NME_enhancer$stage)
-    NME_enhancer$stage_gene=paste0(NME_enhancer$stage_relax,'-',NME_enhancer$gene)
+    NME_annotated=NME[queryHits(olap)]
+    NME_annotated$gene=enhancer$`Target Gene`[subjectHits(olap)]
+    return(NME_annotated)
+}
+enhancerCorCalc<-function(NME,enhancer,MAV,permute=F,seed=0,NMEVar="NME",MAVVar="hypervar_logvar"){
+    NME_annotated=encAnno(NME,enhancer)
+    NME_annotated_cor=corCalc(NME_annotated,MAV,permute,seed,NMEVar,MAVVar)
+    return(NME_annotated_cor)
+}
+corCalc<-function(NME_annotated,MAV,permute=F,seed=0,NMEVar="NME",MAVVar="hypervar_logvar"){
+   MAV$hypervar_logvar=MAV[[MAVVar]]
+    NME_annotated$NME=NME_annotated[[NMEVar]]   
+    NME_annotated$stage_relax=gsub('.5',"",NME_annotated$stage)
+    NME_annotated$stage_gene=paste0(NME_annotated$stage_relax,'-',NME_annotated$gene)
     #relax about half day of the stage
     MAV$stage_relax=gsub('.5',"",MAV$stage)
-    
     MAV$stage_gene=paste0(MAV$stage_relax,'-',MAV$gene)
-    MAV[stage_gene%in%NME_enhancer$stage_gene]#10554
-    NME_enhancer$MAV=MAV[match(NME_enhancer$stage_gene,stage_gene)]$hypervar_logvar
-    NME_enhancer_MAV=NME_enhancer[!is.na(MAV)]
-    NME_enhancer_count=NME_enhancer_MAV[,list(nStage=length(unique(stage))),by=list(region)]
-    NME_enhancer_MAV_5stage=NME_enhancer_MAV[region%in%NME_enhancer_count[nStage>=5]$region]
-    #NME_enhancer_MAV_5stage_sdMAV=NME_enhancer_MAV_5stage[,list(sdMAV=sd(MAV)),by=list(region)]
+    MAV[stage_gene%in%NME_annotated$stage_gene]#10554
+    NME_annotated$MAV=MAV[match(NME_annotated$stage_gene,stage_gene)]$hypervar_logvar
+    NME_annotated_MAV=NME_annotated[!is.na(MAV)]
+    NME_annotated_count=NME_annotated_MAV[,list(nStage=length(unique(stage))),by=list(region)]
+    NME_annotated_MAV_5stage=NME_annotated_MAV[region%in%NME_annotated_count[nStage>=5]$region]
+    #NME_annotated_MAV_5stage_sdMAV=NME_annotated_MAV_5stage[,list(sdMAV=sd(MAV)),by=list(region)]
     
     if(permute){
         set.seed(seed)
-            NME_enhancer_cor=NME_enhancer_MAV_5stage[,list(NME_MAV_cor=cor(NME,sample(MAV),method="spearman"),gene=unique(gene)),
+            NME_annotated_cor=NME_annotated_MAV_5stage[,list(NME_MAV_cor=cor(NME,sample(MAV),method="spearman"),gene=unique(gene)),
                     by=list(region)]#MAV change median= 0.03
     }
     else{
-    NME_enhancer_cor=NME_enhancer_MAV_5stage[,list(NME_MAV_cor=cor(NME,MAV,method="spearman"),gene=unique(gene)),
+    NME_annotated_cor=NME_annotated_MAV_5stage[,list(NME_MAV_cor=cor(NME,MAV,method="spearman"),gene=unique(gene)),
                     by=list(region)]#MAV change median= 0.03
     }
-    return(NME_enhancer_cor)
+    return(NME_annotated_cor)
 }
 #MAV calc
 MAV_calc<-function(expr){
