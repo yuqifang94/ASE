@@ -11,5 +11,5 @@ cat("Processing stage:",stages_selected,'\n')
 m <- 2^m-1#dim: 43346 90637
 m <- m[,stages==stages_selected]
 m <- m[rowSums(m) > 0,]#26384 90637
-d <- saver(m,ncores=10,size.factor=1)$estimate  
+d <- saver(m[1:20,],ncores=10,size.factor=1)$estimate  
 saveRDS(d,file=paste0('../../downstream/data/mouseLimb/10xLimbSaver_',stages_selected,'.rds'))
