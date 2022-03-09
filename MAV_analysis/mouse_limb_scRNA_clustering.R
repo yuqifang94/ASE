@@ -66,20 +66,38 @@ corCalc<-function(NME_annotated,MAV,permute=F,seed=0,NMEVar="NME",MAVVar="hyperv
 }
 #MAV calc
 MAV_calc<-function(expr){
+  expr <- log2(expr + 1)
+  expr <- expr[rowMeans(expr > 0.1) > 0.01,]
+  expr <- expr[!grepl('^Rpl|^Rps',rownames(expr)),]
   m <- rowMeans(expr)
   lm <- log(m)
   var <- apply(expr,1,var)
-  var=var[var!=0]
-  gene_non0Var=names(var)
-  m=m[gene_non0Var]
-  lm=lm[gene_non0Var]
-
   logvar <- log(var)
   hypervar_var <- resid(loess(var~lm))
   hypervar_logvar <- resid(loess(logvar~lm))
-  res <- data.table(gene=gene_non0Var,mean=m,var=var,hypervar_var=hypervar_var,hypervar_logvar=hypervar_logvar)
+   #hypervar_logvar<- resid(lm(logvar~bs(lm))) #This is bs
+  res <- data.table(mean=m,var=var,hypervar_var=hypervar_var,hypervar_logvar=hypervar_logvar,gene=rownames(expr))
   return(res)
+  #
+ 
+  
 }
+# MAV_calc_archive<-function(expr){
+
+#       m <- rowMeans(expr)
+#   lm <- log(m)
+#   var <- apply(expr,1,var)
+#   var=var[var!=0]
+#   gene_non0Var=names(var)
+#   m=m[gene_non0Var]
+#   lm=lm[gene_non0Var]
+
+#   logvar <- log(var)
+#   hypervar_var <- resid(loess(var~lm)) #This is bs
+#   hypervar_logvar <- resid(loess(logvar~lm))#This is not bs
+#   #hypervar_logvar<- resid(lm(var~bs(lm))) #This is bs
+#   res <- data.table(gene=gene_non0Var,mean=m,var=var,hypervar_var=hypervar_var,hypervar_logvar=hypervar_logvar)
+# }
 #Go for Mesenchymal first
 cellTypeMAVcalc<-function(limbDat,selectedCellType){
     cellTypeStageMAV=limbDat[grepl(selectedCellType,names(limbDat))]
@@ -117,6 +135,13 @@ diffCalc<-function(dtIn,rnCol,valueName,valueVar){
     dtOut=melt.data.table(dtOut,id.vars=rnCol, variable.name = "stage",value.name = valueName)
     return(dtOut)
 
+}
+#P-value gen
+pvalCalc<-function(datIn,permuteIn){
+    nullDistCor=ecdf(permuteIn$NME_MAV_cor)
+    datIn$pval=nullDistCor(datIn$NME_MAV_cor)
+    datIn$FDR=p.adjust(datIn$pval,method='BH')#min = 0.65
+    return(datIn)
 }
 #cellTypeStage_MAV_sd=cellTypeStage_MAV[,list(sdMAV=sd(hypervar_logvar)),list(gene)]
 #cellTypeStage_MAV_sd[order(sdMAV,decreasing=T)][1:10]
@@ -214,13 +239,7 @@ dev.off()
 
 write.csv(NME_limb_enhancerCor_mesenchymal[,list(mean_cor=mean(NME_MAV_cor)),by=gene][order(mean_cor,decreasing=T)],
 '../downstream/output/mouse_analysis/limb_cell_heterogenity/NME_MAV_cor_mean.csv',row.names=F)
-#P-value gen
-pvalCalc<-function(datIn,permuteIn){
-    nullDistCor=ecdf(permuteIn$NME_MAV_cor)
-    datIn$pval=nullDistCor(datIn$NME_MAV_cor)
-    datIn$FDR=p.adjust(datIn$pval,method='BH')#min = 0.65
-    return(datIn)
-}
+
 
 #Do differential MAV and NME
 NME_limb_enhancerCor_mesenchymal_Diff=enhancerCorCalc(dNME_mm10_limb,enhancer,cellTypeStage_Mesenchymal_dMAV,NMEVar="dNME",MAVVar="dMAV")

@@ -1,5 +1,5 @@
 #Uuse SAVER in MARCC, conda_R with Jason's code at /scratch/users/zji4@jhu.edu/andy_ASE/hypervar/encmouse/data/code
-#MARCC R/4.0.2
+#MARCC R/3.6.1, gcc/9.2.0
 library(SAVER)
 library(data.table)
 #All takes too long, need to separate by stage
