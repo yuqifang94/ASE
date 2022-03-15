@@ -115,7 +115,7 @@ plot_two_samples("chr1:75443504-75443755",genome,"Asic4","E13.5","E14.5","forebr
 plot_two_samples("chr18:38278051-38278300",genome,"Fgf1","E11.5","E12.5","liver")
 
 #Human examples
-plot_two_samples_human<-function(region_plot,genome,gene_in,tissue_in,sample_in,bam_dir="G:/archive_dropbox/allele_specific/bamfiles/",
+plot_two_samples_human<-function(region_plot,genome,gene_in,tissue_in,sample_in,bam_dir="/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/",
                                  folder_out='../downstream/output/mouse_analysis/examples/motif_region_example/',CG_hg19=CG_hg19,pointSize=pointSize,lwd=lwd){
   bam_dir=paste0(bam_dir,tissue_in,'/')
   chr_name=gsub(':.*','',region_plot)
@@ -138,6 +138,7 @@ plot_two_samples_human<-function(region_plot,genome,gene_in,tissue_in,sample_in,
   
   
 }
+bam_dir='/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/'
 CG_hg19=getCpgSiteshg19()
 genome <- BSgenome.Hsapiens.UCSC.hg19
 seqlevels(genome)=gsub('chr','',seqlevels(genome))
@@ -151,3 +152,12 @@ plot_two_samples_human("4:7308694-7309119",genome,'SORCS2','HUES64','HUES64_stem
 plot_two_samples_human("14:104566670-104566870",genome,'ASPG','HUES64','HUES64_stem_27_undifferentiated_paired_phased',CG_hg19=CG_hg19,pointSize=0.5,lwd=0.075)
 plot_two_samples_human("1:175568947-175569147",genome,'TNR','HUES64','HUES64_stem_27_undifferentiated_paired_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075)
 plot_two_samples_human("19:54668387-54668587",genome,'TMC4','HUES64','HUES64_stem_27_undifferentiated_paired_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075)
+
+#Select human sample
+outDir='/users/yfang/yfang_dcs04/ASE_clean_run_403/downstream/output/human_analysis/example/'
+
+GR_merge=readRDS(GR_merge_file)
+GR_merge=convert_GR(GR_merge,direction="DT")
+GR_merge[dMML<0.1&dNME_pval<0.1&N_hg19>=4][order(dNME,decreasing=T),list(dNME,dMML,N,region,Sample)]
+plot_two_samples_human("chr1:54758539-54759205",genome,'SSBP3','STL003','Aorta_single - STL003_single_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075,folder_out=outDir,
+  bam_dir=bam_dir)

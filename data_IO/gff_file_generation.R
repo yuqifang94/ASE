@@ -56,7 +56,6 @@ gff_gen(hg19_all_comp_break,cpgr,hg19_bl,'../downstream/output/human_analysis/CP
 # Linux code for correcting format and copy to each file ------------------
 #Running dir: /ibox/afeinbe2/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/
 # sed -i 's/%2c/,/g' hg19_TSS_20kb_250bp.gff
-# sed -i 's/];/]/g' hg19_TSS_20kb_250bp.gff
 # sed -i 's/chr//g' hg19_TSS_20kb_250bp.gff
 # subj=(H9 HUES64 skin03 STL001 STL002 STL003 STL011 H1 HuFGM02 112 149 150)
 # for i in "${subj[@]}"; do cp hg19_TSS_20kb_250bp.gff ~/work/shared/CpelAsm/data/${i}/cpelasm/${i}_allele_agnostic_analysis.gff; done

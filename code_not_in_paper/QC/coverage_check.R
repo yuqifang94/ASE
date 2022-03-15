@@ -25,7 +25,8 @@ export.bed(sort(cpgr),'../downstream/output/human_analysis/QC/hg19_all_CpG.bed')
 #for fn in ../bam_all/*phased.all.sorted.bam; do sbatch coverage_calc.sh hg19_all_CpG.bed $fn "${fn/\.\.\/bam_all\//}".agnostic.cov; done
 #Need to rerun human coverage analysis
 bed_out=GRanges()
-for (fn in dir(pattern='*.cov')){
+cov_dir='../downstream/data/coverage_human/'
+for (fn in dir(cov_dir,pattern='all.sorted.bam.agnostic.cov')){
   bed_in=import.bedGraph(fn)
   sample=gsub('_phased.all.sorted.bam.agnostic.cov','',fn)
   bed_in$coverage=bed_in$NA.2
@@ -50,7 +51,19 @@ for (fn in dir(cov_dir,pattern='*.cov')){
 }
 saveRDS(bed_out,'../downstream/output/mouse_analysis/mouse_coverage.rds')
 #ASM coverage
-#for fn in ../bam_asm/*.bam; do sbatch coverage_calc.sh hg19_all_CpG.bed $fn "${fn/\.\.\/bam_asm\//}".agnostic.cov; done
-
+#for fn in ../bam_asm/*.bam; do sbatch coverage_calc.sh hg19_all_CpG.bed $fn "${fn/\.\.\/bam_asm\//}".agnostic.cov; donebed_out=GRanges()
+cov_dir='../downstream/data/coverage_human/'
+bed_out=GRanges()
+for (fn in dir(cov_dir,pattern='sort.genome')){
+  bed_in=import.bedGraph(paste0(cov_dir,fn))
+  sample=gsub('_phased.sort*.bam.agnostic.cov','',fn)
+  cat("Processing: ",fn,"\n")
+  bed_in$coverage=bed_in$NA.2
+  bed_in$Sample=sample
+  bed_in=bed_in[seqlevels(bed_in)%in%1:22]
+  mcols(bed_in)=mcols(bed_in)[,c('coverage','Sample')]
+  bed_out=c(bed_out,bed_in)
+  
+}
 #Mbias
 #for fn in ../bam_all/{149,150,HuFGM02,H1}*.bam; do echo sbatch mbias.sh $fn $PWD ~/data/yfang/referenceGenome/hg19_Arioc/; done
