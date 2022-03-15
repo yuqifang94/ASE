@@ -231,7 +231,7 @@ methyl_circle_plotCpG <- function(cpgsite = cpgsite, bamFile = bamFile,
         theme_void() + 
         geom_segment(data = d2, aes(x = xstart, y = -line_s, xend = xend,
             yend = -line_s), colour = "grey", size = lwd) +
-        geom_point(data = d, aes(x = CpG, y = -line_s, group=value,fill =value,color=value),size = pointSize,stroke =0) +
+        geom_point(data = d[!is.na(d$value)], aes(x = CpG, y = -line_s, group=value,fill =value,color=value),size = pointSize,stroke =0) +
       scale_fill_manual(values=c("U"="blue","M"="red","NA"=NA))+
       scale_color_manual(values=c("U"="blue","M"="red","NA"=NA))+
         # geom_point(aes(x = cpg.start, y = 0), shape = 24, size = 3, 

@@ -117,7 +117,7 @@ plot_two_samples("chr18:38278051-38278300",genome,"Fgf1","E11.5","E12.5","liver"
 #Human examples
 plot_two_samples_human<-function(region_plot,genome,gene_in,tissue_in,sample_in,bam_dir="/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/",
                                  folder_out='../downstream/output/mouse_analysis/examples/motif_region_example/',CG_hg19=CG_hg19,pointSize=pointSize,lwd=lwd){
-  bam_dir=paste0(bam_dir,tissue_in,'/')
+  bam_dir=paste0(bam_dir,tissue_in,'/bam/')
   chr_name=gsub(':.*','',region_plot)
   region_plot=convert_GR(region_plot)
   
@@ -154,10 +154,13 @@ plot_two_samples_human("1:175568947-175569147",genome,'TNR','HUES64','HUES64_ste
 plot_two_samples_human("19:54668387-54668587",genome,'TMC4','HUES64','HUES64_stem_27_undifferentiated_paired_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075)
 
 #Select human sample
-outDir='/users/yfang/yfang_dcs04/ASE_clean_run_403/downstream/output/human_analysis/example/'
+outDir='../downstream/output/human_analysis/example/'
 
 GR_merge=readRDS(GR_merge_file)
 GR_merge=convert_GR(GR_merge,direction="DT")
-GR_merge[dMML<0.1&dNME_pval<0.1&N_hg19>=4][order(dNME,decreasing=T),list(dNME,dMML,N,region,Sample)]
-plot_two_samples_human("chr1:54758539-54759205",genome,'SSBP3','STL003','Aorta_single - STL003_single_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075,folder_out=outDir,
+GR_merge[dMML<0.1&dNME_pval<0.1&N_hg19>=4&(!is.na(genes_promoter)|!is.na(genes_body))][order(dNME,decreasing=T),list(dNME,dMML,N,region,Sample,genes_promoter,genes_body)]
+plot_two_samples_human("1:95568901-95569362",genome,'SSBP3','STL003','STL003_Aorta_single_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075,folder_out=outDir,
   bam_dir=bam_dir)
+
+  egion_plot,genome,gene_in,tissue_in,sample_in,bam_dir="/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/",
+                                 folder_out='../downstream/output/mouse_analysis/examples/motif_region_example/',CG_hg19=CG_hg19,pointSize=pointSize,lwd=lwd
