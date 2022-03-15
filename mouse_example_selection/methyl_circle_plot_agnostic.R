@@ -41,7 +41,7 @@
 #' @import ggplot2
 #'
 #' @export
-source('split_reads.R')
+source('mosue_example_selection/split_reads.R')
 library(stringr)
 methyl_circle_plotCpG <- function(cpgsite = cpgsite, bamFile = bamFile, 
     pointSize = 3, refFile = refFile, dame = NULL, order = FALSE, 
