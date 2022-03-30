@@ -111,6 +111,8 @@ TSS_dis_dNME=dist_calc(convert_GR(human_variant_dNME$region),genomic_features$TS
 TSS_dis_dNME=convert_GR(TSS_dis_dNME,direction='DT')
 TSS_dNME_match=match(human_variant_dNME$region,TSS_dis_dNME$region)
 human_variant_dNME$TSS_dist=TSS_dis_dNME$dist[TSS_dNME_match]#Median 8981
+
+
 #Archive
 human_pan=subsetByOverlaps(human_variant,pan_mutation_gr_19)#442710/5357609
 saveRDS(human_pan,'../downstream/output/human_pan.rds')
