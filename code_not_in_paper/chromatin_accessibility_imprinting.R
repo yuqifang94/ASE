@@ -115,17 +115,17 @@ ggplot(data=as.data.frame(mcols(GR_merge)),aes(x=dMML,y=dNME))+geom_smooth()+
 dMML_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',Imprinted_Genes$Gene),
                     data.frame(allele="All Imprinted\ngenes")),
               cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Paternal']), data.frame(allele="Paternally\nexpressed")),
+           Imprinted_Genes$Gene[Imprinted_Genes$`Expressedï¿½Allele`=='Paternal']), data.frame(allele="Paternally\nexpressed")),
             cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dMML_pval',
-           Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal']), data.frame(allele="Maternally\nexpressed")))
+           Imprinted_Genes$Gene[Imprinted_Genes$`Expressedï¿½Allele`=='Maternal']), data.frame(allele="Maternally\nexpressed")))
 dMML_OR$stat_type="dMML-ASM"
 dMML_OR$star=add.significance.stars(dMML_OR$pvalue, cutoffs = c(0.05, 0.01, 0.001))
 dNME_OR=rbind(cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',Imprinted_Genes$Gene),
                     data.frame(allele="All Imprinted genes")),
               cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
-                               Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Paternal']), data.frame(allele="Paternally expressed")),
+                               Imprinted_Genes$Gene[Imprinted_Genes$`Expressedï¿½Allele`=='Paternal']), data.frame(allele="Paternally expressed")),
               cbind(MAE_enrich(GR_merge[!is.na(GR_merge$genes_promoter)],0.1,'genes_promoter','dNME_pval',
-                               Imprinted_Genes$Gene[Imprinted_Genes$`Expressed Allele`=='Maternal']), data.frame(allele="Maternally expressed")))
+                               Imprinted_Genes$Gene[Imprinted_Genes$`Expressedï¿½Allele`=='Maternal']), data.frame(allele="Maternally expressed")))
 dNME_OR$stat_type="dNME-ASM"
 dNME_OR$star=add.significance.stars(dNME_OR$pvalue, cutoffs = c(0.05, 0.01, 0.001))
 
@@ -176,8 +176,40 @@ chromHMM_dMML_all$states=factor(chromHMM_dMML_all$states,levels=chromHMM_dMML_al
 chromHMM_dMML_all$FDR=p.adjust(chromHMM_dMML_all$p_value,method='BH')
 chromHMM_dMML_all$star=add.significance.stars(chromHMM_dMML_all$FDR, cutoffs = c(0.05, 0.01, 0.001))
 chromHMM_dMML_all$states=factor(chromHMM_dMML_all$states,levels=chromHMM_dMML_all$states[order(chromHMM_dMML_all$OR,decreasing=F)])
-pdf('../downstream/output/graphs/Figure2/Figure2C_crhomHMM.pdf',width=5,height=5)
+pdf('../downstream/output/graphs/Figure2/Figure2C_chromHMM_dMML.pdf',width=5,height=5)
 print(ggplot(chromHMM_dMML_all,aes(x=states,y=OR,fill=states))+geom_bar(stat="identity",color="black",position=position_dodge(0.9))+
+  geom_errorbar(aes(ymin=lower_CI,ymax=upper_CI),width=0.2,position=position_dodge(0.9))+ coord_flip()+
+  theme_glob+xlab("chromHMM states")+theme(legend.position = "")+ylim(c(0,13))+
+  geom_text(aes(label=round(OR,digits = 2),y=upper_CI),hjust=-0.5, color="black", size=3)+
+  geom_text(aes(label=star,y=upper_CI+0.5),hjust=-1, color="black", size=3))
+dev.off()
+
+#dNME
+# ChromHMM annotations ----------------------------------------------------
+ah = AnnotationHub()
+ENCODE_name=ENCODE_to_sample(unique(GR_merge$Sample))
+chromHMM_dNME_all_ls=list()
+ah_gr=GRanges()
+#Do it for all available data, check
+suppressMessages({for (sp in ENCODE_name$sample[!is.na(ENCODE_name$ENCODE)]){
+ah_num=names(AnnotationHub::query(ah, c("chromhmmSegmentations", ENCODE_name$ENCODE[ENCODE_name$sample==sp])))
+  chromHMM=ah[[ah_num]]
+  chromHMM_dNME_all_ls[[sp]]=chromHMM_OR(GR_merge, chromHMM,sp,stat="dNME_pval")
+  # }
+}
+})
+
+#####Summing up cont table
+chromHMM_dNME_all=chromHMM_combine(chromHMM_dNME_all_ls)
+
+#Plot OR with error bar
+chromHMM_dNME_all=chromHMM_dNME_all[order(chromHMM_dNME_all$OR,decreasing=F),]
+chromHMM_dNME_all$states=factor(chromHMM_dNME_all$states,levels=chromHMM_dNME_all$states)
+chromHMM_dNME_all$FDR=p.adjust(chromHMM_dNME_all$p_value,method='BH')
+chromHMM_dNME_all$star=add.significance.stars(chromHMM_dNME_all$FDR, cutoffs = c(0.05, 0.01, 0.001))
+chromHMM_dNME_all$states=factor(chromHMM_dNME_all$states,levels=chromHMM_dNME_all$states[order(chromHMM_dNME_all$OR,decreasing=F)])
+pdf('../downstream/output/human_analysis/chromatin_accessibility/Figure2C_chromHMM_dNME.pdf',width=5,height=5)
+print(ggplot(chromHMM_dNME_all,aes(x=states,y=OR,fill=states))+geom_bar(stat="identity",color="black",position=position_dodge(0.9))+
   geom_errorbar(aes(ymin=lower_CI,ymax=upper_CI),width=0.2,position=position_dodge(0.9))+ coord_flip()+
   theme_glob+xlab("chromHMM states")+theme(legend.position = "")+ylim(c(0,13))+
   geom_text(aes(label=round(OR,digits = 2),y=upper_CI),hjust=-0.5, color="black", size=3)+
@@ -191,7 +223,7 @@ dev.off()
 ######reading in data
 GR_merge_H1=GR_merge[GR_merge$Subject=='H1']
 #This file from Ken
-ATAC_H1=as.data.frame(read.table("../downstream/input/H1_ATAC_allele_count.txt",header=T,stringsAsFactors = F))
+ATAC_H1=as.data.frame(read.table("../downstream/input/human_analysis/chromatin_analysis/H1_ATAC_allele_count.txt",header=T,stringsAsFactors = F))
 colnames(ATAC_H1)=c("seqname","start","end","rep1_g1","rep1_g2","rep2_g1","rep2_g2")
 sampleTable <- data.frame(condition = factor(c("genome1","genome2","genome1","genome2")))
 rownames(sampleTable) <- colnames(ATAC_H1)[4:7]
@@ -206,7 +238,7 @@ res_ATAC_lfc<-results(dds_ATAC_lfc,name=c("condition_genome2_vs_genome1"))
 
 ##############read in ATAC-seq CPM data they are same in regions
 #This file from Ken
-ATAC_H1_CPM=as.data.frame(read.table("../downstream/input/H1_ATAC_allele_CPM.txt",header=T,stringsAsFactors = F))
+ATAC_H1_CPM=as.data.frame(read.table("../downstream/input/human_analysis/chromatin_analysis/H1_ATAC_allele_CPM.txt",header=T,stringsAsFactors = F))
 colnames(ATAC_H1_CPM)=c("seqname","start","end","rep1_g1_CPM","rep1_g2_CPM","rep2_g1_CPM","rep2_g2_CPM")
 ATAC_H1_CPM=makeGRangesFromDataFrame(as.data.frame(ATAC_H1_CPM),keep.extra.columns = T)
 elementMetadata(ATAC_H1_CPM)=cbind(res_ATAC_lfc,elementMetadata(ATAC_H1_CPM))
@@ -237,7 +269,7 @@ print(ggplot(ATAC_plot[ATAC_plot$dMML_pval<=pval_cutoff,],aes(x=dMML,y=ATAC_FC_C
   ylab('Allelic accessibility change')+theme_glob)+xlab('relative dMML')
 dev.off()
 #Not in use Figure S3
-# pdf('../downstream/output/graphs/FigureS3/Figure2D_ATAC-seq_dNME.pdf',width=3.5,height=3.5)
-# print(ggplot(ATAC_plot[ATAC_plot$dNME_pval<=pval_cutoff,],aes(x=dNME,y=ATAC_FC_CPM))+geom_smooth()+geom_point(alpha=0.5)+
-#   ylab('Allelic accessibility change')+theme_glob)+xlab('relative dNME')
-# dev.off()
+pdf('../downstream/output/human_analysis/chromatin_accessibility/ATAC-seq_dNME.pdf',width=3.5,height=3.5)
+print(ggplot(ATAC_plot[ATAC_plot$dNME_pval<=pval_cutoff,],aes(x=dNME,y=ATAC_FC_CPM))+geom_smooth()+geom_point(alpha=0.5)+
+  ylab('Allelic accessibility change')+theme_glob)+xlab('relative dNME')
+dev.off()

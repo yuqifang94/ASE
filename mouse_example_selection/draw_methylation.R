@@ -154,13 +154,28 @@ plot_two_samples_human("1:175568947-175569147",genome,'TNR','HUES64','HUES64_ste
 plot_two_samples_human("19:54668387-54668587",genome,'TMC4','HUES64','HUES64_stem_27_undifferentiated_paired_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075)
 
 #Select human sample
+bam_dir='/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/'
+CG_hg19=getCpgSiteshg19()
+genome <- BSgenome.Hsapiens.UCSC.hg19
+seqlevels(genome)=gsub('chr','',seqlevels(genome))
+seqlevels(CG_hg19)=gsub('chr','',seqlevels(CG_hg19))
 outDir='../downstream/output/human_analysis/example/'
-
+bam_dir='/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/'
 GR_merge=readRDS(GR_merge_file)
 GR_merge=convert_GR(GR_merge,direction="DT")
-GR_merge[dMML<0.1&dNME_pval<0.1&N_hg19>=4&(!is.na(genes_promoter)|!is.na(genes_body))][order(dNME,decreasing=T),list(dNME,dMML,N,region,Sample,genes_promoter,genes_body)]
-plot_two_samples_human("1:95568901-95569362",genome,'SSBP3','STL003','STL003_Aorta_single_phased',CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075,folder_out=outDir,
-  bam_dir=bam_dir)
+GR_merge_sub= GR_merge[dMML<0.1&dNME_pval<0.1&N_hg19>=5&(!is.na(genes_promoter)|!is.na(genes_body))][order(dNME,decreasing=T),
+    list(dNME,dMML,N,region,Sample,genes_promoter,genes_body,MML1,MML2,NME1,NME2)]
+ source('mouse_example_selection/methyl_circle_plot_agnostic.R')
+ GR_merge_sub[grepl("ESC",Sample)]$Sample=gsub("ESC","ESC_paired",GR_merge_sub[grepl("ESC",Sample)]$Sample)
+for (i in 1:nrow(GR_merge_sub) ){
+  region_select=as.data.frame(GR_merge_sub)[i,]
+  gene = na.omit(c(unlist(region_select$genes_promoter),unlist(region_select$genes_body)))[1]
+  tissue=gsub('.*- ','',region_select$Sample)
+    sample=paste0(tissue,'_',gsub(' -.*','',region_select$Sample),'_phased')
+  cat("Processing:",sample,"\n")
+  if(tissue != "H1"&!sample %in% c('STL003_Spleen_single_phased')){
 
-  egion_plot,genome,gene_in,tissue_in,sample_in,bam_dir="/dcs04/feinberg/data/personal/yfang/allele_specific_roadmap_CEPL/work_archive/CpelAsm/data/",
-                                 folder_out='../downstream/output/mouse_analysis/examples/motif_region_example/',CG_hg19=CG_hg19,pointSize=pointSize,lwd=lwd
+  plot_two_samples_human(gsub("chr","",region_select$region),genome,gene,tissue,sample,CG_hg19=CG_hg19,pointSize=0.35,lwd=0.075,folder_out=outDir,
+  bam_dir=bam_dir)
+  }
+}

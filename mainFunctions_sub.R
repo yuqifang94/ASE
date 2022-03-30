@@ -794,7 +794,7 @@ chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_p
 chromHMM_combine<-function(chromHMM_in){
   cont_table_all=list()
   #ChromHMM, list object, each is a sample, within sample ,each is a state
-  for (states in unique(unlist(lapply(chromHMM_dMML_all_ls,function(x) names(x[[2]]))))){
+  for (states in unique(unlist(lapply(chromHMM_in,function(x) names(x[[2]]))))){
     #extract 2x2 table for each states for each sample, return a list of sample with its contengency table
     chromHMM_in_cont=lapply(chromHMM_in, function(x,states) x[[2]][[states]],states=states)
     #For each state, construct a CMH table, 4 columns

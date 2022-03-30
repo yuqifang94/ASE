@@ -23,3 +23,4 @@ for(ts in names(uc)){
   cat("Finish processing:",ts,'in ',proc.time()[[3]]-tt1,'\n')
   
 }
+#Check /users/yfang/yfang_dcs04/allele_agnostic_mouse_all/CPEL/CPEL_agnostic/cpelasm/cpelasm/MARCC_archive_20210830/jsd_output_CPEL

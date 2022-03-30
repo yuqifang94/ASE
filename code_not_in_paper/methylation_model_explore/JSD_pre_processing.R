@@ -10,9 +10,9 @@ JSD_in$JSD=JSD_in$score
 return(JSD_in)},mc.cores=24)
 JSD_in=fastDoCall('c',JSD_in_ls)
 JSD_in$tissue=sub('_.*','',JSD_in$Sample)
-
-JSD_in_matrix_ls=mclapply(unique(JSD_in$tissue),function(x) agnostic_matrix_conversion(JSD_in[JSD_in$tissue==x],'JSD'),mc.cores=12)
-saveRDS(JSD_in,JSD_in_fn)#74% regiOn have all data
+JSD_in=convert_GR(JSD_in,"DT")
+JSD_in_dt=dcast.data.table(JSD_in,region+N~Sample,value.var="JSD")
+saveRDS(JSD_in_dt,JSD_in_fn)#74% regiOn have all data
 
 #Filter out the region with N >=18
 UC_in=readRDS(UC_in_matrix_ls_file)
