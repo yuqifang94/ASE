@@ -1,5 +1,178 @@
 source('mainFunctions_sub.R')
 # GWAS analysis -----------------------------------------------------------
+Functions
+get_traits_GWAS<-function(variant_in,trait_gr_in,pval_cutoff=0.1,count_cutoff=3,stat='dNME_pval',CMH=FALSE,maxgap=500,ncores=15){
+  traits_ls=mclapply(trait_gr_in,get_traits_GWAS_all_trait,
+                   variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH,maxgap=maxgap,
+                   mc.cores=ncores)
+  return(traits_ls)
+  #list(do.call(rbind,lapply(traits_ls,function(x)x[[1]])),do.call(rbind,lapply(traits_ls,function(x)x[[2]])))
+}
+get_traits_GWAS_all_trait<-function(trait_gr,variant_in,pval_cutoff,count_cutoff,stat,CMH,maxgap=500){
+  #trait_gr=trait_gr[trait_gr$trait%in%trait]
+  trait=unique(trait_gr$`DISEASE/TRAIT`)
+  OR_output=data.frame()
+  CMH_df=data.frame()
+  dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
+  dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
+  dNME_traits_gr=findOverlaps(dNME_sig,trait_gr,maxgap = maxgap)
+  # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+  # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+  # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+  # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+  dNME_trait=length(unique(queryHits(dNME_traits_gr)))
+  dNME_non_trait=length(dNME_sig)-dNME_trait
+  non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
+  non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
+  trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+  journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
+  trait_gr_out=trait_gr[subjectHits(dNME_traits_gr)]
+  mcols(trait_gr_out)=mcols(trait_gr_out)[c('MAPPED_GENE','STRONGEST SNP-RISK ALLELE','DISEASE/TRAIT')]
+  names(mcols(trait_gr_out))=c('genes','risk allele','traits')
+  rm(dNME_sig)
+  rm(dNME_non_sig)
+  rm(trait_gr)
+  gc()
+  if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+    
+    CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+                      count=trait_count,subject='All')
+    cat('processing trait',trait,'\n')
+    
+    if(length(CMH_df)>0){
+      if (CMH){return(CMH_df)}
+      else{
+        
+        OR=CMH_test(CMH_df)
+        OR_output=cbind(t(CMH_df$count),data.frame(trait=trait,OR=OR$estimate,
+                                                   p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+        colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+        OR_output$journal=journal
+        
+        return(list(OR_output,trait_gr_out))
+      }
+    }
+  }
+}
+#Modify this to adapt trait analysis
+get_traits_GWAS_all_trait_single<-function(variant_in,trait_gr,pval_cutoff,count_cutoff,stat,CMH,maxgap){
+ 
+  OR_output=data.frame()
+  CMH_df=data.frame()
+  dNME_sig=variant_in[elementMetadata(variant_in)[,stat]<=pval_cutoff]
+  dNME_non_sig=variant_in[elementMetadata(variant_in)[,stat]>pval_cutoff]
+  
+  # dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+  # non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+  # dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+  # non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+  dNME_trait=length(subsetByOverlaps(dNME_sig,trait_gr,maxgap = maxgap))
+  dNME_non_trait=length(dNME_sig)-dNME_trait
+  non_dNME_trait=length(subsetByOverlaps(dNME_non_sig,trait_gr,maxgap = maxgap))
+  non_dNME_non_trait=length(dNME_non_sig)-non_dNME_trait
+  trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+  rm(dNME_sig)
+  rm(dNME_non_sig)
+  rm(trait_gr)
+  gc()
+  if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+    
+    CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+                      count=trait_count,subject='All')
+
+    
+    if(length(CMH_df)>0){
+      if (CMH){return(CMH_df)}
+      else{
+        
+        OR=CMH_test(CMH_df)
+        OR_output=cbind(t(CMH_df$count),data.frame(OR=OR$estimate,
+                                                   p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+        colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+        OR_output$journal=paste(unique(trait_gr$JOURNAL),collapse = ',')
+        return(OR_output)
+      }
+    }
+  }
+}
+
+
+
+get_traits_GWAS_trait<-function(trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
+  traits_sp_ls=lapply(unique(variant_in$germlayer),get_traits_GWAS_sp_trait,trait=trait,
+                      variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH)
+  traits_sp=do.call(rbind,traits_sp_ls)
+  if(CMH&length(traits_sp)>0){
+    OR=CMH_test(traits_sp)
+    OR_output=data.frame(trait=trait,OR=OR$estimate,p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2])
+    return(OR_output)
+  }else if(!CMH){
+    return(traits_sp)
+  }
+
+
+}
+
+
+
+
+get_traits_GWAS_sp_trait<-function(sp,trait,variant_in,pval_cutoff,count_cutoff,stat,CMH){
+ 
+      OR_output=data.frame()
+      CMH_df=data.frame()
+      variant_in_sp=variant_in[variant_in$germlayer==sp&!is.na(variant_in$trait),]
+ 
+      dNME_sig=variant_in_sp[,stat]<=pval_cutoff
+      dNME_non_sig=variant_in_sp[,stat]>pval_cutoff
+    
+      dNME_trait=sum(unlist(variant_in_sp$trait[dNME_sig])==trait)
+      non_dNME_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])==trait)
+      dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_sig])!=trait)
+      non_dNME_non_trait=sum(unlist(variant_in_sp$trait[dNME_non_sig])!=trait)
+      trait_count=c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait)
+      if(all(!is.na(trait_count))&all(trait_count>=count_cutoff)){
+       
+        CMH_df=data.frame(ASM=c('Yes','Yes','No','No'),feature=c('Yes','No','Yes','No'),
+                                       count=trait_count,subject=sp)
+        cat('processing',sp,'with trait',trait,'\n')
+
+      if(length(CMH_df)>0){
+        if (CMH){return(CMH_df)}
+        else{
+          OR=CMH_test(CMH_df)
+          OR_output=cbind(t(CMH_df$count),data.frame(subject=sp,trait=trait,OR=OR$estimate,
+                                                     p_value=OR$p.value,lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+          colnames(OR_output)[1:4]=c('dNME_trait','non_dNME_trait','dNME_non_trait','non_dNME_non_trait')
+          return(OR_output)
+        }
+      }
+     }
+}
+
+tissue_to_germlayer<-function(GR_input){
+  GR_input$germlayer=NA
+  tissue_ectoderm=c("foreskin_keratinocyte_paired",
+                    "foreskin_melanocyte_paired",
+                    "ectoderm_paired",
+                    "brain_cerebellum_tissue_paired",
+                    "brain_germinal_matrix_tissue_paired",
+                    "Brain_substantia_nigra_paired",
+                    "Brain_Hippocampus_middle_paired" )
+  tissue_mesoderm=c("mesoderm_23_paired","Adipose_single",
+                    "Left_Ventricle_single","Psoas_Muscle_single" ,
+                    "Right_Ventricle_single","Right_Atrium_single","Spleen_single",
+                    "Adrenal_Gland_single","Aorta_single","Ovary_single")
+  tissue_endoderm=c("Small_Intestine_single","Lung_single","endoerm_27_paired",
+                    "Bladder_single" ,"Gastric_single", "Sigmoid_Colon_single",
+                    "Thymus_single","Esophagus_single", "Pancreas_single" ,"Liver_single")
+  tissue_ESC=c("rep1","rep2","merged","42_embryonic_stem_cell_single" , "stem_27_undifferentiated_paired",'ESC')
+  GR_input$germlayer[GR_input$tissue %in% tissue_ectoderm]='ectoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_mesoderm]='mesoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_endoderm]='endoderm'
+  GR_input$germlayer[GR_input$tissue %in% tissue_ESC]='ESC'
+  return(GR_input)
+}
+
 #Check GWAS traits have hg19 coordinates
 variant_trait=readRDS('../downstream/input/human_analysis/variant_traits.rds')
 variant_trait_gr=GRanges(variant_trait)

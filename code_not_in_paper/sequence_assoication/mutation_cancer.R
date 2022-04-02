@@ -55,6 +55,18 @@ pan_mutation_gr_19_passenger=pan_mutation_gr_19[pan_mutation_gr_19$`FATHMM score
 #Find overlap with passenger mutation
 olap_passenger=findOverlaps(human_variant,pan_mutation_gr_19_passenger)
 human_variant_passenger=human_variant[queryHits(olap_passenger)]
+
+#Subset with driver mutation
+pan_mutation_gr_19_functional=pan_mutation_gr_19[pan_mutation_gr_19$`FATHMM prediction`=="Functional"]
+#Find overlap with functiona mutation
+olap_functional=findOverlaps(human_variant,pan_mutation_gr_19_functional)
+human_variant_functional=human_variant[queryHits(olap_functional)]
+human_variant_functional$site=pan_mutation_gr_19_functional$`Primary site`[subjectHits(olap_functional)]
+human_variant_functional$gene=pan_mutation_gr_19_functional$`HGNC ID`[subjectHits(olap_functional)]
+human_variant_functional_dt=convert_GR(human_variant_functional,direction="DT")
+human_variant_functional$gene=pan_mutation_gr_19_functional$`HGNC ID`[subjectHits(olap_functional)]
+human_variant_functional_dt$SNP=gsub('-.*','',human_variant_functional_dt$region)
+write.csv(human_variant_functional_dt[dNME_pval<=0.1,list(SNP,dNME,site)],"../downstream/output/human_analysis/GWAS/cancer_mutation_dNME.csv")
 #Check genomic context
 genomic_features=readRDS(genomic_features_file)
 
