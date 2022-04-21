@@ -27,7 +27,7 @@ MML_Ecker_read<-function(fn){
   colnames(bed_in)=c('chr','start','end','MML')
   bed_in=bed_in[,list(region=paste0(chr,':',start,'-',end),MML=MML/100)]
   bed_in$Sample=sample_in
-  return(bed_in[grepl(paste0('chr',c(1:20,"X"),':'),region)])
+  return(bed_in[grepl(paste(paste0('chr',c(1:20,"X"),':'),collapse='|'),region)])
 }
 MML_fn_check<-function(fn,MML){
   tt1=proc.time()[[3]]
