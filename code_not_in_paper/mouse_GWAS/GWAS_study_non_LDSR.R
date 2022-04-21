@@ -189,7 +189,7 @@ trait_NME_out_ts=lapply(unique(NME_in_dt$germlayer),function(ts){
   print(trait_NME_out)
   return(trait_NME_out)
 })
-saveRDS(trait_NME_out_ts,'../downstream/output/human_analysis/trait_NME_out_ts_germlayer.rds')
+saveRDS(trait_NME_out_ts,'../downstream/output/human_analysis/GWAS/trait_NME_out_ts_germlayer.rds')
 trait_NME_out_ts_germlayer=readRDS('../downstream/output/human_analysis/GWAS/trait_NME_out_ts_germlayer.rds')
 trait_NME_out_ts_germlayer=do.call(rbind,trait_NME_out_ts_germlayer)
 # trait_NME_out_ts_merged=do.call(rbind,trait_NME_out_ts)
@@ -268,12 +268,31 @@ for(trait in unique(variant_trait$`DISEASE/TRAIT`)){
   
   
 }
+#This will be used in thesis---------------------------------------------------------------------------------------------------------------------------------------------------------
+NME_in=readRDS(NME_agnostic_DNase_file)
+DNase_hg19=readRDS(DNase_hg19_file)
+control_hg19=readRDS(control_hg19_file)
+variant_trait=readRDS('../downstream/input/human_analysis/variant_traits.rds')
+NME_in$DNase=NA
+NME_in_olap=findOverlaps(NME_in,DNase_hg19,type='equal')
+NME_in$DNase[queryHits(NME_in_olap)]="DNase"
+NME_in_olap=findOverlaps(NME_in,control_hg19,type='equal')
+NME_in$DNase[queryHits(NME_in_olap)]="control"
+variant_trait=GRanges(variant_trait)
+SNP_NME_in$GWAS="Non GWAS"
+variant_trait$cancer="Non-cancer"
+variant_trait$cancer[grepl('lympho|cancer|leukemia|melanoma|myeloma|carcinoma|Meningioma|Adverse response to chemotherapy|Cutaneous nevi|Glioma|tumor',variant_trait$`DISEASE/TRAIT`,ignore.case = T)]=
+  "cancer-related trait"
 
+high_NME_DNase = quantile(NME_in[NME_in$DNase=="DNase"]$NME,prob=0.75)
+high_NME_control=quantile(NME_in[NME_in$DNase=="control"]$NME,prob=0.75)
+trait_NME_out=data.table()
 for(trait in unique(variant_trait$`DISEASE/TRAIT`)){
+
   NME_trait=subsetByOverlaps(NME_in,variant_trait[variant_trait$`DISEASE/TRAIT`==trait])
-  DNase_high=sum(NME_trait$NME>=high_NME_mean&NME_trait$DNase=="DNase")
+  DNase_high=sum(NME_trait$NME>=high_NME_DNase&NME_trait$DNase=="DNase")
   DNase_total=sum(NME_trait$DNase=="DNase")
-  control_high=sum(NME_trait$NME>=high_NME&NME_trait$DNase=="control")
+  control_high=sum(NME_trait$NME>=high_NME_control&NME_trait$DNase=="control")
   control_total=sum(NME_trait$DNase=="control")
   DNase_mean_quantile=mean(NME_ecdf(NME_trait[NME_trait$DNase=="DNase"]$NME))
   control_mean_quantile=mean(NME_ecdf(NME_trait[NME_trait$DNase=="control"]$NME))
@@ -286,9 +305,10 @@ for(trait in unique(variant_trait$`DISEASE/TRAIT`)){
 }
 trait_NME_out$DNase_high_percent=trait_NME_out$DNase_high/trait_NME_out$DNase_total
 trait_NME_out$control_high_percent=trait_NME_out$control_high/trait_NME_out$control_total 
-saveRDS(trait_NME_out,'../downstream/output/human_analysis/GWAS_agnostic_NME_DNase_mean.rds')
+saveRDS(trait_NME_out,'../downstream/output/human_analysis/GWAS/GWAS_agnostic_NME_DNase_mean.rds')
+
 #Do cancer only, do binomial test
-trait_NME_out=readRDS('../downstream/output/human_analysis/GWAS_agnostic_NME_DNase.rds')
+trait_NME_out=readRDS('../downstream/output/human_analysis/GWAS/GWAS_agnostic_NME_DNase.rds')
 trait_NME_out=trait_NME_out[DNase_total>0]
 p_exp=sum(trait_NME_out$DNase_high)/sum(trait_NME_out$DNase_total)
 trait_NME_out$p_value_binom=unlist(lapply(1:nrow(trait_NME_out),function(x) binom.test(trait_NME_out[x]$DNase_high,trait_NME_out[x]$DNase_total,p=p_exp,alternative = 'greater')$p.value))
