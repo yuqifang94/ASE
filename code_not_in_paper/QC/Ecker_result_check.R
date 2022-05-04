@@ -12,7 +12,7 @@ cor_rep<-function(gr_in,stat){
     cor_out[[ts]]=cor.test(mcols(gr_rep1)[,stat],mcols(gr_rep2)[,stat])}
   return(cor_out)
 }
-MML_Ecker_read<-function(fn){
+MML_rename<-function(fn){
   fn_split=strsplit(gsub('.*/|.bed.gz','',fn),'_')[[1]]
   tissue=fn_split[2]
   stage=fn_split[1]
@@ -21,12 +21,17 @@ MML_Ecker_read<-function(fn){
     stage=paste(gsub('E','day',stage),'_5',sep='')
     
   }
-  sample_in=paste(tissue,stage,rep,sep='-')
+  return(paste(tissue,stage,rep,sep='-'))
+
+}
+MML_Ecker_read<-function(fn){
+  sample_in=MML_rename(fn)
   bed_in=fread(fn)
   bed_in=bed_in[,c(1,2,3,11)]
   colnames(bed_in)=c('chr','start','end','MML')
   bed_in=bed_in[,list(region=paste0(chr,':',start,'-',end),MML=MML/100)]
-  bed_in$Sample=sample_in
+  colnames(bed_in)[2]=sample_in
+  
   return(bed_in[grepl(paste(paste0('chr',c(1:20,"X"),':'),collapse='|'),region)])
 }
 MML_fn_check<-function(fn,MML){
@@ -42,15 +47,36 @@ MML_fn_check<-function(fn,MML){
   return(list(sample_in,cor.test(olap_df_agg$bed_in_M,olap_df_agg$MML_M)))
   
 }
+MML_regionMean<-function(dtIn,olapIn){
+  dtIn=dtIn[subjectHits(olapIn)]
+  dtIn$qt=queryHits(olapIn)
+  sp=colnames(dtIn)[2]
+  dtIn=dtIn[,list(meanMML=mean(get(sp))),by=list(qt)]
+  colnames(dtIn)[2]=sp
+  return(dtIn)
+}
 #checking methylation value if they're same from bed file
 MML_in=readRDS(MML_matrix_file)
 #check MML for each tissue between Ecker and ours
 Ecker_MML_dir='../downstream/input/mouse_analysis/MML_bed_Ecker/'
 MML_Ecker=mclapply(paste0(Ecker_MML_dir,dir(Ecker_MML_dir,pattern='bed.gz')),MML_Ecker_read,mc.cores=20)
-saveRDS("../downstream/output/mouse_analysis/QC/Ecker_MML_raw.rds")
-MML_Ecker=do.call(rbind,MML_Ecker)
-MML_Ecker = dcast.data.table(MML_Ecker,region~Sample,fun.aggregate=mean)
-cor_out=mclapply(dir('MML_bed',pattern='bed.gz'),MML_fn_check,MML=MML_in,mc.cores=20)
+saveRDS(MML_Ecker,"../downstream/output/mouse_analysis/QC/Ecker_MML_raw.rds")
+names(MML_Ecker)=unlist(lapply(paste0(Ecker_MML_dir,dir(Ecker_MML_dir,pattern='bed.gz')),MML_rename))
+lapply(MML_Ecker,nrow)
+#Find overlap and take mean
+Ecker_region=MML_Ecker[[1]]$region
+MML_Ecker=lapply(MML_Ecker,function(x) x[match(Ecker_region,region)])
+Ecker_gr=convert_GR(Ecker_region,direction="GR")
+olap=findOverlaps(MML_in,Ecker_gr)
+MML_Ecker_mean=lapply(MML_Ecker,MML_regionMean,olapIn=olap)
+library(Gmisc)
+analyzedRegion=convert_GR(granges(MML_in),direction='DT')$region[MML_Ecker_mean[[1]]$qt]
+MML_Ecker_mean_sp=lapply(MML_Ecker_mean,function(x) x[,2])
+MML_Ecker_mean_sp=fastDoCall("cbind",MML_Ecker_mean_sp)
+MML_Ecker_mean_sp$analyzedRegion=analyzedRegion
+colnames(MML_Ecker_mean_sp)=gsub("E0","P0",gsub("_5",".5",gsub('day','E',gsub('.*\\.','',colnames(MML_Ecker_mean_sp)))))
+saveRDS(MML_Ecker_mean_sp,'../downstream/output/mouse_analysis/QC/MML_Ecker_analyzed_region.rds')
+
 saveRDS('../downstream/output/mouse_analysis/QC/cor_out_pearson_DNase_dedup.rds')
 correlation=readRDS('../downstream/output/mouse_analysis/QC/cor_out_pearson_DNase_dedup.rds')
 correlation_df=do.call(rbind,lapply(correlation,function(x){
@@ -177,3 +203,24 @@ ref_mt$rep=as.numeric(gsub('mCG level r','',ref_mt$rep))
 ref_mt$sample=paste(ref_mt$tissue,ref_mt$stage,ref_mt$rep,sep='.')
 MML_compare=data.frame(sample=rownames(mean_MML_df),MML_DNase=mean_MML_df$MML)
 MML_compare$MML_paper=ref_mt$MML[match(MML_compare$sample,ref_mt$sample)]
+
+#Check coverage
+mouse_coverage=readRDS('../../ASE_clean_run_403/downstream/output/mouse_analysis/QC/mouse_coverage_region.rds')
+#Ecker coverage: downstream\input\mouse_analysis\QC
+
+#Loading biological replicates
+#MML
+dir_comp='../downstream/data/mouse_with_rep/'
+MML_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*mml"),
+                               read.agnostic.mouse,in_dir=dir_comp,mc.cores=20))
+MML_in$bioreplicate=unlist(mclapply(strsplit(MML_in$Sample,'_'),function(x) gsub('merged','',x[2]),mc.cores=10))
+MML_in$MML=MML_in$score
+MML_in$score=NULL
+saveRDS(MML_in,'../downstream/output/mouse_analysis/QC/MML_with_replicates.rds')
+#NME
+NME_in=fastDoCall('c',mclapply(dir(dir_comp,pattern=".*nme"),read.agnostic.mouse,in_dir=dir_comp,mc.cores=20))
+NME_in$bioreplicate=unlist(mclapply(strsplit(NME_in$Sample,'_'),function(x) gsub('merged','',x[2]),mc.cores=10))
+NME_in$NME=NME_in$score
+NME_in$score=NULL
+saveRDS(NME_in,'../downstream/output/mouse_analysis/QC/NME_with_replicates.rds')
+
