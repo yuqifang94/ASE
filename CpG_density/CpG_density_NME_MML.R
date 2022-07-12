@@ -91,6 +91,7 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
                                  axis.text.x=element_text(size=7),
                                  axis.text.y=element_text(size=7))
 # text=element_text(family="Space Mono"))
+#NME
 for (sn in unique(variant_HetCpG_meta_dt$SNP)){
   #OR calculation
   for(tri in unique(variant_HetCpG_meta_dt[SNP==sn]$tri_SNP_unique)){
@@ -129,6 +130,7 @@ for (sn in unique(variant_HetCpG_meta_dt$SNP)){
 }
 saveRDS(SNP_het,'../downstream/output/human_analysis/CpG_density/SNP_het_CpG.rds')
 saveRDS(variant_SNP_tri_out,'../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out_CpG.rds')
+
 #Getting png files with mono-spaced font in windows setting, use the variant_SNP_tri_out
 variant_SNP_tri_out=readRDS('../downstream/output/human_analysis/CpG_density/variant_SNP_tri_out_CpG.rds')
 library(extrafont)
@@ -141,8 +143,7 @@ ggarrange(plotlist=lapply(SNP_het,function(x) x+ ylab("log(Odds Ratio)")+theme( 
           nrow=2,ncol=2,common.legend = T,legend="top")
 dev.off()
 
-#Calculate OR for SNPs gaining CG, numbers in text
-OR_calc(variant_HetCpG_meta_dt[dNME_pval<=pval_cutoff],'Lose CpG',"CpG_change")
+
 
 # Density analysis using allele-specific way using regions------------------------------
 GR_merge=readRDS(GR_merge_file)
@@ -169,6 +170,41 @@ GR_merge_dt_CG_diff_mt=rbind(GR_merge_dt_CG_diff_mt,data.table(region_type="all"
 pdf(paste0(figure_path,'CpG_number_NME_hg19_violin.pdf'),width=4,height=2)
 ggplot(GR_merge_dt_CG_diff_mt,aes(x=region_type,y=NME,fill=region_type))+geom_violin()+xlab("allele type")+theme_glob+theme(legend.position = "none")
 dev.off()
+GR_merge_dt_CG_diff_MML=GR_merge_dt[dMML_pval<=pval_cutoff]
+GR_merge_dt_CG_diff_MML[,`more CG`:=c(MML1,MML2)[which.max(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))][,`fewer CG`:=c(MML1,MML2)[which.min(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))]
+GR_merge_dt_CG_diff_mt_MML=melt.data.table(GR_merge_dt_CG_diff_MML[g1CG!=g2CG,list(`more CG`,`fewer CG`)],id.vars=NULL,variable.name = "region_type",value.name="MML")
+all_MML=c(GR_merge_dt_CG_diff_MML$MML1,GR_merge_dt_CG_diff_MML$MML2)
+GR_merge_dt_CG_diff_mt_MML=rbind(GR_merge_dt_CG_diff_mt_MML,data.table(region_type="all",MML=all_MML))
+pdf(paste0(figure_path,'CpG_number_MML_hg19_violin.pdf'),width=4,height=2)
+ggplot(GR_merge_dt_CG_diff_mt_MML,aes(x=region_type,y=MML,fill=region_type))+geom_violin()+xlab("allele type")+theme_glob+theme(legend.position = "none")
+dev.off()
+analyzed_region=convert_GR(GR_merge_dt_CG_diff_MML$region)
+gr_seq=getSeq(Hsapiens,analyzed_region,as.character=T)
+analyzed_region$CGcont_exp=do.call('c',lapply(gr_seq,countCGOR))
+CpG_hg19=readRDS(CpG_hg19_file)
+analyzed_region$CG_hg19=countOverlaps(analyzed_region,CpG_hg19)
+GR_merge_dt_CG_diff_MML$density=analyzed_region$CG_hg19/analyzed_region$CGcont_exp
+pdf(paste0(figure_path,'CpG_number_MML_hg19_violin_hist.pdf'))
+hist(GR_merge_dt_CG_diff_MML$density)
+dev.off()
+GR_merge_dt_CG_diff_MML=GR_merge_dt_CG_diff_MML[density>=0.6]
+GR_merge_dt_CG_diff_MML[,`more CG`:=c(MML1,MML2)[which.max(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))][,`fewer CG`:=c(MML1,MML2)[which.min(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))]
+GR_merge_dt_CG_diff_mt_MML=melt.data.table(GR_merge_dt_CG_diff_MML[g1CG!=g2CG,list(`more CG`,`fewer CG`)],id.vars=NULL,variable.name = "region_type",value.name="MML")
+all_MML=c(GR_merge_dt_CG_diff_MML$MML1,GR_merge_dt_CG_diff_MML$MML2)
+GR_merge_dt_CG_diff_mt_MML=rbind(GR_merge_dt_CG_diff_mt_MML,data.table(region_type="all",MML=all_MML))
+pdf(paste0(figure_path,'CpG_number_MML_hg19_violin_large_den.pdf'),width=4,height=2)
+ggplot(GR_merge_dt_CG_diff_mt_MML,aes(x=region_type,y=MML,fill=region_type))+geom_violin()+xlab("allele type")+theme_glob+theme(legend.position = "none")
+dev.off()
+
+GR_merge_dt_CG_diff_MML=GR_merge_dt_CG_diff_MML[density<0.6]
+GR_merge_dt_CG_diff_MML[,`more CG`:=c(MML1,MML2)[which.max(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))][,`fewer CG`:=c(MML1,MML2)[which.min(c(g1CG,g2CG))],by=seq_len(nrow(GR_merge_dt_CG_diff_MML))]
+GR_merge_dt_CG_diff_mt_MML=melt.data.table(GR_merge_dt_CG_diff_MML[g1CG!=g2CG,list(`more CG`,`fewer CG`)],id.vars=NULL,variable.name = "region_type",value.name="MML")
+all_MML=c(GR_merge_dt_CG_diff_MML$MML1,GR_merge_dt_CG_diff_MML$MML2)
+GR_merge_dt_CG_diff_mt_MML=rbind(GR_merge_dt_CG_diff_mt_MML,data.table(region_type="all",MML=all_MML))
+pdf(paste0(figure_path,'CpG_number_MML_hg19_violin_small_den.pdf'),width=4,height=2)
+ggplot(GR_merge_dt_CG_diff_mt_MML,aes(x=region_type,y=MML,fill=region_type))+geom_violin()+xlab("allele type")+theme_glob+theme(legend.position = "none")
+dev.off()
+
 
 CG_difference=ggplot(GR_merge_dt_CG_diff[g1CG!=g2CG],aes(x=`more CG`,y=`fewer CG`))+geom_hex()+theme_glob+theme(legend.position = "none")+ggtitle("Allele has CG difference")
 noCG_difference=ggplot(GR_merge_dt_CG_diff[g1CG==g2CG],aes(x=NME1,y=NME2))+geom_hex()+theme_glob+theme(legend.position = "none")+ggtitle("Allele has no CG difference")
@@ -177,6 +213,7 @@ ggarrange(CG_difference,noCG_difference,ncol=1)
 dev.off()
 
 t.test(x=GR_merge_dt_CG_diff[g1CG!=g2CG]$`more CG`,y=GR_merge_dt_CG_diff[g1CG!=g2CG]$`fewer CG`,paired=TRUE,alternative="less")
+
 #Categorizing regions
 GR_merge_dt$CpG_stat="No difference"
 GR_merge_dt[CpGdiff!=0]$CpG_stat="With CpG difference"
@@ -192,6 +229,11 @@ ggplot(GR_merge_dt[dNME_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_s
   geom_violin()+xlab("")+
   theme_glob+ylab('relative dNME')+theme(legend.position = "none")
 dev.off()
+pdf(paste0(figure_path,'CpG_number_MML_hg19.pdf',width=7,height=7))
+ggplot(GR_merge_dt[dMML_pval<=pval_cutoff],aes(y=dNME_relative_more_less,x=CpG_stat,fill=CpG_stat))+
+  geom_violin()+xlab("")+
+  theme_glob+ylab('relative dMML')+theme(legend.position = "none")
+dev.off()
 #Line plot for dNME vs density
 GR_merge_dt_sig_density_diff=GR_merge_dt[dNME_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
@@ -204,7 +246,7 @@ dev.off()
 #Line plot for dMML
 GR_merge_dt_sig_density_diff=GR_merge_dt[dMML_pval<=pval_cutoff&density_diff!=0]
 GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_density_diff$density_diff)(GR_merge_dt_sig_density_diff$density_diff)
-pdf('../downstream/output/graphs_tables/CpG_density_dMML_ratio_hg19.pdf',width=7,height=7)
+pdf(paste0(figure_path,'CpG_density_dMML_ratio_hg19.pdf'),width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dMML_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dMML")+
   theme_glob+

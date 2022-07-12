@@ -226,6 +226,12 @@ rownames(H3K27ac_output_dt_cor_dc_mt)=H3K27ac_output_dt_cor_dc$region
 #Check if tissue-specific UC also has highest value
 H3K27ac_output_dt_cor_dc_rank=t(apply(H3K27ac_output_dt_cor_dc[,-1],1,function(x) rank(-x)))
 rownames(H3K27ac_output_dt_cor_dc_rank)=H3K27ac_output_dt_cor_dc$region
+#Plot some example
+# chr5:31905600-31907600 
+pdf("../downstream/output/mouse_analysis/tissue_specific_enhancer/example_chr5_31905600_31907600.pdf",width=3.5,height=3.5)
+ggplot( H3K27ac_output_dt[region=="chr5:31905600-31907600"&grepl("EFP",sample)],aes(x=log2RPKM,y=log2FPKM))+geom_point()+
+  xlab("candidiate region\nChIP-seq [log2(RPKM)]")+ylab("candidiate gene\nRNA-seq  [log2(FPKM)]")
+dev.off()
 ts_aid=readRDS(ts_aid_dt_fn)
  UC_in=readRDS(UC_in_matrix_cluster_file)
  analyzed_region=lapply(UC_in,rownames)

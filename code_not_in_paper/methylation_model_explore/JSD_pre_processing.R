@@ -13,7 +13,10 @@ JSD_in$tissue=sub('_.*','',JSD_in$Sample)
 JSD_in=convert_GR(JSD_in,"DT")
 JSD_in_dt=dcast.data.table(JSD_in,region+N~Sample,value.var="JSD")
 saveRDS(JSD_in_dt,JSD_in_fn)#74% regiOn have all data
-
+jsd=readRDS(JSD_in_fn)
+colnames(jsd)=gsub(paste(paste0('-',unique(unlist(lapply(strsplit(colnames(jsd),'-'),function(x) x[1])))[c(-1,-2)]),collapse='|'),'',colnames(jsd))
+colnames(jsd)=gsub('_all','',colnames(jsd))
+saveRDS(jsd,JSD_in_fn)
 #Filter out the region with N >=18
 UC_in=readRDS(UC_in_matrix_ls_file)
 JSD_in_gr=unique(granges(JSD_in))

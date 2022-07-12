@@ -86,10 +86,10 @@ suppressPackageStartupMessages({
   {BiocManager::install("org.Hs.eg.db")}
   library(org.Hs.eg.db)
   
-  #hg38 genome: not used maybe
-  if (!requireNamespace("SNPlocs.Hsapiens.dbSNP151.GRCh38", quietly = TRUE)){
-    BiocManager::install("SNPlocs.Hsapiens.dbSNP151.GRCh38")}
-  library(SNPlocs.Hsapiens.dbSNP151.GRCh38)
+  # #hg38 genome: not used maybe
+  # if (!requireNamespace("SNPlocs.Hsapiens.dbSNP151.GRCh38", quietly = TRUE)){
+  #   BiocManager::install("SNPlocs.Hsapiens.dbSNP151.GRCh38")}
+  # library(SNPlocs.Hsapiens.dbSNP151.GRCh38)
   
   #mm10 genome related
   if (!requireNamespace("TxDb.Mmusculus.UCSC.mm10.knownGene", quietly = TRUE)){

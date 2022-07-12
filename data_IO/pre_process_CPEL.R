@@ -249,15 +249,11 @@ for(fn in  dir(in_dir,pattern="[mn]m[le].bedGraph")){
   
   
   if(stat_in=="NME"){
-    NME_in_sp=read.bedGraph.informME(paste0(in_dir,fn))
-    NME_in_sp$Sample=sample_in
-    NME_in_sp$statistics=stat_in
-    NME_in=c(NME_in,NME_in_sp)}
+  NME_in=c(NME_in,read.agnostic(paste0(in_dir,fn),GR_merge[GR_merge$dMML_pval<=pval_cutoff],
+                                allele_include = F,sample_in=sample_in,hyper_var_file=fn_in))
+ }
   else if(stat_in=="MML"){
-    MML_in_sp=read.bedGraph.informME(paste0(in_dir,fn))
-    MML_in_sp$Sample=sample_in
-    MML_in_sp$statistics=stat_in
-    MML_in=c(MML_in,MML_in_sp)}else
+  MML_in=c(MML_in,read.agnostic(paste0(in_dir,fn),GR_merge_in=NULL,allele_include = F,sample_in=sample_in,hyper_var_file=fn_in))}else
     {cat("Error stat_in:", stat_in,'\n')}
 }
 rm(NME_in_sp)

@@ -10,6 +10,17 @@ source('dependencies.R')
 #Set DT use only 1 thread
 setDTthreads(1)
 # main functions ----------------------------------------------------------
+#Convert correlation test result to data.table
+corToDt<-function(corTest){
+  return(data.table(
+    correlation=corTest$estimate,
+    Pvalue = corTest$p.value,
+    lowerCI=corTest$conf.int[1],
+    upperCI = corTest$conf.int[2]
+
+  ))
+
+}
 #Get CpG sites from hg19
 getCpgSitesH19 <- function(chrsOfInterest=paste("chr",c(1:22,"X","Y"),sep="")){
   # Obtain all CpG sites
@@ -588,8 +599,9 @@ read_hypervar<-function(hyper_var_in){
   hyper_var=data.table()
   for (fn in hyper_var_in){
     fn_in=readRDS(fn)
-    fn_in$gene_name=rownames(fn_in)
+    gene_name=rownames(fn_in)
     fn_in=as.data.table(fn_in)
+    fn_in$gene_name=gene_name
     rownames(fn_in)=NULL
     hyper_var=rbind(hyper_var,fn_in)
   }
@@ -2544,7 +2556,7 @@ add_repeats<-function(region_in,repeats_in){
 getCpgSitesmm10 <- function(chrsOfInterest=paste("chr",1:19,sep="")){
   #1:19 exclude the sex chromosome
   # Obtain all CpG sites
-  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),with=2)))
+  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Mmusculus[[x]])),width=2)))
   # Set genome and seqlengths
   cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="mm10")
   # Return CpG site GR

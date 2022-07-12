@@ -1,5 +1,6 @@
+source('mainFunctions_sub.R')
 suppressMessages(library(GenomicRanges))
-d <- readRDS('/home-4/zji4@jhu.edu/scratch/tmp/UC_in_all.rds')
+d <- readRDS(UC_in_MDS_all_file)
 rn <- d[,1]
 d <- as.matrix(d[,-1])
 rownames(d) <- rn

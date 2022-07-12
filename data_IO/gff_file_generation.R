@@ -115,10 +115,26 @@ mm10_all_break$CpG=countOverlaps(mm10_all_break,cpgr)
 sum(width(mm10_all_break[mm10_all_break$CpG>0]))/seqlength#0.7355
 # mm10 linux reformat -----------------------------------------------------
 #mm10
-# sed -i 's/%2c/,/g' mm10_allele_agnostic_analysis.gff
-# sed -i 's/];$/]/g' mm10_allele_agnostic_analysis.gff
-# sed -i 's/rtracklayer/\./g' mm10_allele_agnostic_analysis.gff
-# sed -i 's/sequence_feature/\./g' mm10_allele_agnostic_analysis.gff
+# sed -i 's/%2c/,/g' ../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff
+# sed -i 's/];$/]/g' ../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff
+# sed -i 's/rtracklayer/\./g' ../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff
+# sed -i 's/sequence_feature/\./g' ../downstream/output/mouse_analysis/CPEL_inputs/mm10_allele_agnostic_analysis_compliment.gff
+#All human gff
+gff_all=c(readRDS('../downstream/output/human_analysis/CPEL_inputs/hg19_allele_agnostic_analysis_compliment.rds'),
+          readRDS('../downstream/output/human_analysis/CPEL_inputs/human_ASM_region_allele_agnostic_250bp.rds'),
+           readRDS('../downstream/output/human_analysis/CPEL_inputs/hg19_DNase_250bp_gff.rds'),
+           readRDS('../downstream/output/human_analysis/CPEL_inputs/hg19_TSS_20kb_250bp.rds')
 
+)
+gff_all=setGenomeLengths(gff_all)
+gff_all[start(gff_all)<0]
+gff_all=gff_all[start(gff_all)>0]
+gff_all[start(gff_all)<0]
+seqlevels(gff_all)=gsub("chr","",seqlevels(gff_all))
+export.gff3(sort(unique(gff_all)),'../downstream/output/human_analysis/CPEL_inputs/hg19_all_250bp.gff')
 
+sed -i 's/%2c/,/g' /users/yfang/yfang_dcs04/ASE_clean_run_403/ASE/../downstream/output/human_analysis/CPEL_inputs/hg19_all_250bp.gff
+sed -i 's/];$/]/g' /users/yfang/yfang_dcs04/ASE_clean_run_403/ASE/../downstream/output/human_analysis/CPEL_inputs/hg19_all_250bp.gff
+sed -i 's/rtracklayer/\./g' /users/yfang/yfang_dcs04/ASE_clean_run_403/ASE/../downstream/output/human_analysis/CPEL_inputs/hg19_all_250bp.gff
+sed -i 's/sequence_feature/\./g' /users/yfang/yfang_dcs04/ASE_clean_run_403/ASE/../downstream/output/human_analysis/CPEL_inputs/hg19_all_250bp.gff
   
