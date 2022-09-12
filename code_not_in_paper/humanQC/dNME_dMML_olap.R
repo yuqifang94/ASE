@@ -1,7 +1,7 @@
 source('mainFunctions_sub.R')
 GR_merge=readRDS(GR_merge_file)
-merged_dt=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_MML_merged_dt.rds")
 GR_merge_dt=convert_GR(GR_merge,direction="DT")
+merged_dt=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_MML_merged_dt.rds")
 #Separate tissue GO
 #write.csv(data.table(Sample=unique(GR_merge$Sample)),"../downstream/output/human_analysis/dMML_dNME_GO/human_sample_tissue.csv")
 sample_tissue=fread("../downstream/output/human_analysis/dMML_dNME_GO/human_sample_tissue.csv")
@@ -25,11 +25,11 @@ write.csv(GR_merge_dMML_only[,list(dMML,dMML_pval,Sample,dNME,dNME_pval,genes_pr
 write.csv(GR_merge_both[,list(dMML,dMML_pval,Sample,dNME,dNME_pval,genes_promoter,genes_body,TSS,region)],"../downstream/output/human_analysis/dMML_dNME_GO/both.csv")
 
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
-                                 axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
-                                 axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
-                                 axis.text.x=element_text(size=7),
-                                 axis.text.y=element_text(size=7))
-pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d.pdf',width=5,height=5)
+                                 axis.title.x=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.text.x=element_text(size=10),
+                                 axis.text.y=element_text(size=10))
+pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d.pdf',width=4,height=3)
 #Plotting dNME dMML
 print(ggplot(GR_merge_dt,
                 aes(x=dMML, y=dNME))+
@@ -40,14 +40,14 @@ print(ggplot(GR_merge_dt,
                 scale_fill_gradient(name = "count", trans = "log10",high="#132B43",low="#56B1F7"))
 dev.off()
 
-pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d_sig.pdf',width=5,height=5)
+pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d_sig.pdf',width=4,height=3)
 #Plotting dNME dMML
 print(ggplot(GR_merge_dt[GR_merge$dNME_pval<=pval_cutoff|GR_merge$dMML_pval<=pval_cutoff],
                 aes(x=dMML, y=dNME))+
                 xlim(c(0,1))+ylim(c(0,1))+ggtitle("dMML and dNME relationship")+
                 #geom_smooth(method="loess",se=FALSE)+
                 xlab("dMML")+ ylab("dNME")+geom_bin2d(bins=100)+theme_glob+
-                geom_smooth(method="lm",color="red")+
+                #geom_smooth(method="lm",color="red")+
                 scale_fill_gradient(name = "count", trans = "log10",high="#132B43",low="#56B1F7"))
 dev.off()
 #dNME vs N

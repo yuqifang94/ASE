@@ -38,12 +38,17 @@ pd <- rbind(pd,data.frame(MDS1=-0.015,MDS2=0,tissue='Center',time='Center'))
 contcv <- rev(viridis_pal()(length(unique(pd$time))-1))
 contcv <- c(contcv,'red')
 names(contcv) <- c(setdiff(unique(pd$time),'Center'),'Center')
-
-pdf('/home-4/zji4@jhu.edu/scratch/andy_ASE/MDS/UC_tissue.pdf',width=5.5,height=4.5)
-ggplot() + geom_point(data=pd[pd$tissue!='Center',],aes(x=MDS1,y=MDS2,col=tissue)) + theme_classic() + theme(legend.title = element_blank())
+saveRDS(pd,"../downstream/output/mouse_analysis/MDS/pd.rds")
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=10),
+                                 axis.title.x=element_text(hjust=0.5,size=7,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=7,face="bold"),
+                                 axis.text.x=element_text(size=7),
+                                 axis.text.y=element_text(size=7))
+pdf('../downstream/output/mouse_analysis/MDS/UC_tissue.pdf',width=4,height=3)
+ggplot() + geom_point(data=pd[pd$tissue!='Center',],aes(x=MDS1,y=MDS2,col=tissue)) + theme_glob + theme(legend.title = element_blank())
 dev.off()
-pdf('/home-4/zji4@jhu.edu/scratch/andy_ASE/MDS/UC_time.pdf',width=5.5,height=4.5)
-ggplot() + geom_point(data=pd,aes(x=MDS1,y=MDS2,col=time)) + theme_classic() + scale_color_manual(values=contcv) + theme(legend.title = element_blank())
+pdf('../downstream/output/mouse_analysis/MDS/UC_time.pdf',width=4,height=3)
+ggplot() + geom_point(data=pd,aes(x=MDS1,y=MDS2,col=time)) + theme_glob+ scale_color_manual(values=contcv) + theme(legend.title = element_blank())
 dev.off()
 
 

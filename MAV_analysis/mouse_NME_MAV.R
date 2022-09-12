@@ -1,17 +1,21 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-theme_glob=theme(plot.title = element_text(hjust = 0.5,size=24),
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                  axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
                  axis.text.x=element_text(size=16),
                  axis.text.y=element_text(size=16))+theme_classic()
-
+theme_glob_heatmap=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
+                 axis.title.x=element_text(hjust=0.5,size=36,face="bold"),
+                 axis.title.y=element_text(hjust=0.5,size=36,face="bold"),
+                 axis.text.x=element_text(size=36),
+                 axis.text.y=element_text(size=36))
 # MAV vs NME -------------------------------------------------
 NME_in_dt=readRDS(NME_mouse_MAV_fn)
 NME_in_dt=NME_in_dt[(!is.na(hyper_var)&hyper_var!=-100)&!is.na(NME)]
 NME_in_dt$Sample=NME_in_dt$stage
 NME_in_dt$score=NME_in_dt$NME
-dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="hyper_var",dir=figure_path)
+plot_heatmap=dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="hyper_var",dir=figure_path,theme_glob_heatmap=theme_glob_heatmap)
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="var",dir=figure_path)
 dist_plot_run(NME_in_dt,theme_glob,ylab="NME",stat_in="mean",dir=figure_path)
 

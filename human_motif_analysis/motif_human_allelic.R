@@ -26,7 +26,7 @@ saveRDS(motif_gene,motif_gene_file)
 # Find motif prefere NME or MML using binomial test using all the regions-----------------------
 motif_gene <- readRDS(motif_gene_file)
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
-  #NME
+#NME
 
 motif_dir_dNME=direction_calc_enriched_subj(motif_gene,variant_HetCpG_meta,
                                        unique(motif_gene$geneSymbol),pval_cutoff=0.1,stat="NME")
@@ -111,5 +111,14 @@ write.csv(motif_low_MML_only_OMIM, row.names =F,
           "../downstream/output/human_analysis/motif_analysis/motif_prefer_low_MML_only_OMIM.csv")
 write.csv(motif_ent_only_OMIM, row.names =F,
           "../downstream/output/human_analysis/motif_analysis/motif_prefer_high_NME_only_OMIM.csv")
-
-
+#plot low NME
+lowNME=fread('../downstream/output/graphs_tables/motif_preference_table/All_regions/table2_motif_prefer_low_NME.csv')
+motif_dir_dMML=readRDS('../downstream/output/human_analysis/motif_analysis/dMML_all.rds')
+LowNME_only=lowNME[!TF%in%motif_dir_dMML[FDR<=0.2]$TF]
+OMIM=fread('../downstream/input/human_analysis/SNP_biology/genemap2.txt',skip=3)
+OMIM$`Gene Symbols`=strsplit(as.character(OMIM$`Gene Symbols`),', ')
+OMIM=OMIM[Phenotypes!=""]
+motif_lowNME_OMIM=OMIM_annotation(LowNME_only,OMIM)
+pdf('../downstream/output/human_analysis/motif_analysis/ZBTB33_NME_allele.pdf',width=2.35,height=2.35)
+motif_out_ZBTB33=plot_merge_SNP_motif(variant_HetCpG_meta,motif_gene,motif="ZBTB33",stat="NME",pval_cutoff=pval_cutoff,theme_glob=theme_glob)
+dev.off()

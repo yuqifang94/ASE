@@ -877,7 +877,8 @@ OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA,stat_in="NME"){
   return(data.table(OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2],SNP=SNP))
 }
 
-dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cutoff,dir){
+dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cutoff,theme_glob_heatmap=NULL,dir){
+  if(is.null(theme_glob_heatmap)){theme_glob_heatmap=theme_glob}
   
   #informME_in_dist=informME_in_dist[-which(informME_in_dist$dMML_pval<=cutoff)]
   
@@ -927,7 +928,7 @@ dist_plot_run<-function(informME_in_dist,theme_glob,ylab,stat_in,cutoff=pval_cut
   heatmap_informME_dat=heatmap_informME_dat[order(heatmap_informME_dat$cor,decreasing = F),]
   heatmap_informME_dat$Sample=factor(heatmap_informME_dat$Sample,levels = unique(heatmap_informME_dat$Sample))
   heatmap_plot=ggplot(heatmap_informME_dat,aes(hypervarquant,Sample,fill=NME))+geom_tile()+scale_fill_distiller(palette = "RdPu", direction = 1)+
-    xlab('quantile')+ylab('Sample')+theme_glob+theme(legend.position = 'bottom')
+    xlab('quantile')+ylab('Sample')+theme_glob_heatmap+theme(legend.position = 'bottom')
   ggsave(paste0(dir,'Figure3A_',ylab,'_',stat_in,'_heatmap.pdf'),heatmap_plot,device='pdf',width=7,height=7,units="in")
   # cor_plot=ggplot(plot_informME_dat,aes(x=exp_stat,y=dat))+
   #   geom_smooth(size=1,na.rm=TRUE,se=TRUE)+theme_glob+
@@ -1572,8 +1573,8 @@ plot_GO_heatmap<-function(tissue_all_merged,tissue_all_merged_top,fn,FDR_cutoff,
                show_colnames = F,show_rownames = T,display_numbers=tissue_all_merged_sel_FDR,border_color = NA,
                color = colorRampPalette(brewer.pal(n = 7, name ="GnBu"))(100),number_color = "white",
                filename=fn,
-               cellwidth=60,cellheight=25,annotation_legend = F,angle_col = "90",
-               fontsize=30,legend = F,annotation_col = colann,gaps_col = gaps_col,
+               cellwidth=60,cellheight=25,annotation_legend = T,angle_col = "90",
+               fontsize=30,legend = T,annotation_col = colann,gaps_col = gaps_col,
                annotation_colors = list(tissue=tissue_col,cluster=cluster_col))
     }
     return(sel_term)
@@ -1911,10 +1912,11 @@ der_flat_finder<-function(der_in,diff_in,density_in,direction=-1,quant=0.05){
   return(data.table(der=der,der_before=der_before,der=der_in[idx],idx=idx,x_out=diff_in[idx]))
 }
 create_folder<-function(folder_out){ifelse(!dir.exists(file.path(folder_out)), dir.create(file.path(folder_out)), FALSE)}
-correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=0.2,quant=0.25,subsmple_plot=1,
+correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=0.2,quant=0.25,subsample_plot=1,
                                  dir_figure,
-                                 breaks_color=c("MML only", "NME only", "Both","Neither"),
-                                 values_color=c("red", "blue", "green", "purple")){
+                                 NME_only_name="Predominantly\nNME",
+                                 MML_only_name="Predominantly\nMML",
+                                 values_color=c("Predominantly\nNME"="blue", "Predominantly\nMML"="red", "Both"="green", "Neither"="purple")){
   theme_density=theme_classic()+theme(legend.position = "bottom",
                                       axis.title.x=element_text(hjust=0.5,size=18,face="bold"),
                                       axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
@@ -1922,7 +1924,8 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
                                       axis.text.y=element_text(size=16),
                                       legend.text = element_text(size=16),
                                      )
- 
+
+  
   cat('Processing:',ts,'\n')
   create_folder(dir_figure)
   tissue_in=cor_dt[[ts]]
@@ -2020,7 +2023,7 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
     tt1=proc.time()[[3]]
     #Plot in density plot
     #Subsample
-    subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+    subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsample_plot),replace = F)
    print(ggplot(tissue_in[subsample_tissue_in],aes(x=cor_mean,y=cor_diff))+
       stat_density_2d( geom = "raster",  aes(fill = after_stat(density)), contour = FALSE,n=200)+
       #scale_fill_distiller(palette = "YlOrBr",trans="log10")
@@ -2136,11 +2139,11 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   #dMML_only
   tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
               (cor_diff<=diff_cutoff_dMML_only|
-                 (dMML_cor>0&dNME_cor<0))]$region_type="MML only"
+                 (dMML_cor>0&dNME_cor<0))]$region_type=MML_only_name
   #dNME_only
   tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
               (cor_diff>=diff_cutoff_dNME_only|
-                 (dNME_cor>0&dMML_cor<0))]$region_type="NME only"
+                 (dNME_cor>0&dMML_cor<0))]$region_type=NME_only_name
   
   #Neither
   tissue_in[dNME_FDR>FDR_cutoff&dMML_FDR>FDR_cutoff]$region_type="Neither"
@@ -2148,20 +2151,20 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   tt1=proc.time()[[3]]
   #dev.off()
   #Smooth cutoffs
-  subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsmple_plot),replace = F)
+  subsample_tissue_in=sample(1:nrow(tissue_in),round(nrow(tissue_in)*subsample_plot),replace = F)
   #png(paste0('../downstream/output/correlation/cor_',ts,'_cluster_all_cor_smoothed_quant_weighted_',filtered,'.png'),width=4,height=4.5,units = 'in',res=144)
    catotry_dot_cor=ggplot(tissue_in[subsample_tissue_in],aes(x=dMML_cor,y=dNME_cor,color=region_type,fill=region_type))+
           geom_point(alpha=0.1)+xlab("UC-dMML correlation")+ylab("UC-dNME correlation")+
           guides(colour = guide_legend(override.aes = list(alpha = 1),nrow=2,byrow=TRUE))+
-    theme_density+theme(legend.title=element_blank())
+    theme_density+theme(legend.title=element_blank())+scale_color_manual(values=values_color,aesthetics = c("color","fill"))
   #dev.off()
   #MA plot
   #png(paste0('../downstream/output/correlation/cor_',ts,'_cluster_all_cor_MA_smoothed_quant_',filtered,'.png'),width=4,height=4.5,units = 'in',res=144)
-   tissue_in$region_type=factor(tissue_in$region_type, levels=c("MML only","NME only","Both","Neither"))
+   tissue_in$region_type=factor(tissue_in$region_type, levels=c(MML_only_name,NME_only_name,"Both","Neither"))
   catotry_dot_MA=ggplot(tissue_in[subsample_tissue_in],aes(x=cor_mean ,y=cor_diff ,color=region_type,fill=region_type))+
           geom_point(alpha=0.1)+xlab("average correlation")+ylab("correlation difference")+
     guides(colour = guide_legend(override.aes = list(alpha = 1),nrow=2,byrow=TRUE))+
-    theme_density+scale_color_manual(breaks = breaks_color, values=values_color)
+    theme_density+scale_color_manual(values=values_color,aesthetics = c("color","fill"))
   #dev.off()
 cat('Finish plot dot plot:',proc.time()[[3]]-tt1,'\n')
 tt1=proc.time()[[3]]
@@ -2172,13 +2175,13 @@ tt1=proc.time()[[3]]
      #print(head(cutoff_dt))
      mycolors <- colorRampPalette(brewer.pal(8, "Set2"))(8)
     
-      png(paste0(dir_figure,ts,'_density_',filtered,'.png'),width=9,height=12.5,units = 'in',res=1080,type='cairo')
+      png(paste0(dir_figure,ts,'_density_',filtered,'.png'),width=9,height=12.5,units = 'in',res=2048,type='cairo')
       print(ggarrange(raw_density_log,raw_MA_log,raw_density_log_cutoff_only,raw_MA_log_cutoff_only,
                       raw_density_log_cutoff_FDR,
                       #cat_density_log,cat_density_MA_log, 
                       ncol = 2, nrow = 3,common.legend = TRUE))
       dev.off()
-      png(paste0(dir_figure,ts,'_dot_',filtered,'.png'),width=4.5,height=9,units = 'in',res=1080,type='cairo')
+      png(paste0(dir_figure,ts,'_dot_',filtered,'.png'),width=4.5,height=9,units = 'in',res=2048,type='cairo')
       print(ggarrange(catotry_dot_cor,catotry_dot_MA, 
                       ncol = 1, nrow = 2,common.legend = TRUE))
       dev.off()
@@ -2190,7 +2193,7 @@ tt1=proc.time()[[3]]
   return(tissue_in)
   
 }
-dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff){
+dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff,NME_only_name="Predominantly\nNME",MML_only_name="Predominantly\nMML"){
   #Find dMML and dNME cutoff for dMML only and dNME only region: diff=dNME-dMML, dNME=(diff+mean)/2, dMML=(mean-diff)/2
   dt_in$dMML_cutoff_dMML_only=(dt_in$cor_mean*2-dt_in$diff_cutoff_dMML_only)/2
   dt_in$dNME_cutoff_dMML_only=(dt_in$cor_mean*2+dt_in$diff_cutoff_dMML_only)/2
@@ -2214,15 +2217,15 @@ dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff){
       dNME=rep(cutoff_dNME,length(dMML_seq))
     ),
     data.table(
-      region_type="dMML only",
-      dMML=unique(round(dt_in[region_type=='dMML_only']$dMML_cor,digits=2)),
-      dNME=dt_in[region_type=='dMML_only',list(dNME_max=max(dNME_cor)),by=round(dMML_cor,digits=2)]$dNME_max
+      region_type=MML_only_name,
+      dMML=unique(round(dt_in[region_type==MML_only_name]$dMML_cor,digits=2)),
+      dNME=dt_in[region_type==MML_only_name,list(dNME_max=max(dNME_cor)),by=round(dMML_cor,digits=2)]$dNME_max
       
     ),
     data.table(
-      region_type="dNME only",
-      dMML=dt_in[region_type=='dNME_only',list(dMML_max=max(dMML_cor)),by=round(dNME_cor,digits=2)]$dMML_max,
-      dNME=unique(round(dt_in[region_type=='dNME_only']$dNME_cor,digits=2))
+      region_type=NME_only_name,
+      dMML=dt_in[region_type==NME_only_name,list(dMML_max=max(dMML_cor)),by=round(dNME_cor,digits=2)]$dMML_max,
+      dNME=unique(round(dt_in[region_type==NME_only_name]$dNME_cor,digits=2))
       
     )
   )
@@ -2231,23 +2234,23 @@ dMML_dNME_cutoff_dt<-function(dt_in,FDR_cutoff){
 }
 
 plot_correlation<-function(tissue_out_filtered,pdf_fn,plot_pdf=T,
-                                 breaks_color=c("MML only", "NME only", "Both","Neither"),
-                                 values_color=c("red", "blue", "green", "purple")){
+                                 values_color=c("Predominantly\nNME"="blue", "Predominantly\nMML"="red", "Both"="green", "Neither"="purple"),
+                                 NME_only_name="Predominantly\nNME",MML_only_name="Predominantly\nMML"){
   tissue_out_filtered=do.call(rbind,tissue_out_filtered)
   tissue_out_filtered$region_type=factor(tissue_out_filtered$region_type,
-                                         levels=c("MML only","NME only","Both","Neither"))
+                                         levels=c(MML_only_name,NME_only_name,"Both","Neither"))
   #All regions
   tissue_out_filtered_frequency=tissue_out_filtered[tissue!="NT",list(count=length(region)),by=list(tissue,region_type)]
   tissue_out_filtered_frequency_p=tissue_out_filtered_frequency[,list(percentage=round(count/sum(count)*100,digits=0),region_type=region_type),by=list(tissue)]
   tissue_out_filtered_frequency_p[,list(minp=min(percentage),maxp=max(percentage)),by=list(region_type)]
-  print(t.test(tissue_out_filtered_frequency_p[region_type=="MML only"]$percentage,
-         tissue_out_filtered_frequency_p[region_type=="NME only"]$percentage,alternative = "less"))
+  print(t.test(tissue_out_filtered_frequency_p[region_type==MML_only_name]$percentage,
+         tissue_out_filtered_frequency_p[region_type==NME_only_name]$percentage,alternative = "less"))
   plot_out=ggplot(tissue_out_filtered_frequency, aes(y=count, x=tissue,fill=region_type)) + 
           geom_bar( stat="identity",position="fill")+ylab("")+xlab("")+
           
           theme_classic()+theme(axis.text.x=element_text(size=32,angle=90),
                                 axis.text.y=element_text(size=32))+
-          scale_fill_manual(breaks=breaks_color,values=values_color)+guides(fill=guide_legend(nrow=2,byrow=TRUE))+
+          scale_fill_manual(values=values_color)+guides(fill=guide_legend(nrow=2,byrow=TRUE))+
           theme(legend.position = "bottom",legend.title = element_blank(),legend.text =element_text(size=28))
   if(plot_pdf){
   pdf(pdf_fn,width=7,height=16)

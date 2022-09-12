@@ -1,5 +1,4 @@
 rm(list=ls())
-setwd('../')
 source("mainFunctions_sub.R")
 #Define ggplot theme
 
@@ -86,10 +85,10 @@ variant_SNP_tri=data.table()
 variant_SNP_tri_out=list()
 names(color_theme)=unique(variant_HetCpG_meta_dt$SNP)
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
-                                 axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
-                                 axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
-                                 axis.text.x=element_text(size=7),
-                                 axis.text.y=element_text(size=7))
+                                 axis.title.x=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.text.x=element_text(size=12),
+                                 axis.text.y=element_text(size=12))
 # text=element_text(family="Space Mono"))
 #NME
 for (sn in unique(variant_HetCpG_meta_dt$SNP)){
@@ -137,13 +136,18 @@ library(extrafont)
 loadfonts()
 SNP_het=readRDS('../downstream/output/human_analysis/CpG_density/SNP_het_CpG.rds')
 png('../downstream/output/human_analysis/CpG_density/variant_OR_tri3_two_cat_greater_CG_bg_rev_hg19.png',
-    width=7,height=7,units='in',res=1080, family = 'Consolas')
+    width=7,height=7,units='in',res=2048, family = 'Consolas')
 #SNP_het=SNP_het[c("C>G", names(SNP_het)[names(SNP_het)!="C>G"])]
-ggarrange(plotlist=lapply(SNP_het,function(x) x+ ylab("log(Odds Ratio)")+theme( axis.title.x=element_text(hjust=0.5,size=16,face="bold"))), 
+ggarrange(plotlist=lapply(SNP_het,function(x) x+ ylab("log(Odds Ratio)")+theme( axis.title.x=element_text(hjust=0.5,size=12,face="bold"))), 
           nrow=2,ncol=2,common.legend = T,legend="top")
 dev.off()
 
-
+png('../downstream/output/human_analysis/CpG_density/variant_OR_tri3_two_cat_greater_CG_bg_rev_hg19_thesis.png',
+    width=14,height=7,units='in',res=2048, family = 'Consolas')
+#SNP_het=SNP_het[c("C>G", names(SNP_het)[names(SNP_het)!="C>G"])]
+ggarrange(plotlist=lapply(SNP_het,function(x) x+ ylab("log(Odds Ratio)")+theme(axis.title.x=element_text(hjust=0.5,size=12,face="bold"))), 
+          nrow=2,ncol=2,common.legend = T,legend="top")
+dev.off()
 
 # Density analysis using allele-specific way using regions------------------------------
 GR_merge=readRDS(GR_merge_file)
@@ -240,6 +244,19 @@ GR_merge_dt_sig_density_diff$density_difference_quantile=ecdf(GR_merge_dt_sig_de
 pdf(paste0(figure_path,'CpG_density_dNME_ratio_hg19.pdf'),width=7,height=7)
 ggplot(GR_merge_dt_sig_density_diff,aes(x=density_difference_quantile,y=dNME_relative))+geom_smooth(fill='light blue')+
   xlab("CpG density ratio quantile")+ylab("relative dNME")+
+  theme_glob+
+  theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()
+
+pdf(paste0(figure_path,'CpG_density_dNME_ratio_hg19_not_quantile_abs.pdf'),width=7,height=7)
+ggplot(GR_merge_dt_sig_density_diff,aes(x=abs(density_diff),y=abs(dNME_relative)))+geom_smooth(se=F)+
+  xlab("CpG density ratio quantile")+ylab("dNME")+
+  theme_glob+
+  theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()
+pdf(paste0(figure_path,'CpG_density_dNME_ratio_hg19_not_quantile.pdf'),width=7,height=7)
+ggplot(GR_merge_dt_sig_density_diff,aes(x=density_diff,y=dNME_relative))+geom_smooth(se=F)+
+  xlab("CpG density difference")+ylab("dNME")+
   theme_glob+
   theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 dev.off()

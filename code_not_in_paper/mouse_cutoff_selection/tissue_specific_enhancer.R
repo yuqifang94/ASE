@@ -227,13 +227,18 @@ rownames(H3K27ac_output_dt_cor_dc_mt)=H3K27ac_output_dt_cor_dc$region
 H3K27ac_output_dt_cor_dc_rank=t(apply(H3K27ac_output_dt_cor_dc[,-1],1,function(x) rank(-x)))
 rownames(H3K27ac_output_dt_cor_dc_rank)=H3K27ac_output_dt_cor_dc$region
 #Plot some example
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=10),
+                                 axis.title.x=element_text(hjust=0.5,size=14,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=14,face="bold"),
+                                 axis.text.x=element_text(size=14),
+                                 axis.text.y=element_text(size=14))
 # chr5:31905600-31907600 
-pdf("../downstream/output/mouse_analysis/tissue_specific_enhancer/example_chr5_31905600_31907600.pdf",width=3.5,height=3.5)
-ggplot( H3K27ac_output_dt[region=="chr5:31905600-31907600"&grepl("EFP",sample)],aes(x=log2RPKM,y=log2FPKM))+geom_point()+
-  xlab("candidiate region\nChIP-seq [log2(RPKM)]")+ylab("candidiate gene\nRNA-seq  [log2(FPKM)]")
+pdf("../downstream/output/mouse_analysis/tissue_specific_enhancer/example_chr5_31905600_31907600.pdf",width=4,height=4)
+ggplot( H3K27ac_output_dt[region=="chr5:31905600-31907600"&grepl("EFP",sample)],aes(x=log2RPKM,y=log2FPKM))+geom_point(size=2)+
+  xlab("candidiate region\nChIP-seq [log2(RPKM)]")+ylab("candidiate gene\nRNA-seq  [log2(FPKM)]")+theme_glob
 dev.off()
 ts_aid=readRDS(ts_aid_dt_fn)
- UC_in=readRDS(UC_in_matrix_cluster_file)
+ UC_in=readRDS(UC_in_matrix_cluster_file)#Random regions has all data
  analyzed_region=lapply(UC_in,rownames)
 ##Add non_tissue_specific region as control
 extract_rank_dt<-function(region_in,enhancer_rank,enhancer_correlation,ts,tissue_name){
@@ -273,7 +278,11 @@ saveRDS(ts_aid_out,ts_aid_out_fn)
 #Plotting
 #Barplot for each tissue plot ts aid region for that tissue and others
 ts_aid_out=readRDS(ts_aid_out_fn)
-
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=10),
+                                 axis.title.x=element_text(hjust=0.5,size=14,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=14,face="bold"),
+                                 axis.text.x=element_text(size=14),
+                                 axis.text.y=element_text(size=14))
 pdf(paste0(figure_path,'correlation_tissue_rank_all.pdf'))
    plot_dt=data.table(correlation=ts_aid_out$rank_correlation,cor_type='tissue_specific_UC',tissue=ts_aid_out$tissue)
     plot_dt$correlation=factor(round(plot_dt$correlation),levels=as.character(1:7))#Round tiles
@@ -281,11 +290,11 @@ pdf(paste0(figure_path,'correlation_tissue_rank_all.pdf'))
     plot_dt=plot_dt[,.N,by=list(tissue,correlation)]
     plot_dt[,prop_N:=N/sum(N),by=list(tissue)]
       print(ggplot(plot_dt,aes(x=tissue,y=prop_N,group=correlation,fill=correlation))+geom_bar(stat="identity",position="stack")+
-      ggtitle("")+xlab("")+ylim(c(0,1))+ylab("")+
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+      ggtitle("")+xlab("")+ylim(c(0,1))+ylab("")+theme_glob+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))+theme(legend.position("bottom"))
 dev.off()
 
-pdf(paste0(figure_path,'correlation_tissue_rank_1.pdf'))
+pdf(paste0(figure_path,'correlation_tissue_rank_1.pdf'),width=8,height=6)
    plot_dt=data.table(correlation=ts_aid_out$rank_correlation,cor_type='tissue_specific_UC',tissue=ts_aid_out$tissue)
     plot_dt$correlation=factor(round(plot_dt$correlation),levels=as.character(1:7))#Round tiles
     plot_dt$tissue=factor(plot_dt$tissue,levels=unique(plot_dt$tissue))
@@ -294,8 +303,16 @@ pdf(paste0(figure_path,'correlation_tissue_rank_1.pdf'))
      plot_dt[grepl('-control',plot_dt$tissue)]$region_type='Non tissue-specific'
     plot_dt[,prop_N:=N/sum(N),by=list(tissue)]
       print(ggplot(plot_dt[correlation=='1'],aes(x=tissue,y=prop_N,fill=region_type))+geom_bar(stat="identity")+
-      ggtitle("")+xlab("")+ylim(c(0,0.3))+ylab("")+
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)))
+      ggtitle("")+xlab("")+ylim(c(0,0.3))+ylab("correlation")+theme_glob+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+theme(legend.position="bottom",legend.title=element_blank()))
+dev.off()
+pdf(paste0(figure_path,'correlation_tissue_rank_violin.pdf'),width=10,height=6)
+   plot_dt=data.table(correlation=ts_aid_out$correlation,cor_type='tissue_specific_UC',tissue=ts_aid_out$tissue)
+     plot_dt$region_type='tissue-specific'
+     plot_dt[grepl('-control',plot_dt$tissue)]$region_type='Non tissue-specific'
+      print(ggplot(plot_dt,aes(x=tissue,y=correlation,fill=region_type))+geom_boxplot(outlier.shape=NA)+
+      ggtitle("")+xlab("")+ylim(c(0,1))+ylab("correlation")+theme_glob+
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+theme(legend.position="bottom",legend.title=element_blank()))
 dev.off()
 
 #Assigning cluster to each region

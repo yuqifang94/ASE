@@ -12,7 +12,8 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=24),
                                  axis.title.y=element_text(hjust=0.5,size=18,face="bold"),
                                  axis.text.x=element_text(size=16),
                                  axis.text.y=element_text(size=16))
-
+NME_only_name = "Predominantly\nNME"
+MML_only_name = "Predominantly\nMML"
 #588188 used for clustering
 #
 figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_all',gsub('.','',cutoffs),'.tiff')
@@ -30,7 +31,7 @@ if(!file.exists(cor_dt_pre_process_fn)){
 }
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
-tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,
+tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,NME_only_name=NME_only_name,MML_only_name=MML_only_name,
                            dir_figure=paste0(dir_out_rds_correlation,'correlation_figure/'))
 names(tissue_out_filtered)=names(cor_dt_filtered)
 
@@ -70,3 +71,44 @@ assign_regions(tissue_out_filtered,dir_out_cluster01,DNAase)
 figure_name=paste0(figure_path,'all_sc_N17_ft_kmeans_10run_filtered_non_ts_01.jpeg')
 cluster_assignment(dir_cluster_in_01_non_ts,dir_out_cluster01_non_ts,cutoffs=0.1,
         cluster_region_out_fn=cluster_01_region_out_non_ts_fn,figure_name=figure_name)
+
+# Plot example regions for each catogries -------------------------
+UC_merge=readRDS(UC_merge_file)
+UC_merge=UC_merge$heart
+UC_merge=UC_merge[,grepl("-E1",colnames(UC_merge))]
+tissue_out_filtered=readRDS(tissue_out_filtered_fn)
+tissue_out_filtered=tissue_out_filtered$heart
+tissue_out_filtered=tissue_out_filtered[order(abs(cor_diff),decreasing=T)][region%in%rownames(UC_merge)]
+ preProcessingRegion<-function(datIn){
+    datOut=data.table(value=as.numeric(datIn),metaDat=names(datIn))
+    datOut$statType=gsub("-.*","",datOut$metaDat)
+    datOut$stage=gsub("dNME-|dMML-|UC-heart-|-all","",datOut$metaDat)
+    datOutUCdNME=datOut[statType=="UC"]
+    colnames(datOutUCdNME)[1]="UC"
+    datOutUCdNME$value=datOut[statType=="dNME"][match(datOutUCdNME$stage,stage)]$value
+    datOutUCdNME$statType="dNME"
+    datOutUCdMML=datOut[statType=="UC"]
+    colnames(datOutUCdMML)[1]="UC"
+    datOutUCdMML$value=datOut[statType=="dMML"][match(datOutUCdMML$stage,stage)]$value
+    datOutUCdMML$statType="dMML"
+    return(rbind(datOutUCdNME,datOutUCdMML))
+ }
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
+                                 axis.title.x=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.text.x=element_text(size=10),
+                                 axis.text.y=element_text(size=10),legend.title=element_blank())
+
+
+ pdf("../downstream/output/mouse_analysis/QC/region_cat_example.pdf")
+  NME_only_region=preProcessingRegion(UC_merge[tissue_out_filtered[region_type==NME_only_name][order(dNME_cor,decreasing=T)][3]$region,])
+  NME_only_fig=ggplot(NME_only_region,aes(x=UC,y=value,color=statType))+geom_point(size=0.5)+geom_smooth(se=FALSE,method="lm")+ggtitle(NME_only_name)+theme_glob
+  MML_only_region=preProcessingRegion(UC_merge[tissue_out_filtered[region_type==MML_only_name][order(round(dMML_cor,digits=3),decreasing=T)][3]$region,])
+  MML_only_fig=ggplot(MML_only_region,aes(x=UC,y=value,color=statType))+geom_point(size=0.5)+geom_smooth(se=FALSE,method="lm")+ggtitle(MML_only_name)+theme_glob
+  both_region=preProcessingRegion(UC_merge[tissue_out_filtered[region_type=="Both"][order(round(dMML_cor,digits=3),round(dNME_cor,digits=3),decreasing=T)][12]$region,])
+  both_fig=ggplot(both_region,aes(x=UC,y=value,color=statType))+geom_point(size=0.5)+geom_smooth(se=FALSE,method="lm")+ggtitle("Both")+theme_glob
+  neither_region=preProcessingRegion(UC_merge[tissue_out_filtered[region_type=="Neither"][order(round(dMML_cor,digits=3),round(dNME_cor,digits=3),decreasing=F)][3]$region,])
+  neither_fig=ggplot(neither_region,aes(x=UC,y=value,color=statType))+geom_point(size=0.5)+geom_smooth(se=FALSE,method="lm")+ggtitle("Neither")+theme_glob
+  print(ggarrange(NME_only_fig,MML_only_fig,both_fig,neither_fig,nrow=2,ncol=2,common.legend = TRUE, legend="bottom"))
+ 
+ dev.off()

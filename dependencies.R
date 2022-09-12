@@ -20,10 +20,11 @@ suppressPackageStartupMessages({
   if (!requireNamespace("ggplot2", quietly = TRUE))
   {BiocManager::install("ggplot2")}
   library(ggplot2)
+  library(ggthemes)
   # if (!requireNamespace("ggpubr", quietly = TRUE))
   # {BiocManager::install("ggpubr")}
   # library(ggpubr)
-  
+  library("ggsci")
   if (!requireNamespace("lattice", quietly = TRUE))
   {install.packages("lattice")}
   library(lattice)

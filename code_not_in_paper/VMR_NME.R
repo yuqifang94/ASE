@@ -10,6 +10,11 @@ OR_VMR<-function(NME_dat,vmr,percent,NME_quant='quant_score'){
   #print(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
   fisher.test(matrix(c(NME_VMR,nonNME_VMR,NME_nonVMR,nonNME_nonVMR),nrow = 2))
 }
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
+                                 axis.title.x=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.text.x=element_text(size=10),
+                                 axis.text.y=element_text(size=10))
 # NME_VMR -----------------------------------------------------------------
 NME_in=readRDS(NME_agnostic_file)
 #Brain
@@ -36,8 +41,8 @@ for(percent in unique(NME_in_brain$quant_score_1p)){
   OR_quant_1p=rbind(OR_quant_1p,data.frame(quant=percent,OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.in[1],upperCI=OR$conf.in[2]))
   
 }
-pdf('../downstream/output/human_analysis/VMR_NME/brain_NME_quantile.pdf')
-ggplot(OR_quant_1p,aes(x=quant,y=OR))+geom_point()+geom_smooth()+xlab('NME quantile')+ylab('OR of VMR')
+pdf('../downstream/output/human_analysis/VMR_NME/brain_NME_quantile.pdf',height=3.5,width=3.5)
+ggplot(OR_quant_1p,aes(x=quant,y=OR))+geom_point(size=0.5)+geom_smooth()+xlab('NME quantile')+ylab('OR of VMR')+theme_glob
 dev.off()
 
 NME_in_brain$quant_score=findInterval(NME_in_brain$NME,quantile(NME_in_brain$NME,prob=seq(0.25,0.75,0.25)))
@@ -71,8 +76,8 @@ for(percent in unique(NME_in_lung$quant_score_1p)){
   OR_quant_1p=rbind(OR_quant_1p,data.frame(quant=percent,OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.in[1],upperCI=OR$conf.in[2]))
   
 }
-pdf('../downstream/output/human_analysis/VMR_NME/lung_NME_quantile.pdf')
-ggplot(OR_quant_1p,aes(x=quant,y=OR))+geom_point()+geom_smooth()+xlab('NME quantile')+ylab('OR of VMR')
+pdf('../downstream/output/human_analysis/VMR_NME/lung_NME_quantile.pdf',height=3.5,width=3.5)
+ggplot(OR_quant_1p,aes(x=quant,y=OR))+geom_point(size=0.5)+geom_smooth()+xlab('NME quantile')+ylab('OR of VMR')+theme_glob
 dev.off()
 
 ##corSIV analysis: no significant result
