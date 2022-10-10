@@ -29,15 +29,17 @@ theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
                                  axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
                                  axis.text.x=element_text(size=10),
                                  axis.text.y=element_text(size=10))
-pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d.pdf',width=4,height=3)
+pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d_sample.pdf',width=4,height=3)
 #Plotting dNME dMML
-print(ggplot(GR_merge_dt,
-                aes(x=dMML, y=dNME))+
-                xlim(c(0,1))+ylim(c(0,1))+ggtitle("dMML and dNME relationship")+
-                #geom_smooth(method="loess",se=FALSE)+
-                xlab("dMML")+ ylab("dNME")+geom_bin2d(bins=100)+theme_glob+
-                #geom_smooth(method="lm",color="red")+
-                scale_fill_gradient(name = "count", trans = "log10",high="#132B43",low="#56B1F7"))
+for (sp in unique(GR_merge_dt$Sample)){
+    print(ggplot(GR_merge_dt[Sample==sp],
+                    aes(x=dMML, y=dNME))+
+                    xlim(c(0,1))+ylim(c(0,1))+ggtitle(paste0("dMML and dNME relationship\n",sp))+
+                    #geom_smooth(method="loess",se=FALSE)+
+                    xlab("dMML")+ ylab("dNME")+geom_bin2d(bins=100)+theme_glob+
+                    #geom_smooth(method="lm",color="red")+
+                    scale_fill_gradient(name = "count", trans = "log10",high="#132B43",low="#56B1F7"))
+}
 dev.off()
 
 pdf('../downstream/output/human_analysis/QC/dNME_vs_dMML_bin2d_sig.pdf',width=4,height=3)
@@ -57,5 +59,12 @@ dNME_N[GR_merge$N>=10]$N=">=10"
 dNME_N$N=factor(dNME_N$N,levels=c(1:10,">=10"))
 print(ggplot(dNME_N,aes(x=N,y=dNME))+geom_boxplot(outlier.shape=NA))
 dev.off()
-
-
+GR_merge=readRDS(GR_merge_file)
+R2_out=data.table()
+for (sp in unique(GR_merge$Sample)){
+    GR_merge_sp=GR_merge[GR_merge$Sample==sp]
+    diff_fit=summary(lm(GR_merge_sp$dNME~GR_merge_sp$dMML))
+    linear_fit=summary(lm(c(GR_merge_sp$NME1,GR_merge_sp$NME2)~c(GR_merge_sp$MML1,GR_merge_sp$MML2)))
+    quar_fit=summary(lm(c(GR_merge_sp$NME1,GR_merge_sp$NME2)~poly(c(GR_merge_sp$MML1,GR_merge_sp$MML2),2,raw=TRUE))) 
+    R2_out=rbind(R2_out,data.table(diff_fit=diff_fit$r.squared,linear_fit=linear_fit$r.squared,quar_fit=quar_fit$r.squared,Sample=sp))
+}

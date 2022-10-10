@@ -48,7 +48,7 @@ summary(lm(NME_in_dt$NME~NME_in_dt$MML))
 
 #NME  MAV
 
-NME_in=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_in_dt_mean_corrected_gr.rds")
+NME_in=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_in_dt_gastric_STL002_gr.rds")
 genomic_features=readRDS(genomic_features_file)
 GR_calc=data.frame()
 scRNA_result=data.frame()
@@ -71,3 +71,56 @@ for (sp in unique(NME_in$Sample)){
     
   }else{cat("file not exist for:",sp,'\n')}
 }
+dist_plot_run(as.data.table(hyper_var_all$NME_hypervar_calc),theme_glob,ylab="NME",stat_in="hypervar_logvar",dir='../downstream/output/human_analysis/NME_MAV/mean_adjust_NME/')
+#Small sample STL002 Gastric
+NME_in=readRDS(NME_agnostic_file)
+MML_in=readRDS(MML_agnostic_file)
+NME_in_dt=convert_GR(NME_in,direction="DT")
+NME_in_dt=NME_in_dt[Sample=="Gastric_single - STL002"]
+NME_in_dt$region_Sample=paste0(NME_in_dt$region,'-',NME_in_dt$Sample)
+MML_in_dt=convert_GR(MML_in,direction="DT")
+MML_in_dt$region_Sample=paste0(MML_in_dt$region,'-',MML_in_dt$Sample)
+NME_in_dt$MML=MML_in_dt[match(NME_in_dt$region_Sample,region_Sample)]$MML
+NME_in_dt[,NME_res:=resid(loess(NME~MML)),by=list(Sample)]
+saveRDS(NME_in_dt,"../downstream/output/human_analysis/CPEL_outputs/NME_in_dt_gastric_STL002.rds")
+NME_in_dt=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_in_dt_gastric_STL002.rds")
+NME_in_dt_gr=convert_GR(NME_in_dt$region)
+mcols(NME_in_dt_gr)=NME_in_dt
+saveRDS(NME_in_dt_gr,"../downstream/output/human_analysis/CPEL_outputs/NME_in_dt_gastric_STL002_gr.rds")
+#Plot MML and NME
+NME_in=readRDS(NME_agnostic_file)
+MML_in=readRDS(MML_agnostic_file)
+NME_in_dt=convert_GR(NME_in,direction="DT")
+MML_in_dt=convert_GR(MML_in,direction="DT")
+NME_in_dt$region_Sample=paste0(NME_in_dt$region,'-',NME_in_dt$Sample)
+MML_in_dt$region_Sample=paste0(MML_in_dt$region,'-',MML_in_dt$Sample)
+NME_in_dt$MML=MML_in_dt[match(NME_in_dt$region_Sample,region_Sample)]$MML
+theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
+                                 axis.title.x=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.title.y=element_text(hjust=0.5,size=12,face="bold"),
+                                 axis.text.x=element_text(size=10),
+                                 axis.text.y=element_text(size=10))
+pdf("../downstream/output/human_analysis/QC/NME_vs_MML_bin2d.pdf")
+for (sp in unique(NME_in_dt$Sample)){
+    print(ggplot(NME_in_dt[Sample==sp],
+                  aes(x=MML, y=NME))+
+                  xlim(c(0,1))+ylim(c(0,1))+ggtitle(paste0("MML and NME relationship\n",sp))+
+                  #geom_smooth(method="loess",se=FALSE)+
+                  xlab("MML")+ ylab("NME")+geom_bin2d(bins=100)+theme_glob+
+                  #geom_smooth(method="lm",color="red")+
+                  scale_fill_gradient(name = "count", trans = "log10",high="#132B43",low="#56B1F7"))
+}
+dev.off()
+#add line geom_function(fun = function(x) 0.5*exp(-abs(x)))
+
+for (sp in unique(NME_in_dt$Sample)){
+    png(paste0("../downstream/output/human_analysis/QC/NME_vs_MML_dot/",sp,".png"))
+    print(ggplot(NME_in_dt[Sample==sp],
+                  aes(x=MML, y=NME))+
+                  xlim(c(0,1))+ylim(c(0,1))+ggtitle(paste0("MML and NME relationship\n",sp))+
+                  #geom_smooth(method="loess",se=FALSE)+
+                  xlab("MML")+ ylab("NME")+geom_point(size=0.01)+theme_glob)
+    dev.off()
+}
+
+
