@@ -1,6 +1,6 @@
 source('mainFunctions_sub.R')
 # GWAS analysis -----------------------------------------------------------
-Functions
+#Functions
 get_traits_GWAS<-function(variant_in,trait_gr_in,pval_cutoff=0.1,count_cutoff=3,stat='dNME_pval',CMH=FALSE,maxgap=500,ncores=15){
   traits_ls=mclapply(trait_gr_in,get_traits_GWAS_all_trait,
                    variant_in=variant_in,pval_cutoff=pval_cutoff,count_cutoff=count_cutoff,stat=stat,CMH=CMH,maxgap=maxgap,
@@ -239,3 +239,52 @@ ggplot(dNME_traits_sig,aes(y=OR,x=trait))+
   coord_flip()+ theme(axis.text.x = element_text(hjust = 1),legend.position = "none")+xlab("GWAS traits")+
   ggtitle("GWAS trait enrichment")+geom_text(aes(label=round(OR,digits = 2)), hjust=-0.5, color="black", size=3.5)
 dev.off()
+
+#Examine neurological traits
+#Start with line 74
+variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
+variant_HetCpG_meta_brain=variant_HetCpG_meta[grepl("brain|Brain",variant_HetCpG_meta$Sample)]
+
+run_CMH_brain<-function(variant_HetCpG_meta_brain,SNP_trait,maxGap){
+  SNP_trait$end=SNP_trait$start
+  SNP_trait_gr=makeGRangesFromDataFrame(SNP_trait)
+  seqlevels(SNP_trait_gr)=paste0("chr",seqlevels(SNP_trait_gr))
+
+  cmh_out=c()
+  for(sp in unique(variant_HetCpG_meta_brain$Sample)){
+    variant_HetCpG_meta_sp=variant_HetCpG_meta_brain[variant_HetCpG_meta_brain$Sample==sp]
+    dNME_trait_olap=findOverlaps(variant_HetCpG_meta_sp,SNP_trait_gr,maxgap=maxGap)
+    variant_trait=variant_HetCpG_meta_sp[queryHits(dNME_trait_olap)]
+    variant_non_trait=variant_HetCpG_meta_sp[-queryHits(dNME_trait_olap)]
+    dNME_trait=sum(variant_trait$dNME_pval<=0.1)
+    non_dNME_trait=sum(variant_trait$dNME_pval>0.1)
+    dNME_non_trait=sum(variant_non_trait$dNME_pval<=0.1)
+    non_dNME_non_trait=sum(variant_non_trait$dNME_pval>0.1)
+    cmh_out=c(cmh_out,c(dNME_trait,non_dNME_trait,dNME_non_trait,non_dNME_non_trait))
+  }
+  cmh_out_run=array(cmh_out,dim=c(2,2,length(unique(variant_HetCpG_meta_brain$Sample))),
+                  dimnames=list(dNME=c("dNME","non-dNME"),
+                                trait=c("trait","non-trait"),
+                                sample=unique(variant_HetCpG_meta_brain$Sample)))
+  return(mantelhaen.test(cmh_out_run,exact=TRUE)) 
+}                          
+
+SNP_sch=fread('../downstream/input/human_analysis/PGC/PGC3_SCZ_wave3.core.autosome.public.v3.vcf.tsv',skip=73,header=T)
+SNP_sch_trait=SNP_sch[PVAL<=5*10^-8]#22345
+colnames(SNP_sch_trait)[c(1,3)]=c("chr","start")
+sch=run_CMH_brain(variant_HetCpG_meta_brain,SNP_sch_trait,maxGap=1000)#2.946185
+
+SNP_bp=fread('../downstream/input/human_analysis/PGC/pgc-bip2021-all.vcf.tsv',skip=72,header=T)
+SNP_bp_trait=SNP_bp[PVAL<=5*10^-8]#22345
+colnames(SNP_bp_trait)[c(1,2)]=c("chr","start")
+bp=run_CMH_brain(variant_HetCpG_meta_brain,SNP_bp_trait,maxGap=1000)#3.215223
+
+SNP_az=fread('../downstream/input/human_analysis/PGC/PGCALZ2sumstatsExcluding23andMe.txt',skip=0,header=T)
+SNP_az_trait=SNP_az[p<=5*10^-8]#22345
+colnames(SNP_az_trait)[c(1,2)]=c("chr","start")
+az=run_CMH_brain(variant_HetCpG_meta_brain,SNP_az_trait,maxGap=1000)#0.22
+
+SNP_adhd=fread('../downstream/input/human_analysis/PGC/daner_adhd_meta_filtered_NA_iPSYCH23_PGC11_sigPCs_woSEX_2ell6sd_EUR_Neff_70.meta',skip=0,header=T)
+SNP_adhd_trait=SNP_adhd[P<=5*10^-8]#22345
+colnames(SNP_adhd_trait)[c(1,3)]=c("chr","start")
+adhd=run_CMH_brain(variant_HetCpG_meta_brain,SNP_adhd_trait,maxGap=1000)#0.8197396

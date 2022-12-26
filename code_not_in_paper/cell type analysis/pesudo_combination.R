@@ -74,3 +74,8 @@ NME_out=cor_pse_acutal_plot("NME")
 MML_out=cor_pse_acutal_plot("MML")
 #Id large dNME regions
 
+#Check correlation between psedu NME and MML
+statType="NME"
+dat_all=readRDS(paste0("../downstream/output/human_analysis/CPEL_outputs/",statType,"_agnostic_all.rds"))
+dat_all=convert_GR(dat_all[dat_all$Sample %in% c("endoerm_27_paired - HUES64","mesoderm_23_paired - HUES64")],direction="DT")
+dat_all=dcast.data.table(dat_all,region~Sample,value.var="score",fun.aggregate="mean")

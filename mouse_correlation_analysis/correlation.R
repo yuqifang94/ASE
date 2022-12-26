@@ -22,6 +22,7 @@ cluster_assignment(dir_cluster_in_01,dir_out_cluster01,cutoffs=0.1,cluster_regio
 #Merge into data table
 #Filtered result
 cor_dt_pre_process_fn=paste0(dir_out_rds_correlation,'correlation_dt_N17_kmeans_10run_filtered_all_regions.rds')
+
 if(!file.exists(cor_dt_pre_process_fn)){
   cor_dt_filtered=lapply(names(dNME_cor),cor_dt_preprocessing,dMML_cor=dMML_cor,
                          dNME_cor=dNME_cor,dmml_perm=dmml_perm,dnme_perm=dnme_perm,
@@ -32,7 +33,7 @@ if(!file.exists(cor_dt_pre_process_fn)){
 cor_dt_filtered=readRDS(cor_dt_pre_process_fn)
 #Plot the density for each one
 tissue_out_filtered=lapply(names(cor_dt_filtered),correlation_processing,cor_dt=cor_dt_filtered,filtered=T,NME_only_name=NME_only_name,MML_only_name=MML_only_name,
-                           dir_figure=paste0(dir_out_rds_correlation,'correlation_figure/'))
+                           dir_figure=paste0(dir_out_rds_correlation,'correlation_figure2/'))
 names(tissue_out_filtered)=names(cor_dt_filtered)
 
 saveRDS(tissue_out_filtered,tissue_out_filtered_fn)

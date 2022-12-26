@@ -1,27 +1,27 @@
 source('mainFunctions_sub.R')
-NME_all=readRDS(NME_agnostic_all_file)
+
 GR_merge=readRDS(GR_merge_file)
 CpG_hg19=getCpgSitesH19()#26752702
 subsetByOverlaps(CpG_hg19,GR_merge[GR_merge$dMML_pval<=0.1])#25105
 subsetByOverlaps(CpG_hg19,NME_all)#21234156
 MML_all=readRDS(MML_agnostic_all_file)
-NME_all_dt=convert_GR(NME_all,direction="DT")
+#Remove ASM filtered NME region
+MML_all_dt=MML_all_dt[!is.na(MML)]
 MML_all_dt=convert_GR(MML_all,direction="DT")
+MML_all_dt_rmASM=MML_all_dt[paste0(region,Sample)%in%paste0(NME_all_dt$region,NME_all_dt$Sample)]
+saveRDS(MML_all_dt_rmASM,"../downstream/output/human_analysis/CPEL_outputs/MML_all_dt_rmASM.rds")
+NME_all=readRDS(NME_agnostic_all_file)
+NME_all_dt=convert_GR(NME_all,direction="DT")
 theme_glob=theme_classic()+theme(plot.title = element_text(hjust = 0.5,size=12),
                                  axis.title.x=element_text(hjust=0.5,size=9,face="bold"),
                                  axis.title.y=element_text(hjust=0.5,size=9,face="bold"),
                                  axis.text.x=element_text(size=7),
                                  axis.text.y=element_text(size=7))
 # Plotting NME vs MML ------------------------------------
-MML_all_dt=MML_all_dt[!is.na(MML)]
 NME_all_dt=NME_all_dt[!is.na(NME)]
-#Remove ASM filtered NME region
-MML_all_dt_rmASM=MML_all_dt[paste0(region,Sample)%in%paste0(NME_all_dt$region,NME_all_dt$Sample)]
-saveRDS(MML_all_dt_rmASM,"../downstream/output/human_analysis/CPEL_outputs/MML_all_dt_rmASM.rds")
 MML_all_dt_rmASM=readRDS("../downstream/output/human_analysis/CPEL_outputs/MML_all_dt_rmASM.rds")
-merged_dt=data.table(MML=MML_all_dt_rmASM$MML,NME=NME_all_dt$NME)#number of MML: 135135992, number of NME: 135135992
+merged_dt=data.table(MML=MML_all_dt_rmASM$MML,NME=NME_all_dt$NME,Sample=NME_all_dt$Sample,hyper_var_fn=NME_all_dt$hyper_var_fn)#number of MML: 135135992, number of NME: 135135992
 saveRDS(merged_dt,"../downstream/output/human_analysis/CPEL_outputs/NME_MML_merged_dt.rds")
-merged_dt=readRDS("../downstream/output/human_analysis/CPEL_outputs/NME_MML_merged_dt.rds")
 #Aggregate NME, using quantiles, 0.05 and 0.95
 merged_dt_agg=merged_dt[, list(NME=round(median(NME),digits=digits_round),
                                    Bottom25=round(quantile(NME,probs=0.25),digits=digits_round),
@@ -92,7 +92,7 @@ summary(linear_m_NME)
 # Multiple R-squared:  0.04528,   Adjusted R-squared:  0.04528 
 # F-statistic: 6.41e+06 on 1 and 135135990 DF,  p-value: < 2.2e-16
 
-sqare_m=lm(GR_merge$dNME~ poly(GR_merge$dMML, 2))
+sqare_m=lm(merged_dt$NME~ poly(merged_dt$MML, 2))
 summary(sqare_m)
 # Call:
 # lm(formula = GR_merge$dNME ~ poly(GR_merge$dMML, 2))
@@ -160,3 +160,13 @@ cor.test(merged_dt$NME,merged_dt$MML)
 # -0.2127981 
 
 #Correlation with CpG density
+
+#correlation between NME, MML and dNME, dMML separating by sample
+merged_dt_r2_linear=merged_dt[,list(R2=summary(lm(NME~poly(MML,1)))$r.squared),by=list(Sample)]
+merged_dt_r2_poly=merged_dt[,list(R2=summary(lm(NME~poly(MML,2)))$r.squared),by=list(Sample)]
+GR_merge_dt=convert_GR(GR_merge,direction="DT")
+GR_merge_r2_linear=GR_merge_dt[dMML_pval<=pval_cutoff&dNME_pval<=pval_cutoff,
+                                list(R2=ifelse(length(dMML)>10&length(dNME)>10,summary(lm(dNME~poly(dMML,1)))$r.squared,as.numeric(NA)),
+                                corP=ifelse(length(dMML)>10&length(dNME)>10,cor(dNME,dMML),as.numeric(NA))
+                                #corP=cor(dNME,dMML)                                
+                                ),by=list(Sample)]

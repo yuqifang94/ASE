@@ -76,6 +76,7 @@ dev.off()
 # Find low MML and high NME only ------------------------------------------
 #Rename columns
 low_MML=motif_dir_dMML[FDR<=0.1&Proportion<0.5]$TF
+high_MML=motif_dir_dMML[FDR<=0.1&Proportion>0.5]$TF
 high_NME=motif_dir_dNME[FDR<=0.1&Proportion>0.5]$TF
 motif_dir_dMML$dMML_pvalue=motif_dir_dMML$Pvalue
 motif_dir_dMML$dMML_FDR=motif_dir_dMML$FDR
@@ -87,9 +88,10 @@ motif_dir_dNME$CI=motif_dir_dNME$proportion_high_NME_CI
 low_MML_TF=low_MML[!low_MML%in%high_NME]
 low_MML_only=cbind(motif_dir_dMML[match(low_MML_TF,TF)],
                    motif_dir_dNME[match(low_MML_TF,TF)])
-high_NME_TF=high_NME[!high_NME%in%low_MML]
+high_NME_TF=high_NME[!high_NME%in%c(low_MML,high_MML)]
 high_NME_only=cbind(motif_dir_dNME[match(high_NME_TF,TF)],
                     motif_dir_dMML[match(high_NME_TF,TF)])
+high_NME_TF_not_high_MML=high_NME[!high_NME%in%high_MML]
 
 write.csv(low_MML_only[order(Proportion_low_MML),list(TF,Proportion_low_MML,dMML_pvalue,dMML_FDR,proportion_high_NME,dNME_pvalue,dNME_FDR,CI)],
           '../downstream/output/graphs_tables/motif_preference_table/All_regions/motif_prefer_low_MML_only.csv',row.names = F)

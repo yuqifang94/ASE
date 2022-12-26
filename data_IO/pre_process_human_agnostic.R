@@ -104,6 +104,8 @@ rm(NME_in_sp)
 rm(MML_in_sp)
 #NME in check: 51459969
 #MML in check: 51459969
+NME_in$NME=NME_in$score
+MML_in$MML=MML_in$score
 saveRDS(NME_in[NME_in$N>=2],NME_agnostic_ASM_file)
 saveRDS(MML_in[MML_in$N>=2],MML_agnostic_ASM_file)
 
@@ -133,6 +135,8 @@ for(fn in  dir(in_dir_compliment,pattern="[mn]m[le].bedGraph")){
 
 #NME in check: 202721894
 #MML in check: 202721894
+NME_in$NME=NME_in$score
+MML_in$MML=MML_in$score
 saveRDS(NME_in[NME_in$N>=2],NME_agnostic_comp_file)
 saveRDS(MML_in[MML_in$N>=2],MML_agnostic_comp_file)
 
@@ -141,12 +145,12 @@ saveRDS(c(readRDS(NME_agnostic_file),
           readRDS(NME_agnostic_DNase_file),
           #readRDS(NME_agnostic_ASM_file),
           readRDS(NME_agnostic_comp_file)
-                  ),NME_agnostic_all_file)
+          ),NME_agnostic_all_file)
 saveRDS(c(readRDS(MML_agnostic_file),
           readRDS(MML_agnostic_DNase_file),
           #readRDS(MML_agnostic_ASM_file),
           readRDS(MML_agnostic_comp_file)
-),MML_agnostic_all_file)
+          ),MML_agnostic_all_file)
 
 #Check each file for size: difference due to removing ASM regions
 NME_agnostic=readRDS(NME_agnostic_file)#77457572

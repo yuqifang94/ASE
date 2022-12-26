@@ -1340,7 +1340,7 @@ GO_run<-function(gl,back,cluster,ptcount=0,mapping="org.Mm.eg.db"){
   #non_annotated_sig=total sig
   #Annotated_sig=0
   #choose(a+b,a)=1 given a=0
-  sigres$p0_choose=choose(sigres$bg_all-sigres$Annotated,sigres$sig_all)/choose(sigres$bg_all,sigres$sig_all)
+  #sigres$p0_choose=choose(sigres$bg_all-sigres$Annotated,sigres$sig_all)/choose(sigres$bg_all,sigres$sig_all)
   sigres$p0=phyper(0,sigres$sig_all,sigres$bg_all-sigres$sig_all,sigres$Annotated)
   sigres=sigres[Significant!=0]
   sigres$p_fs=sigres[,list(p_fisher=fisher_GO(Significant,Annotated,bg_all,sig_all)),by = seq_len(nrow(sigres))]$p_fisher
@@ -2129,24 +2129,24 @@ correlation_processing<-function(ts,cor_dt,filtered=F,density_plot=T,FDR_cutoff=
   #Assigning regions
   rm(diff_cutoff_dNME_only)
   rm(diff_cutoff_dMML_only)
-
-  tissue_in$region_type="NA"
+  #Neither
+  neither_id=which(tissue_in$dNME_FDR>FDR_cutoff&tissue_in$dMML_FDR>FDR_cutoff)
+  tissue_in_neither=tissue_in[neither_id]
+  tissue_in_neither$region_type='Neither'
+  tissue_in_sig=tissue_in[-neither_id]
+  tissue_in_sig$region_type='NA'
   #Both
-  tissue_in[cor_diff<diff_cutoff_dNME_only&
-              cor_diff>diff_cutoff_dMML_only&
-              (dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)]$region_type="Both"
+  tissue_in_sig[cor_diff<diff_cutoff_dNME_only&
+              cor_diff>diff_cutoff_dMML_only]$region_type="Both"
   #One significant the other one <0 are also quantified as only
   #dMML_only
-  tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
-              (cor_diff<=diff_cutoff_dMML_only|
+  tissue_in_sig[(cor_diff<=diff_cutoff_dMML_only|
                  (dMML_cor>0&dNME_cor<0))]$region_type=MML_only_name
   #dNME_only
-  tissue_in[(dNME_FDR<=FDR_cutoff|dMML_FDR<=FDR_cutoff)&
-              (cor_diff>=diff_cutoff_dNME_only|
+  tissue_in_sig[(cor_diff>=diff_cutoff_dNME_only|
                  (dNME_cor>0&dMML_cor<0))]$region_type=NME_only_name
   
-  #Neither
-  tissue_in[dNME_FDR>FDR_cutoff&dMML_FDR>FDR_cutoff]$region_type="Neither"
+  tissue_in=rbind(tissue_in_neither,tissue_in_sig)
   cat('Finish assign regions types cutoffs:',proc.time()[[3]]-tt1,'\n')
   tt1=proc.time()[[3]]
   #dev.off()
