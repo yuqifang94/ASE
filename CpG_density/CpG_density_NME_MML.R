@@ -1,7 +1,18 @@
 rm(list=ls())
 source("mainFunctions_sub.R")
-#Define ggplot theme
-
+#SNP OR
+OR_calc<-function(tb_in,SNP,SNP_name,pval_cutoff=NA,stat_in="NME"){
+ print(SNP)
+  larger_SNP=sum(tb_in[[SNP_name]]==SNP&(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  larger_nonSNP=sum(tb_in[[SNP_name]]!=SNP&(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  lower_SNP=sum(tb_in[[SNP_name]]==SNP&!(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  lower_nonSNP=sum(tb_in[[SNP_name]]!=SNP&!(tb_in[[paste0('d',stat_in,"_relative")]]>0))
+  cont_table=matrix(c(larger_SNP,larger_nonSNP,lower_SNP,lower_nonSNP),nrow=2)
+  print(cont_table)
+  OR=fisher.test(cont_table,alternative ='two.sided')
+  #print(cont_table)
+  return(data.table(OR=OR$estimate,pvalue=OR$p.value,lowerCI=OR$conf.int[1],upperCI=OR$conf.int[2],SNP=SNP))
+}
 # Preprocess SNP files to get unique SNP and trinucleotide -----------------------------------------------------
 variant_HetCpG_meta=readRDS(variant_HetCpG_meta_file)
 variant_HetCpG_meta_dt=convert_GR(variant_HetCpG_meta,direction='DT')

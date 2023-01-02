@@ -1,4 +1,18 @@
 source('mainFunctions_sub.R')
+#MAE enrich
+MAE_enrich<-function(GR_merge,pval_cutoff,genes='genes_promoter',stat='dMML_pval',MAE=MAE){
+  #GR_merge=GR_merge[!is.na(GR_merge$genes_promoter)]
+  GR_merge=elementMetadata(GR_merge)
+  stat_gene=GR_merge[[genes]][GR_merge[[stat]]<=pval_cutoff]
+  non_stat_gene=GR_merge[[genes]][GR_merge[[stat]]>pval_cutoff]
+  stat_MAE=sum(unlist(lapply(stat_gene,function(x) any(x %in% MAE))))
+  nonstat_MAE=sum(unlist(lapply(non_stat_gene,function(x) any(x %in% MAE)))) 
+  nonstat_nonMAE=sum(!unlist(lapply(non_stat_gene,function(x) any(x %in% MAE))))
+  stat_nonMAE=sum(!unlist(lapply(stat_gene,function(x) any(x %in% MAE))))
+  print(matrix(c(stat_MAE,stat_nonMAE,nonstat_MAE,nonstat_nonMAE),nrow=2))
+  ft=fisher.test(matrix(c(stat_MAE,stat_nonMAE,nonstat_MAE,nonstat_nonMAE),nrow=2))
+  return(data.frame(OR=ft$estimate,pvalue=ft$p.value,lowerCI= ft$conf.int[1],upperCI=ft$conf.int[2]))
+}
 # Finding the overlap between monoallelic expressed gene ------------------
 GR_merge=readRDS(GR_merge_file)
 MAE_BAE_data_Gimelbrant <- as.data.frame(read_excel("../downstream/input/human_analysis/imprinting_ASE/MAE_BAE_data_Gimelbrant.xlsx"),stringsAsFactors=F)

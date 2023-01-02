@@ -1,0 +1,182 @@
+
+#read in mouse enhancer
+read_chromHMM_bed<-function(bed_dir,rep){
+  bed_out=GRanges()
+  for(fn in dir(bed_dir,pattern='.bed.gz')){
+    #get sample name etc
+    fn_split=strsplit(fn,'_')[[1]]
+    stage=gsub('e','E',fn_split[1])
+    tissue=gsub('facial-prominence','EFP',fn_split[2])
+    tissue=gsub('neural-tube','NT',tissue)
+    bed_in=read.table(paste(bed_dir,fn,sep=''))
+    colnames(bed_in)=c('chr','start','end','chrom_num','chrom_state')
+    bed_in=makeGRangesFromDataFrame(bed_in,keep.extra.columns = T)
+    bed_in$stage=stage
+    bed_in$tissue=tissue
+    bed_in$rep=rep
+    bed_in$Sample=paste(stage,tissue,sep='-')
+    bed_out=c(bed_out,bed_in)
+  }
+  return(bed_out)
+}
+
+#Enrichment analysis for genomic features in dMML and dNME
+testEnrichmentFeature_stat<-function(dataGR,featureGR,maxgap=0,output_ft=1){
+  # Find ranges overlapping with feature
+  olaps <- findOverlaps(dataGR,featureGR,type="any",select="all",maxgap = maxgap)
+  
+  indFeature <- queryHits(olaps)
+  featurestatistic <- dataGR[indFeature]
+  complementarystatistic <- dataGR[-indFeature]
+  
+  # Enrichment of in feature
+  #featurestatistic <- featureData[featureData$Statistic==statistic]
+  #complementarystatistic <- complementaryData[complementaryData$Statistic==statistic]
+  contTablestatistic <- data.frame(ASM=c(NA,NA),nonASM=c(NA,NA))
+  rownames(contTablestatistic) <- c("Feature","Complementary")
+  contTablestatistic[1,]$ASM <- sum(featurestatistic$ASM=="Yes")
+  contTablestatistic[1,]$nonASM <- sum(featurestatistic$ASM=="No")
+  contTablestatistic[2,]$ASM <- sum(complementarystatistic$ASM=="Yes")
+  contTablestatistic[2,]$nonASM <- sum(complementarystatistic$ASM=="No")
+  #print(contTablestatistic)
+  #Return overlap >=output_ft
+  if(contTablestatistic[1,1]>=output_ft){
+  return(list(contTablestatistic,fisher.test(contTablestatistic)))
+  }
+}
+#ChromHMM* check
+ENCODE_to_sample<-function(sample_in){
+  #Assign code to each sample
+  ENCODE_number_to_sample=data.frame(sample=sample_in,stringsAsFactors = F)
+  ENCODE_number_to_sample$subject=unlist(lapply(ENCODE_number_to_sample$sample,function(x) strsplit(x,' - ')[[1]][2]))
+  ENCODE_number_to_sample$tissue=unlist(lapply(ENCODE_number_to_sample$sample,function(x) gsub(c('_single','_paired'),'',strsplit(x,' - ')[[1]][1])))
+  #Assign known code to given sample
+  ENCODE_number_to_sample$ENCODE=NA
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$subject=='H1']='E003'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='stem_27_undifferentiated_paired - HUES64']='E016'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='42_embryonic_stem_cell_single - H9']='E008'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='foreskin_melanocyte_paired - skin03']='E061'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='foreskin_keratinocyte_paired - skin03']='E058'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Small_Intestine']='E109'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Gastric']='E094'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Left_Ventricle']='E095'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Lung']='E096'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Psoas_Muscle']='E100'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Right_Ventricle']='E105'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Sigmoid_Colon']='E106'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Spleen']='E113'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Thymus']='E112'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue %in% c('Adipose','Adipose_Tissue')]='E063'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Aorta']='E065'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Esophagus']='E079'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Adrenal_Gland']='E080'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Ovary']='E097'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Pancreas']='E087'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Liver']='E066'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$tissue=='Right_Atrium']='E014'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='ectoderm_paired - HUES64']='E012'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='endoerm_27_paired - HUES64']='E011'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='mesoderm_23_paired - HUES64']='E013'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='brain_germinal_matrix_tissue_paired - HuFGM02']='E070'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='Brain_substantia_nigra_paired - 112']='E074'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='Brain_Hippocampus_middle_paired - 149']='E071'
+  ENCODE_number_to_sample$ENCODE[ENCODE_number_to_sample$sample=='Brain_Hippocampus_middle_paired - 150']='E071'
+  
+  return(ENCODE_number_to_sample)
+}
+
+##Use  CMH test for chromHMM analysis
+chromHMM_OR<-function(GR_merge,chromHMM,sample_name,pval_cutoff=0.1,stat="dNME_pval"){
+  
+  GR_merge_sp=GR_merge[GR_merge$Sample%in%sample_name]
+  GR_merge_sp$ASM="No"
+  GR_merge_sp$ASM[elementMetadata(GR_merge_sp)[,stat]<=pval_cutoff]="Yes"
+  out_df=data.frame()
+  count_table=list()
+  count_table_N=data.frame()
+  for(states in unique(chromHMM$name)){
+    
+    OR=testEnrichmentFeature_stat(GR_merge_sp,chromHMM[chromHMM$name==states])
+    if(!is.null(OR)){
+    #Get contengency table
+    count_table[[states]]=OR[[1]]
+    OR=OR[[2]]
+    #result directly from fisher.test for each state
+    out_df=rbind(out_df,
+                 data.frame(state=states,OR=OR$estimate,p_value=OR$p.value,
+                            lower_CI=OR$conf.int[1],upper_CI=OR$conf.int[2]))
+    }
+    # }
+  }
+  return(list(out_df,count_table))
+}
+
+#Combine contengency table
+chromHMM_combine<-function(chromHMM_in){
+  cont_table_all=list()
+  #ChromHMM, list object, each is a sample, within sample ,each is a state
+  for (states in unique(unlist(lapply(chromHMM_in,function(x) names(x[[2]]))))){
+    #extract 2x2 table for each states for each sample, return a list of sample with its contengency table
+    chromHMM_in_cont=lapply(chromHMM_in, function(x,states) x[[2]][[states]],states=states)
+    #For each state, construct a CMH table, 4 columns
+    cont_table_all[[states]]=do.call(rbind,lapply(seq_along(chromHMM_in_cont),melt_cont,cont_in=chromHMM_in_cont))
+    print(states)
+    
+  }
+  cont_table_all_CMH=lapply(cont_table_all,CMH_test)
+  cont_table_all_CMH_df=data.frame(states=names(cont_table_all_CMH), 
+                                   OR=unlist(lapply(cont_table_all_CMH, function(x) x$estimate[[1]])), 
+                                   p_value=unlist(lapply(cont_table_all_CMH, function(x) x$p.value)),
+                                   lower_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[1])),
+                                   upper_CI=unlist(lapply(cont_table_all_CMH,function(x) x$conf.int[2])))
+  
+  return(cont_table_all_CMH_df)
+}
+
+melt_cont<-function(i,cont_in){
+  sp=names(cont_in)[i]
+  # cont_out=cont_in[[i]]
+  # cont_out$subject=factor(paste(sp,cont_out$N,sep='_'))
+  # return(cont_out)
+  count_out=as.numeric(unlist(cont_in[[i]]))
+  if(length(count_out)>0){
+  #print(count_out)
+  #cutoff of smallest number in the table
+  if (all(count_out>0)){
+    return(data.frame(subject=factor(rep(sp,4)),
+                      ASM=factor(c('ASM','ASM','Non-ASM','Non-ASM')),
+                      feature=factor(c('Feature','Non_feature','Feature','Non_feature')),
+                      count=count_out
+    ))
+  }
+  }
+}
+
+CMH_test<-function(df_in,CMH_eqn=count~ASM+feature+subject){
+  if (nrow(df_in)>0){
+    CMH_table=xtabs(CMH_eqn,data=df_in)
+    
+    if (length(dim(CMH_table)[3]!=0)){
+      
+      if(dim(CMH_table)[3]>1){
+        fs=mantelhaen.test(CMH_table)
+      }
+      else if(dim(CMH_table)[3]==1){
+        #print(as.matrix(CMH_table[,,1]))
+        #print(count_all)
+        fs=fisher.test(as.matrix(CMH_table[,,1]))
+        
+      }
+      return(fs)
+    }
+    
+  }
+}
+getCpgSiteshg19 <- function(chrsOfInterest=paste("chr",1:21,sep="")){
+  # Obtain all CpG sites
+  cgs <- lapply(chrsOfInterest, function(x)  GRanges(x,IRanges(start(matchPattern("CG", Hsapiens[[x]])),with=2)))
+  # Set genome and seqlengths
+  cgs <- setGenomeLengths(do.call('c',cgs),chrsOfInterest=chrsOfInterest,genome_in="hg19")
+  # Return CpG site GR
+  return(cgs)
+}
